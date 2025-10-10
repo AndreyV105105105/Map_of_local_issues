@@ -1,4 +1,37 @@
-.venv
-db.sqlite3
 /.env
 /docker-compose.override.yml
+
+# Django-specific files
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+media/  # Or specific subdirectories within media if needed
+static_root/ # Or the directory where collectstatic outputs files
+
+# Virtual Environment
+.env/
+venv/
+env/
+
+# IDE-specific files (e.g., PyCharm, VS Code)
+.idea/
+.vscode/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Testing and build artifacts
+.coverage
+.tox/
+.eggs/
+build/
+dist/
+
+# Python-specific files
+*.pyo
+*.pyd
+*.so
