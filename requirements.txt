@@ -1,1 +1,5 @@
-django~=5.2.6
+GDAL==3.4.1
+python-dotenv==1.1.1
+pillow==11.3.0
+django==5.2.6
+psycopg2-binary==2.9.9
