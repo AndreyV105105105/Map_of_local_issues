@@ -4,15 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(_('email address'), unique=True, blank=False)
-
-    username = models.CharField(
-        max_length=150,
-        unique=True,
-        blank=True,
-        null=True,
-        help_text=_("Optional. Used for legacy systems.")
-    )
+    email = models.EmailField(_('email address'), blank=False)
 
     # Role field (citizen/official)
     ROLE_CHOICES = [
@@ -49,15 +41,6 @@ class CustomUser(AbstractUser):
         null=True
     )
 
-    # Set email as the primary identifier for login
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []  # Only email and password are required
-
-    def save(self, *args, **kwargs):
-        # Automatically set username to email if not provided
-        if not self.username and self.email:
-            self.username = self.email
-        super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.email
+        return self.username
