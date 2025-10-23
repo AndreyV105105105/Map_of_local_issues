@@ -1,14 +1,9 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.contrib.auth.views import LoginView
-from users.forms import CustomAuthenticationForm
+from home_page.views import home_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', LoginView.as_view(
-        form_class=CustomAuthenticationForm,
-        template_name='registration/login.html'
-    ), name='login'),
-    path('', include('home_page.urls')),
-    # Add other app URLs here
+    path('users/', include('users.urls', namespace='users')),
+    path('', home_view, name='home'),
 ]
