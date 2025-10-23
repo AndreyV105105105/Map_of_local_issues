@@ -1,12 +1,20 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.core.exceptions import ValidationError
 
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(_('email address'), blank=False)
+    email = models.EmailField(_('email address'), unique=True, blank=False)
 
-    # Role field (citizen/official)
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text=_("Optional. Used for legacy systems.")
+    )
+
     ROLE_CHOICES = [
         ('citizen', 'Citizen'),
         ('official', 'Official'),
@@ -18,7 +26,6 @@ class CustomUser(AbstractUser):
         help_text=_("Citizens submit issues; officials manage them")
     )
 
-    # Phone number for citizens
     phone_number = models.CharField(
         max_length=20,
         blank=True,
@@ -26,7 +33,6 @@ class CustomUser(AbstractUser):
         help_text=_("For citizen contact info")
     )
 
-    # Department for officials
     department = models.CharField(
         max_length=100,
         blank=True,
@@ -34,13 +40,19 @@ class CustomUser(AbstractUser):
         help_text=_("City department (e.g., 'Public Works') for officials")
     )
 
-    # Profile picture
     profile_picture = models.ImageField(
         upload_to='user_profiles/',
         blank=True,
         null=True
     )
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+
+    def save(self, *args, **kwargs):
+        if not self.username and self.email:
+            self.username = self.email
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.username
+        return self.email
