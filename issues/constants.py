@@ -1,5 +1,3 @@
-# issues/constants.py
-
 ISSUE_CATEGORIES = [
     ("roads", "Дороги"),
     ("lighting", "Освещение"),
@@ -8,4 +6,4 @@ ISSUE_CATEGORIES = [
     ("water", "Водоснабжение"),
 ]
 
-ISSUE_CATEGORY_CHOICES = ISSUE_CATEGORIES  # для совместимости с choices
+ISSUE_CATEGORY_CHOICES = ISSUE_CATEGORIES
