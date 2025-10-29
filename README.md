@@ -3,6 +3,7 @@
 ## Содержание
 - [Настройка окружения](#настройка-окружения)
 - [Запуск проекта](#запуск-проекта)
+- [Миграции базы данных](#миграции-базы-данных)
 - [Создание суперпользователя](#создание-суперпользователя)
 - [Полезные команды](#полезные-команды)
 - [Решение проблем](#решение-проблем)
@@ -123,17 +124,96 @@ docker-compose up --build
 #### Шаг 5: Откройте браузер
 Перейдите по адресу: **[http://localhost:8000/](http://localhost:8000/)**
 
+## Миграции базы данных
+
+Миграции в Django - это способ применения изменений в моделях к структуре базы данных. Вот как работать с миграциями в Docker-окружении:
+
+### Создание миграций
+
+При изменении моделей Django создайте файлы миграций:
+
+```bash
+docker-compose exec web python manage.py makemigrations
+```
+
+Эта команда анализирует изменения в моделях и создает файлы миграций в папке `migrations/` каждого приложения.
+
+### Применение миграций
+
+Чтобы применить миграции к базе данных:
+
+```bash
+docker-compose exec web python manage.py migrate
+```
+
+Эта команда применяет все непримененные миграции к базе данных.
+
+### Просмотр статуса миграций
+
+Чтобы увидеть, какие миграции применены, а какие нет:
+
+```bash
+docker-compose exec web python manage.py showmigrations
+```
+
+### Откат миграций
+
+Чтобы откатить конкретную миграцию:
+
+```bash
+docker-compose exec web python manage.py migrate app_name migration_name
+```
+
+Например, чтобы откатить миграцию приложения `maps` до состояния `0001_initial`:
+
+```bash
+docker-compose exec web python manage.py migrate maps 0001
+```
+
+### Создание пустых миграций
+
+Для создания пустой миграции (например, для выполнения кастомных SQL):
+
+```bash
+docker-compose exec web python manage.py makemigrations app_name --empty
+```
+
+### Типичный рабочий процесс при изменении моделей:
+
+1. Внесите изменения в модели Django
+2. Создайте миграции:
+   ```bash
+   docker-compose exec web python manage.py makemigrations
+   ```
+3. Примените миграции:
+   ```bash
+   docker-compose exec web python manage.py migrate
+   ```
+4. При необходимости создайте дамп данных:
+   ```bash
+   docker-compose exec web python manage.py dumpdata > backup.json
+   ```
+
+### Примечания по миграциям:
+
+- ⚠️ Всегда создавайте и применяйте миграции при изменении моделей
+- ⚠️ Не редактируйте существующие файлы миграций вручную
+- ✅ Коммитьте файлы миграций в репозиторий
+- ✅ Применяйте миграции в production-окружении с осторожностью
+
 ## Создание суперпользователя
 
 Для доступа к административной панели Django необходимо создать суперпользователя:
 
 ### Способ 1: Когда контейнеры уже запущены
 Откройте **новое окно терминала** и выполните:
+
 ```bash
 docker-compose exec web python manage.py createsuperuser
 ```
 
 ### Способ 2: Если контейнеры не запущены
+
 ```bash
 docker-compose run --rm web python manage.py createsuperuser
 ```
@@ -170,17 +250,17 @@ docker-compose down -v
 
 ### Выполнение команд в контейнере Django:
 ```bash
-# Применение миграций
-docker-compose exec web python manage.py migrate
-
-# Создание миграций
-docker-compose exec web python manage.py makemigrations
-
 # Сбор статических файлов
 docker-compose exec web python manage.py collectstatic
 
 # Запуск тестов
 docker-compose exec web python manage.py test
+
+# Запуск shell Django
+docker-compose exec web python manage.py shell
+
+# Проверка здоровья проекта
+docker-compose exec web python manage.py check
 ```
 
 ## Решение проблем
@@ -211,6 +291,15 @@ docker system prune
 2. Проверьте, что в `.env` файле указаны правильные данные для подключения
 3. Попробуйте перезапустить контейнеры: `docker-compose restart`
 
+### Проблема с миграциями:
+Если миграции не применяются:
+1. Убедитесь, что база данных запущена и доступна
+2. Проверьте правильность настроек подключения к БД в `.env`
+3. Попробуйте применить миграции с явным указанием приложения:
+   ```bash
+   docker-compose exec web python manage.py migrate app_name
+   ```
+
 ## Структура контейнеров
 
 - **db**: PostgreSQL с PostGIS на порту 5432
@@ -224,6 +313,7 @@ docker system prune
 1. Главная страница: [http://localhost:8000/](http://localhost:8000/)
 2. Админ-панель: [http://localhost:8000/admin/](http://localhost:8000/admin/)
 3. Статус контейнеров: `docker-compose ps`
+4. Статус миграций: `docker-compose exec web python manage.py showmigrations`
 
 ---
 
