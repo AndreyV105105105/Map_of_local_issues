@@ -1,4 +1,4 @@
-GDAL==3.4.1
+# GDAL installed via system packages (see Dockerfile)
 python-dotenv==1.1.1
 pillow==11.3.0
 django==5.2.6

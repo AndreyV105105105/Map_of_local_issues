@@ -1,0 +1,43 @@
+<!-- templates/issues/create_issue.html -->
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Report a New Issue</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="title" class="form-label">Title</label>
+      <input type="text" class="form-control" id="title" name="title" required>
+    </div>
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+    </div>
+    <div class="mb-3">
+      <label for="category" class="form-label">Category</label>
+      <select class="form-select" id="category" name="category" required>
+        <option value="">-- Select --</option>
+        {% for cat in categories %}
+          <option value="{{ cat.id }}">{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Location (coordinates)</label>
+      <div class="row">
+        <div class="col-md-6">
+          <input type="text" class="form-control" name="lat" placeholder="Latitude (e.g. 61.0045)" required>
+        </div>
+        <div class="col-md-6">
+          <input type="text" class="form-control" name="lon" placeholder="Longitude (e.g. 69.0500)" required>
+        </div>
+      </div>
+      <div class="form-text">You can get coordinates from any online map (e.g., right-click on Google Maps).</div>
+    </div>
+    <button type="submit" class="btn btn-success">Submit Issue</button>
+    <a href="{% url 'issues:map' %}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+{% endblock %}

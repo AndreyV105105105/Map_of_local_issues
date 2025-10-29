@@ -10,6 +10,7 @@
 
       {% if user.is_authenticated %}
         <p>Hello, {{ user.email }}! You are logged in as {{ user.get_role_display }}.</p>
+        <a href="{% url 'issues:map' %}" class="btn btn-success">Go to Map</a>
         <a href="{% url 'users:profile' %}" class="btn btn-primary">View Profile</a>
         <a href="{% url 'users:logout' %}" class="btn btn-secondary">Logout</a>
       {% else %}

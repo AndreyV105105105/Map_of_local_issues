@@ -1,0 +1,197 @@
+<!-- templates/issues/map.html -->
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>{% trans "Карта местных проблем (Ханты-Мансийск)" %}</h2>
+
+  {% if user.is_authenticated and user.role == 'citizen' %}
+    <div class="alert alert-info">
+      {% trans "Кликните по карте, чтобы сообщить о проблеме." %}
+    </div>
+  {% endif %}
+
+  <!-- Карта -->
+  <div id="map" style="height: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px;"></div>
+
+  <!-- Список обращений -->
+  <div class="mt-4">
+    <h4>{% trans "Все обращения" %} ({{ issues.count }})</h4>
+    {% for issue in issues %}
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <h6 class="mb-1">{{ issue.title }}
+              <span class="badge bg-{{ issue.status|lower }}">{{ issue.get_status_display }}</span>
+            </h6>
+          </div>
+          <p class="text-muted small mb-1">
+            {{ issue.description|truncatewords:15 }}
+          </p>
+          <p class="text-muted small mb-0">
+            {% trans "Категория" %}: {{ issue.get_category_display }} |
+            {% trans "Автор" %}: {{ issue.reporter.email }} |
+            {{ issue.created_at|date:"d.m.Y H:i" }}
+          </p>
+
+          {% if user.is_authenticated and user.role == 'official' %}
+            <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="mt-2">
+              {% csrf_token %}
+              <select name="status" class="form-select form-select-sm d-inline w-auto" style="width: auto; display: inline-block; margin-right: 5px;">
+                {% for key, label in issue.STATUS_CHOICES %}
+                  <option value="{{ key }}" {% if issue.status == key %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-sm btn-outline-primary">{% trans "Обновить" %}</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <p>{% trans "Пока нет обращений." %}</p>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Leaflet CSS/JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  // Границы Ханты-Мансийска (примерные)
+  const bounds = [
+    [60.98, 69.00], // юго-запад
+    [61.05, 69.10]  // северо-восток
+  ];
+
+  const map = L.map('map', {
+    maxBounds: bounds,
+    maxBoundsViscosity: 1.0,
+    zoomControl: true
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  map.fitBounds(bounds);
+
+  // === Отображение существующих меток ===
+  {% for issue in issues %}
+    const marker_{{ issue.id }} = L.marker([{{ issue.location.y }}, {{ issue.location.x }}]).addTo(map);
+    marker_{{ issue.id }}.bindPopup(`
+      <b>{{ issue.title }}</b><br>
+      {{ issue.description|truncatewords:20 }}<br>
+      <small>
+        {% trans "Статус" %}: <strong>{{ issue.get_status_display }}</strong><br>
+        {% trans "Категория" %}: {{ issue.get_category_display }}
+      </small>
+    `);
+  {% endfor %}
+
+  // === Добавление новой метки (только для граждан) ===
+  {% if user.is_authenticated and user.role == 'citizen' %}
+    let tempMarker = null;
+
+    map.on('click', function(e) {
+      const lat = e.latlng.lat.toFixed(6);
+      const lng = e.latlng.lng.toFixed(6);
+
+      if (tempMarker) map.removeLayer(tempMarker);
+      tempMarker = L.marker([lat, lng]).addTo(map);
+      tempMarker.bindPopup("{% trans 'Кликните «Сообщить» ниже, чтобы отправить' %}").openPopup();
+
+      document.getElementById('id_lat').value = lat;
+      document.getElementById('id_lon').value = lng;
+      document.getElementById('report-form-modal').style.display = 'block';
+    });
+  {% endif %}
+</script>
+
+<!-- Модальное окно для создания обращения -->
+{% if user.is_authenticated and user.role == 'citizen' %}
+<div id="report-form-modal" style="
+  display: none;
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  width: 90%;
+  max-width: 500px;
+">
+  <h5>{% trans "Сообщить о проблеме" %}</h5>
+  <form method="post" action="{% url 'issues:create_issue' %}">
+    {% csrf_token %}
+    <input type="hidden" id="id_lat" name="lat">
+    <input type="hidden" id="id_lon" name="lon">
+
+    <div class="mb-3">
+      <label class="form-label">{% trans "Название" %}</label>
+      <input type="text" name="title" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{% trans "Описание" %}</label>
+      <textarea name="description" class="form-control" rows="3" required></textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">{% trans "Категория" %}</label>
+      <select name="category" class="form-select" required>
+        {% for value, label in categories %}
+          <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="d-flex justify-content-end">
+      <button type="button" class="btn btn-secondary me-2" onclick="document.getElementById('report-form-modal').style.display='none'">
+        {% trans "Отмена" %}
+      </button>
+      <button type="submit" class="btn btn-success">
+        {% trans "Отправить" %}
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Затемнение фона при открытом модальном окне -->
+<div id="modal-backdrop" style="
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4);
+  z-index: 999;
+"></div>
+
+<script>
+  const modal = document.getElementById('report-form-modal');
+  const backdrop = document.getElementById('modal-backdrop');
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+      backdrop.style.display = 'none';
+    }
+  });
+  document.getElementById('report-form-modal').addEventListener('click', function(e) {
+    if (e.target.tagName === 'BUTTON' && e.target.textContent.trim() === "{% trans 'Отмена' %}") {
+      modal.style.display = 'none';
+      backdrop.style.display = 'none';
+    }
+  });
+  // Показать backdrop вместе с модалкой
+  const originalShow = map.on;
+  map.on('click', function() {
+    if (document.getElementById('report-form-modal').style.display === 'block') {
+      backdrop.style.display = 'block';
+    }
+  });
+</script>
+{% endif %}
+
+{% endblock %}
