@@ -73,10 +73,10 @@
 
 <script>
   // Границы Ханты-Мансийска: [[minLng, minLat], [maxLng, maxLat]]
-  const bounds = [
-    [68.85, 60.85],   // [lng, lat] — юго-запад
-    [69.20, 61.12]    // [lng, lat] — северо-восток
-  ];
+    const bounds = [
+    [68.75, 60.75],   // [minLng, minLat] — южнее и западнее
+    [69.30, 61.15]    // [maxLng, maxLat] — чуть шире
+    ];
 
   // Инициализация карты (OSM — без токена)
   const map = new maplibregl.Map({
