@@ -12,31 +12,34 @@
     </div>
   {% endif %}
 
-  <!-- Карта -->
   <div id="map" style="height: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px;"></div>
 
-  <!-- Список обращений -->
   <div class="mt-4">
-    <h4>{% trans "Все обращения" %} ({{ issues.count }})</h4>
-    {% for issue in issues %}
-      <div class="card mb-3">
-        <div class="card-body">
-          <div class="d-flex justify-content-between">
-            <h6 class="mb-1">{{ issue.title }}
-              <span class="badge bg-{{ issue.status|lower }}">{{ issue.get_status_display }}</span>
-            </h6>
-          </div>
-          <p class="text-muted small mb-1">
-            {{ issue.description|truncatewords:15 }}
-          </p>
-          <p class="text-muted small mb-0">
-            {% trans "Категория" %}: {{ issue.get_category_display }} |
-            {% trans "Автор" %}: {{ issue.reporter.email }} |
-            {{ issue.created_at|date:"d.m.Y H:i" }}
-          </p>
+  <h4>{% trans "Все обращения" %} ({{ issues.count }})</h4>
+  {% for issue in issues %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <!-- Только название — ссылка -->
+        <h6 class="mb-1">
+          <a href="{% url 'issues:issue_detail' issue.id %}" class="text-decoration-none text-dark">
+            {{ issue.title }}
+          </a>
+        </h6>
 
-          {% if user.is_authenticated and user.role == 'official' %}
-            <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="mt-2">
+        <!-- Остальное — не кликабельно -->
+        <p class="text-muted small mb-1">
+          {{ issue.description|truncatewords:15 }}
+        </p>
+        <p class="text-muted small mb-0">
+          {% trans "Категория" %}: {{ issue.get_category_display }} |
+          {% trans "Статус" %}: {{ issue.get_status_display }} |
+          {% trans "Автор" %}: {{ issue.reporter.email }} |
+          {{ issue.created_at|date:"d.m.Y H:i" }}
+        </p>
+
+        {% if user.is_authenticated and user.role == 'official' %}
+          <div class="mt-2">
+            <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="d-inline">
               {% csrf_token %}
               <select name="status" class="form-select form-select-sm d-inline w-auto" style="width: auto; display: inline-block; margin-right: 5px;">
                 {% for key, label in issue.STATUS_CHOICES %}
@@ -45,30 +48,58 @@
               </select>
               <button type="submit" class="btn btn-sm btn-outline-primary">{% trans "Обновить" %}</button>
             </form>
-          {% endif %}
-        </div>
+
+            <form method="post" action="{% url 'issues:delete_issue' issue.id %}"
+                  onsubmit="return confirm('❗ Удалить обращение «{{ issue.title|escapejs }}»? Действие нельзя отменить.');"
+                  class="d-inline ms-2">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                🗑️ {% trans "Удалить" %}
+              </button>
+            </form>
+          </div>
+        {% endif %}
       </div>
-    {% empty %}
-      <p>{% trans "Пока нет обращений." %}</p>
-    {% endfor %}
-  </div>
+    </div>
+  {% empty %}
+    <p>{% trans "Пока нет обращений." %}</p>
+  {% endfor %}
+</div>
 </div>
 
-<!-- MapLibre GL (вместо Leaflet) -->
-<script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
-<link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
+<!-- MapLibre GL -->
+<script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js  "></script>
+<link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css  " rel="stylesheet" />
 
 <script>
-  // Границы Ханты-Мансийска
+  // Границы Ханты-Мансийска: [[minLng, minLat], [maxLng, maxLat]]
   const bounds = [
-    [68.95, 60.98], // [lng, lat] — важно: MapLibre использует [lng, lat], а не [lat, lng]!
-    [69.12, 61.07]
+    [68.85, 60.85],   // [lng, lat] — юго-запад
+    [69.20, 61.12]    // [lng, lat] — северо-восток
   ];
 
+  // Инициализация карты (OSM — без токена)
   const map = new maplibregl.Map({
     container: 'map',
-    style: `https://tile.jawg.io/jawg-light.json?access-token={{ JAWG_TOKEN }}`,
-    center: [69.017, 61.009],
+    style: {
+      version: 8,
+      sources: {
+        'osm': {
+          type: 'raster',
+          tiles: ['https://tile.openstreetmap.de/  {z}/{x}/{y}.png'],
+          tileSize: 256,
+          attribution: '© <a href="https://www.openstreetmap.org/copyright  ">OpenStreetMap</a> contributors'
+        }
+      },
+      layers: [{
+        id: 'osm-tiles',
+        type: 'raster',
+        source: 'osm',
+        minzoom: 0,
+        maxzoom: 19
+      }]
+    },
+    center: [69.0179, 61.0034], // [lng, lat] — центр Ханты-Мансийска
     zoom: 12,
     maxBounds: bounds
   });
@@ -77,40 +108,80 @@
   map.addControl(new maplibregl.ScaleControl({ maxWidth: 100 }), 'bottom-left');
 
   map.on('load', () => {
-    // === Отображение существующих меток ===
     {% for issue in issues %}
-      const popup_{{ issue.id }} = new maplibregl.Popup().setHTML(`
-        <b>{{ issue.title }}</b><br>
-        {{ issue.description|truncatewords:20 }}<br>
-        <small>
-          {% trans "Статус" %}: <strong>{{ issue.get_status_display }}</strong><br>
-          {% trans "Категория" %}: {{ issue.get_category_display }}
-        </small>
-      `);
+      {% if issue.location and issue.location.x is not None and issue.location.y is not None %}
+        {% with lng=issue.location.x|floatformat:"6" lat=issue.location.y|floatformat:"6" %}
+          {% if lng != "None" and lat != "None" %}
+            {
+              const lng = parseFloat("{{ lng }}");
+              const lat = parseFloat("{{ lat }}");
+              if (!isNaN(lng) && !isNaN(lat)) {
+                const popup = new maplibregl.Popup({
+                  closeButton: false,
+                  closeOnClick: false,
+                  anchor: 'top',
+                  offset: [0, -8],
+                  maxWidth: '220px'
+                }).setHTML(`
+                  <a href="{% url 'issues:issue_detail' issue.id %}"
+                     style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
+                    {{ issue.title|escapejs }}
+                  </a>
+                  <small>
+                    Статус: <strong>{{ issue.get_status_display }}</strong><br>
+                    Категория: {{ issue.get_category_display }}
+                  </small>
+                `);
 
-      new maplibregl.Marker({ color: '#e74c3c' })
-        .setLngLat([{{ issue.location.x }}, {{ issue.location.y }}])  // lng, lat
-        .setPopup(popup_{{ issue.id }})
-        .addTo(map);
+                const marker = new maplibregl.Marker({ color: '#e74c3c' })
+                  .setLngLat([lng, lat])
+                  .addTo(map);
+
+                const markerEl = marker.getElement();
+                if (markerEl) {
+                  markerEl.addEventListener('mouseenter', (e) => {
+                    e.stopPropagation();
+                    popup.setLngLat(marker.getLngLat()).addTo(map);
+                  });
+                  markerEl.addEventListener('mouseleave', (e) => {
+                    e.stopPropagation();
+                    if (popup.isOpen()) popup.remove();
+                  });
+
+                  markerEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.location.href = "{% url 'issues:issue_detail' issue.id %}";
+                  });
+                }
+              }
+            }
+          {% endif %}
+        {% endwith %}
+      {% endif %}
     {% endfor %}
 
-    // === Добавление новой метки (только для граждан) ===
     {% if user.is_authenticated and user.role == 'citizen' %}
       let tempMarker = null;
-
       map.on('click', function(e) {
+        const clickedOnMarker = e.originalEvent.target.closest('.maplibregl-marker');
+        if (clickedOnMarker) return;
+
         const lng = e.lngLat.lng.toFixed(6);
         const lat = e.lngLat.lat.toFixed(6);
 
         if (tempMarker) tempMarker.remove();
+
         tempMarker = new maplibregl.Marker({ color: '#3498db' })
           .setLngLat([lng, lat])
-          .setPopup(new maplibregl.Popup().setText("{% trans 'Кликните «Сообщить» ниже, чтобы отправить' %}"))
+          .setPopup(new maplibregl.Popup().setText("{% trans 'Нажмите «Сообщить» ниже, чтобы отправить' %}"))
           .addTo(map);
-        tempMarker.getPopup().addTo(map); // принудительно открываем попап
 
-        document.getElementById('id_lat').value = lat;
-        document.getElementById('id_lon').value = lng;
+        tempMarker.togglePopup();
+
+        const latInput = document.getElementById('id_lat');
+        const lonInput = document.getElementById('id_lon');
+        if (latInput) latInput.value = lat;
+        if (lonInput) lonInput.value = lng;
 
         const modal = document.getElementById('report-form-modal');
         const backdrop = document.getElementById('modal-backdrop');
@@ -123,53 +194,24 @@
   });
 
   map.on('error', (e) => {
-    console.error('[MAP ERROR]', e);
+    console.error('Map error:', e);
     document.getElementById('map').innerHTML = 
-      `<div class="alert alert-danger p-3">❌ Не удалось загрузить карту Jawg. Проверьте JAWG_TOKEN.</div>`;
+      `<div class="alert alert-danger p-3">❌ Ошибка карты: ${e.error?.message || 'неизвестная ошибка'}</div>`;
   });
 </script>
 
-<!-- Модальное окно для создания обращения -->
+<!-- Модальное окно для граждан -->
 {% if user.is_authenticated and user.role == 'citizen' %}
-<div id="modal-backdrop" style="
-  display: none;
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.4);
-  z-index: 999;
-"></div>
-
-<div id="report-form-modal" style="
-  display: none;
-  position: fixed;
-  top: 20%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  z-index: 1000;
-  width: 90%;
-  max-width: 500px;
-">
+<div id="modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:999;"></div>
+<div id="report-form-modal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:white; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:1000; width:90%; max-width:500px;">
   <h5>{% trans "Сообщить о проблеме" %}</h5>
   <form method="post" action="{% url 'issues:create_issue' %}">
     {% csrf_token %}
     <input type="hidden" id="id_lat" name="lat">
     <input type="hidden" id="id_lon" name="lon">
-
-    <div class="mb-3">
-      <label class="form-label">{% trans "Название" %}</label>
-      <input type="text" name="title" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">{% trans "Описание" %}</label>
-      <textarea name="description" class="form-control" rows="3" required></textarea>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">{% trans "Категория" %}</label>
+    <div class="mb-3"><label class="form-label">{% trans "Название" %}</label><input type="text" name="title" class="form-control" required></div>
+    <div class="mb-3"><label class="form-label">{% trans "Описание" %}</label><textarea name="description" class="form-control" rows="3" required></textarea></div>
+    <div class="mb-3"><label class="form-label">{% trans "Категория" %}</label>
       <select name="category" class="form-select" required>
         {% for value, label in categories %}
           <option value="{{ value }}">{{ label }}</option>
@@ -177,15 +219,11 @@
       </select>
     </div>
     <div class="d-flex justify-content-end">
-      <button type="button" class="btn btn-secondary me-2" onclick="
-        document.getElementById('report-form-modal').style.display='none';
-        document.getElementById('modal-backdrop').style.display='none';
-      ">
+      <button type="button" class="btn btn-secondary me-2"
+              onclick="document.getElementById('report-form-modal').style.display='none';document.getElementById('modal-backdrop').style.display='none';">
         {% trans "Отмена" %}
       </button>
-      <button type="submit" class="btn btn-success">
-        {% trans "Отправить" %}
-      </button>
+      <button type="submit" class="btn btn-success">{% trans "Отправить" %}</button>
     </div>
   </form>
 </div>

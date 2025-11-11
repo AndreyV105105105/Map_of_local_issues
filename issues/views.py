@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.gis.geos import Point
 from .models import Issue
 from .constants import ISSUE_CATEGORIES, ISSUE_CATEGORY_CHOICES
-from django.conf import settings 
+from django.conf import settings
 
 
 @login_required
@@ -107,3 +107,26 @@ def update_issue_status(request, issue_id):
     messages.success(request, f"Статус изменён на «{issue.get_status_display()}».")
 
     return redirect('issues:map')
+
+@login_required
+def delete_issue(request, issue_id):
+    if request.user.role != 'official':
+        messages.error(request, "Только должностные лица могут удалять обращения.")
+        return redirect('issues:map')
+
+    issue = get_object_or_404(Issue, id=issue_id)
+
+    if request.method == 'POST':
+        title = issue.title
+        issue.delete()
+        messages.success(request, f"Обращение «{title}» успешно удалено.")
+        return redirect('issues:map')
+
+    # Если GET (кто-то вручную ввёл URL) — не удаляем, а редиректим
+    messages.warning(request, "Метод не поддерживается. Используйте кнопку «Удалить».")
+    return redirect('issues:map')
+
+@login_required
+def issue_detail(request, pk):
+    issue = get_object_or_404(Issue, pk=pk)
+    return render(request, 'issues/issue_detail.html', {'issue': issue})

@@ -42,8 +42,8 @@ class CustomUser(AbstractUser):
         help_text=_("Optional. Used for legacy systems.")
     )
     ROLE_CHOICES = [
-        ('citizen', 'Citizen'),
-        ('official', 'Official'),
+        ('citizen', _('Гражданин')),
+        ('official', _('Официальное лицо')),
     ]
     role = models.CharField(
         max_length=10,

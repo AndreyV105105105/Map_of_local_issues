@@ -2,6 +2,7 @@ from django.contrib.gis.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from .constants import ISSUE_CATEGORY_CHOICES
+from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
 
@@ -22,9 +23,9 @@ class Issue(models.Model):
     STATUS_IN_PROGRESS = 'IN_PROGRESS'
     STATUS_RESOLVED = 'RESOLVED'
     STATUS_CHOICES = [
-        (STATUS_OPEN, 'Open'),
-        (STATUS_IN_PROGRESS, 'In Progress'),
-        (STATUS_RESOLVED, 'Resolved'),
+        (STATUS_OPEN, _('Открыто')),
+        (STATUS_IN_PROGRESS, _('В работе')),
+        (STATUS_RESOLVED, _('Решено')),
     ]
 
     title = models.CharField(max_length=255)

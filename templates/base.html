@@ -10,7 +10,7 @@
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="{% url 'home' %}">Map of Local Issues</a>
+      <a class="navbar-brand" href="{% url 'home' %}">Карта локальных проблем</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -18,17 +18,17 @@
         <ul class="navbar-nav ms-auto">
           {% if user.is_authenticated %}
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'users:profile' %}">{% trans "Profile" %}</a>
+            <a class="nav-link" href="{% url 'users:profile' %}">{% trans "Профиль" %}</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'users:logout' %}">{% trans "Logout" %}</a>
+            <a class="nav-link" href="{% url 'users:logout' %}">{% trans "Выйти" %}</a>
           </li>
           {% else %}
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'users:login' %}">{% trans "Login" %}</a>
+            <a class="nav-link" href="{% url 'users:login' %}">{% trans "Вход" %}</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'users:register' %}">{% trans "Register" %}</a>
+            <a class="nav-link" href="{% url 'users:register' %}">{% trans "Регистрация" %}</a>
           </li>
           {% endif %}
         </ul>
