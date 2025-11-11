@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.gis.geos import Point
 from .models import Issue
 from .constants import ISSUE_CATEGORIES, ISSUE_CATEGORY_CHOICES
+from django.conf import settings 
 
 
 @login_required
@@ -17,6 +18,7 @@ def map_view(request):
         'issues': issues,
         'categories': ISSUE_CATEGORIES,
         'user_role': request.user.role,
+        'JAWG_TOKEN': settings.JAWG_TOKEN,
     })
 
 

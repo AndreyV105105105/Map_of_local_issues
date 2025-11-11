@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h2>{% trans "Карта местных проблем (Ханты-Мансийск)" %}</h2>
+  <h2>{% trans "Карта локальных проблем (Ханты-Мансийск)" %}</h2>
 
   {% if user.is_authenticated and user.role == 'citizen' %}
     <div class="alert alert-info">
@@ -54,67 +54,79 @@
   </div>
 </div>
 
-<!-- Leaflet CSS/JS (без пробелов в URL!) -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- MapLibre GL (вместо Leaflet) -->
+<script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
 
 <script>
-  // Границы Ханты-Мансийска (уточнённые)
+  // Границы Ханты-Мансийска
   const bounds = [
-    [60.98, 68.95], // юго-запад
-    [61.07, 69.12]  // северо-восток
+    [68.95, 60.98], // [lng, lat] — важно: MapLibre использует [lng, lat], а не [lat, lng]!
+    [69.12, 61.07]
   ];
 
-  const map = L.map('map', {
-    maxBounds: bounds,
-    maxBoundsViscosity: 1.0,
-    zoomControl: true
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: `https://tile.jawg.io/jawg-light.json?access-token={{ JAWG_TOKEN }}`,
+    center: [69.017, 61.009],
+    zoom: 12,
+    maxBounds: bounds
   });
 
-  // Рабочий тайл-сервер для России (немецкое зеркало OSM)
-  L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=='
-  }).addTo(map);
+  map.addControl(new maplibregl.NavigationControl(), 'top-right');
+  map.addControl(new maplibregl.ScaleControl({ maxWidth: 100 }), 'bottom-left');
 
-  map.fitBounds(bounds);
+  map.on('load', () => {
+    // === Отображение существующих меток ===
+    {% for issue in issues %}
+      const popup_{{ issue.id }} = new maplibregl.Popup().setHTML(`
+        <b>{{ issue.title }}</b><br>
+        {{ issue.description|truncatewords:20 }}<br>
+        <small>
+          {% trans "Статус" %}: <strong>{{ issue.get_status_display }}</strong><br>
+          {% trans "Категория" %}: {{ issue.get_category_display }}
+        </small>
+      `);
 
-  // === Отображение существующих меток ===
-  {% for issue in issues %}
-    const marker_{{ issue.id }} = L.marker([{{ issue.location.y }}, {{ issue.location.x }}]).addTo(map);
-    marker_{{ issue.id }}.bindPopup(`
-      <b>{{ issue.title }}</b><br>
-      {{ issue.description|truncatewords:20 }}<br>
-      <small>
-        {% trans "Статус" %}: <strong>{{ issue.get_status_display }}</strong><br>
-        {% trans "Категория" %}: {{ issue.get_category_display }}
-      </small>
-    `);
-  {% endfor %}
+      new maplibregl.Marker({ color: '#e74c3c' })
+        .setLngLat([{{ issue.location.x }}, {{ issue.location.y }}])  // lng, lat
+        .setPopup(popup_{{ issue.id }})
+        .addTo(map);
+    {% endfor %}
 
-  // === Добавление новой метки (только для граждан) ===
-  {% if user.is_authenticated and user.role == 'citizen' %}
-    let tempMarker = null;
+    // === Добавление новой метки (только для граждан) ===
+    {% if user.is_authenticated and user.role == 'citizen' %}
+      let tempMarker = null;
 
-    map.on('click', function(e) {
-      const lat = e.latlng.lat.toFixed(6);
-      const lng = e.latlng.lng.toFixed(6);
+      map.on('click', function(e) {
+        const lng = e.lngLat.lng.toFixed(6);
+        const lat = e.lngLat.lat.toFixed(6);
 
-      if (tempMarker) map.removeLayer(tempMarker);
-      tempMarker = L.marker([lat, lng]).addTo(map);
-      tempMarker.bindPopup("{% trans 'Кликните «Сообщить» ниже, чтобы отправить' %}").openPopup();
+        if (tempMarker) tempMarker.remove();
+        tempMarker = new maplibregl.Marker({ color: '#3498db' })
+          .setLngLat([lng, lat])
+          .setPopup(new maplibregl.Popup().setText("{% trans 'Кликните «Сообщить» ниже, чтобы отправить' %}"))
+          .addTo(map);
+        tempMarker.getPopup().addTo(map); // принудительно открываем попап
 
-      document.getElementById('id_lat').value = lat;
-      document.getElementById('id_lon').value = lng;
+        document.getElementById('id_lat').value = lat;
+        document.getElementById('id_lon').value = lng;
 
-      const modal = document.getElementById('report-form-modal');
-      const backdrop = document.getElementById('modal-backdrop');
-      if (modal && backdrop) {
-        modal.style.display = 'block';
-        backdrop.style.display = 'block';
-      }
-    });
-  {% endif %}
+        const modal = document.getElementById('report-form-modal');
+        const backdrop = document.getElementById('modal-backdrop');
+        if (modal && backdrop) {
+          modal.style.display = 'block';
+          backdrop.style.display = 'block';
+        }
+      });
+    {% endif %}
+  });
+
+  map.on('error', (e) => {
+    console.error('[MAP ERROR]', e);
+    document.getElementById('map').innerHTML = 
+      `<div class="alert alert-danger p-3">❌ Не удалось загрузить карту Jawg. Проверьте JAWG_TOKEN.</div>`;
+  });
 </script>
 
 <!-- Модальное окно для создания обращения -->
