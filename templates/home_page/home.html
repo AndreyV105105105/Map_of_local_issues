@@ -1,19 +1,19 @@
-<!-- templates/home_page/home.html -->
 {% extends "base.html" %}
 
 {% block content %}
 <div class="container mt-5">
   <div class="row">
     <div class="col-12">
-      <h1>Welcome to Map of Local Issues</h1>
-      <p>This is your home page.</p>
+      <h1>Добро пожаловать на сайт "Карта локальных проблем"</h1>
+      <p>Это ваша домашняя страница.</p>
 
       {% if user.is_authenticated %}
-        <p>Hello, {{ user.email }}! You are logged in as {{ user.get_role_display }}.</p>
-        <a href="{% url 'users:profile' %}" class="btn btn-primary">View Profile</a>
-        <a href="{% url 'users:logout' %}" class="btn btn-secondary">Logout</a>
+        <p>Здравствуйте, {{ user.email }}! Вы зарегистрированы как {{ user.get_role_display|lower }}.</p>
+        <a href="{% url 'issues:map' %}" class="btn btn-success">Карта</a>
+        <a href="{% url 'users:profile' %}" class="btn btn-primary">Профиль</a>
+        <a href="{% url 'users:logout' %}" class="btn btn-secondary">Выйти</a>
       {% else %}
-        <p>Please <a href="{% url 'users:login' %}">login</a> or <a href="{% url 'users:register' %}">register</a> to get started.</p>
+        <p>Пожалуйста <a href="{% url 'users:login' %}">войдите</a> или <a href="{% url 'users:register' %}">зарегистрируйтесь</a>.</p>
       {% endif %}
     </div>
   </div>

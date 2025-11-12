@@ -18,8 +18,8 @@ class IssueAdmin(GISModelAdmin):
 
     # Spatial admin settings
     map_template = 'gis/admin/openlayers.html'
-    default_lat = 40.7128  # New York
-    default_lon = -74.0060
+    default_lat = 61.0066  # широта Ханты-Мансийска
+    default_lon = 69.0223  # долгота Ханты-Мансийска
     default_zoom = 12
 
 @admin.register(IssuePhoto)

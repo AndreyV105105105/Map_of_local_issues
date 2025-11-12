@@ -7,19 +7,19 @@
     <div class="col-md-6">
       <div class="card">
         <div class="card-header">
-          <h4 class="card-title">{% trans "Profile" %}</h4>
+          <h4 class="card-title">{% trans "Профиль" %}</h4>
         </div>
         <div class="card-body">
-          <p><strong>{% trans "Email" %}:</strong> {{ user.email }}</p>
-          <p><strong>{% trans "Role" %}:</strong> {{ user.get_role_display }}</p>
+          <p><strong>{% trans "Электронная почта" %}:</strong> {{ user.email }}</p>
+          <p><strong>{% trans "Роль" %}:</strong> {{ user.get_role_display }}</p>
           {% if user.phone_number %}
-          <p><strong>{% trans "Phone Number" %}:</strong> {{ user.phone_number }}</p>
+          <p><strong>{% trans "Номер телефона" %}:</strong> {{ user.phone_number }}</p>
           {% endif %}
           {% if user.department %}
-          <p><strong>{% trans "Department" %}:</strong> {{ user.department }}</p>
+          <p><strong>{% trans "Департамент" %}:</strong> {{ user.department }}</p>
           {% endif %}
           <div class="mt-3">
-            <a href="{% url 'users:logout' %}" class="btn btn-danger">{% trans "Logout" %}</a>
+            <a href="{% url 'users:logout' %}" class="btn btn-danger">{% trans "Выйти" %}</a>
           </div>
         </div>
       </div>

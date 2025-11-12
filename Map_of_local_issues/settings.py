@@ -174,6 +174,8 @@ if not DEBUG:
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'webmaster@localhost')
 
+JAWG_TOKEN = 'Mf45jHEMLFSP5bwtBPrNbnowlu9oqxlQgiyW1MOepiL5GEdqZXF43cOmIu50taLH'
+
 # Logging configuration
 LOGGING = {
     'version': 1,

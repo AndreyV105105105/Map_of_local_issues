@@ -1,7 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -20,10 +19,10 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, _("Registration successful! Welcome to the platform."))
+            messages.success(request, _("Регистрация прошла успешно! Добро пожаловать на платформу."))
             return redirect('home')
         else:
-            messages.error(request, _("Please correct the errors below."))
+            messages.error(request, _("Пожалуйста, исправьте ошибки ниже."))
     else:
         form = CustomUserCreationForm()
 
@@ -39,13 +38,14 @@ def login_view(request):
             user = authenticate(request, username=email, password=password)
             if user is not None:
                 login(request, user)
-                messages.success(request, _("You are now logged in."))
+                messages.success(request, _("Вы успешно вошли в систему."))
                 next_url = request.GET.get('next', 'home')
                 return redirect(next_url)
             else:
-                messages.error(request, _("Invalid email or password."))
+                messages.error(request, _("Неверный email или пароль."))
         else:
-            messages.error(request, _("Invalid email or password."))
+            # Форма не валидна → ошибки уже в form.errors, но для единообразия:
+            messages.error(request, _("Неверный email или пароль."))
     else:
         form = CustomAuthenticationForm()
 
@@ -54,5 +54,5 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    messages.success(request, _("You have been logged out."))
+    messages.success(request, _("Вы вышли из системы."))
     return redirect('home')

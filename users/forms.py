@@ -7,27 +7,27 @@ User = get_user_model()
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
-        label=_("Email"),
+        label=_("Электронная почта"),
         required=True,
         widget=forms.EmailInput(attrs={'class': 'form-control'})
     )
     password1 = forms.CharField(
-        label=_("Password"),
+        label=_("Пароль"),
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        help_text=_("Your password must contain at least 8 characters.")
+        help_text=_("Пароль должен содержать не менее 8 символов.")
     )
     password2 = forms.CharField(
-        label=_("Confirm Password"),
+        label=_("Подтверждение пароля"),
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
     role = forms.ChoiceField(
         choices=User.ROLE_CHOICES,
-        label=_("Role"),
+        label=_("Роль"),
         required=True,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     phone_number = forms.CharField(
-        label=_("Phone Number"),
+        label=_("Номер телефона"),
         required=False,
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
@@ -39,14 +39,14 @@ class CustomUserCreationForm(UserCreationForm):
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
-            raise forms.ValidationError(_("This email is already in use."))
+            raise forms.ValidationError(_("Эта электронная почта уже используется."))
         return email
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
-            raise forms.ValidationError(_("Passwords don't match"))
+            raise forms.ValidationError(_("Пароли не совпадают."))
         return password2
 
     def save(self, commit=True):
@@ -56,12 +56,21 @@ class CustomUserCreationForm(UserCreationForm):
             user.save()
         return user
 
+
 class CustomAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(
-        label=_("Email"),
+        label=_("Электронная почта"),
         widget=forms.EmailInput(attrs={'class': 'form-control', 'autofocus': True})
     )
     password = forms.CharField(
-        label=_("Password"),
+        label=_("Пароль"),
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
+
+    # Переводим стандартные ошибки AuthenticationForm
+    error_messages = {
+        'invalid_login': _(
+            "Пожалуйста, введите правильную электронную почту и пароль. Учтите, что оба поля чувствительны к регистру."
+        ),
+        'inactive': _("Эта учетная запись неактивна."),
+    }
