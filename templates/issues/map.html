@@ -28,7 +28,7 @@
           <!-- ✅ ИСПРАВЛЕНО: vote_rating -->
           <div class="d-flex align-items-center mb-2">
             <span class="badge bg-primary rounded-pill px-2 me-2">
-              {{ issue.vote_rating }} {% trans "голос(а/ов)" %}
+              {{ issue.vote_rating }} {% trans "рейтинг" %}
             </span>
 
             {% if user.is_authenticated and user.role == 'citizen' %}
@@ -284,7 +284,7 @@ function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
             if (el.classList.contains('h5')) {
                 el.textContent = data.rating;
             } else {
-                el.textContent = data.rating + ' {% trans "голос(а/ов)" %}';
+                el.textContent = data.rating + ' {% trans "рейтинг" %}';
             }
         });
 

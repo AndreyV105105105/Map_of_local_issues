@@ -23,7 +23,7 @@
           <div class="d-flex align-items-center justify-content-between mt-4 pt-3 border-top">
             <div>
               <span class="h5 mb-0">{{ issue.vote_rating }}</span>
-              <span class="text-muted ms-1">{% trans "голос(а/ов)" %}</span>
+              <span class="text-muted ms-1">{% trans "рейтинг" %}</span>
             </div>
 
             {% if user.is_authenticated and user.role == 'citizen' %}
@@ -210,7 +210,7 @@ function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
             if (el.classList.contains('h5')) {
                 el.textContent = data.rating;
             } else {
-                el.textContent = data.rating + ' {% trans "голос(а/ов)" %}';
+                el.textContent = data.rating + ' {% trans "голосов" %}';
             }
         });
 
