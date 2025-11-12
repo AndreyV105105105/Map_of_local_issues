@@ -1,4 +1,3 @@
-# users/models.py
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -56,9 +55,9 @@ class CustomUser(AbstractUser):
     profile_picture = models.ImageField(upload_to='user_profiles/', blank=True, null=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []  # не требуем username
+    REQUIRED_FIELDS = []
 
-    objects = CustomUserManager()  # ← подключаем кастомный менеджер
+    objects = CustomUserManager()
 
     def save(self, *args, **kwargs):
         if not self.username:
