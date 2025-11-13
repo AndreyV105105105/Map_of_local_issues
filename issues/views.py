@@ -2,11 +2,14 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Case, When, IntegerField, Sum, BooleanField, Value as V
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.translation import gettext as _
+from django.views.decorators.http import require_POST
 
 from .constants import ISSUE_CATEGORIES, ISSUE_CATEGORY_CHOICES
-from .models import Issue, IssuePhoto
+from .models import Issue, IssuePhoto, Vote
 
 
 @login_required
@@ -16,7 +19,27 @@ def map_view(request):
     Доступно всем авторизованным пользователям.
     """
     # Используем prefetch_related для оптимизации запросов к фотографиям
-    issues = Issue.objects.select_related('reporter').prefetch_related('photos').all()
+    # и аннотации для голосования
+    issues = Issue.objects.select_related('reporter').prefetch_related(
+        Prefetch('photos', queryset=IssuePhoto.objects.order_by('id'))
+    ).annotate(
+        user_vote=Case(
+            When(votes__user=request.user, then='votes__value'),
+            default=None,
+            output_field=IntegerField()
+        ),
+        user_has_upvoted=Case(
+            When(votes__user=request.user, votes__value=1, then=V(True)),
+            default=V(False),
+            output_field=BooleanField()
+        ),
+        user_has_downvoted=Case(
+            When(votes__user=request.user, votes__value=-1, then=V(True)),
+            default=V(False),
+            output_field=BooleanField()
+        ),
+        vote_rating=Sum('votes__value', default=0)
+    )
     return render(request, 'issues/map.html', {
         'issues': issues,
         'categories': ISSUE_CATEGORIES,
@@ -156,8 +179,68 @@ def delete_issue(request, issue_id):
 
 @login_required
 def issue_detail(request, pk):
-    # Получаем проблему с предзагрузкой связанных фотографий для оптимизации запросов
+    # Получаем проблему с предзагрузкой связанных фотографий и аннотациями для голосов
     issue = get_object_or_404(Issue.objects.prefetch_related(
         Prefetch('photos', queryset=IssuePhoto.objects.order_by('id'))
+    ).annotate(
+        user_vote=Case(
+            When(votes__user=request.user, then='votes__value'),
+            default=None,
+            output_field=IntegerField()
+        ),
+        user_has_upvoted=Case(
+            When(votes__user=request.user, votes__value=1, then=V(True)),
+            default=V(False),
+            output_field=BooleanField()
+        ),
+        user_has_downvoted=Case(
+            When(votes__user=request.user, votes__value=-1, then=V(True)),
+            default=V(False),
+            output_field=BooleanField()
+        ),
+        vote_rating=Sum('votes__value', default=0)
     ), pk=pk)
     return render(request, 'issues/issue_detail.html', {'issue': issue})
+
+
+@login_required
+@require_POST
+def vote_issue(request, issue_id):
+    # Проверка роли
+    if request.user.role != 'citizen':
+        return JsonResponse({
+            'success': False,
+            'error': _('Только граждане могут голосовать.')
+        }, status=403)
+
+    issue = get_object_or_404(Issue, id=issue_id)
+    vote_value = request.POST.get('vote')
+
+    # Обработка: '1' → +1, '-1' → -1, '0' → отмена
+    if vote_value == '0':
+        # Удаляем голос, если есть
+        deleted, _ = Vote.objects.filter(user=request.user, issue=issue).delete()
+        user_vote = None
+    elif vote_value in ['1', '-1']:
+        value = int(vote_value)
+        vote, created = Vote.objects.update_or_create(
+            user=request.user,
+            issue=issue,
+            defaults={'value': value}
+        )
+        user_vote = vote.value
+    else:
+        return JsonResponse({
+            'success': False,
+            'error': _('Голос должен быть +1, -1 или 0 (отмена).')
+        }, status=400)
+
+    # Вычисляем рейтинг напрямую через агрегацию — быстро и надёжно
+    rating = issue.votes.aggregate(rating_sum=Sum('value'))['rating_sum'] or 0
+
+    return JsonResponse({
+        'success': True,
+        'rating': rating,
+        'user_vote': user_vote,  # null, 1 или -1
+        'issue_id': issue_id
+    })

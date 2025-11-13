@@ -19,8 +19,31 @@
             <p class="mb-0" style="white-space: pre-wrap;">{{ issue.description|default:"—" }}</p>
           </div>
 
+          <!-- Голосование -->
+          <div class="d-flex align-items-center justify-content-between mt-4 pt-3 border-top">
+            <div>
+              <span class="h5 mb-0" data-issue-id="{{ issue.id }}" id="rating-value">{{ issue.vote_rating }}</span>
+              <span class="text-muted ms-1">{% trans "рейтинг" %}</span>
+            </div>
+
+            {% if user.is_authenticated and user.role == 'citizen' %}
+              <div class="btn-group" role="group">
+                <button type="button"
+                        class="btn btn-sm {% if issue.user_has_upvoted %}btn-success{% else %}btn-outline-success{% endif %}"
+                        onclick="toggleVote({{ issue.id }}, 1, {{ issue.user_has_upvoted|yesno:'true,false' }}, {{ issue.user_has_downvoted|yesno:'true,false' }})">
+                  👍
+                </button>
+                <button type="button"
+                        class="btn btn-sm {% if issue.user_has_downvoted %}btn-danger{% else %}btn-outline-danger{% endif %}"
+                        onclick="toggleVote({{ issue.id }}, -1, {{ issue.user_has_upvoted|yesno:'true,false' }}, {{ issue.user_has_downvoted|yesno:'true,false' }})">
+                  👎
+                </button>
+              </div>
+            {% endif %}
+          </div>
+
           {% if issue.photos.all %}
-          <h5 class="mb-3">{% trans "Фотографии проблемы" %}</h5>
+          <h5 class="mb-3 mt-4">{% trans "Фотографии проблемы" %}</h5>
           <div class="row g-2 mb-4">
             {% for photo in issue.photos.all %}
             <div class="col-6 col-md-4 col-lg-3">
@@ -35,7 +58,7 @@
           </div>
           {% endif %}
 
-          <h5 class="mb-3">{% trans "Детали" %}</h5>
+          <h5 class="mb-3 mt-4">{% trans "Детали" %}</h5>
           <dl class="row mb-0">
             <dt class="col-sm-4 text-muted small">{% trans "Автор" %}</dt>
             <dd class="col-sm-8">{{ issue.reporter.get_full_name|default:issue.reporter.email }}</dd>
@@ -46,6 +69,21 @@
             <dt class="col-sm-4 text-muted small">{% trans "Координаты" %}</dt>
             <dd class="col-sm-8">
               <code>{{ issue.location.x|floatformat:6 }}, {{ issue.location.y|floatformat:6 }}</code>
+            </dd>
+            <dt class="col-sm-4 text-muted small">{% trans "Рейтинг" %}</dt>
+            <dd class="col-sm-8">
+              <span class="badge bg-primary">{{ issue.vote_rating }}</span>
+              {% if user.is_authenticated and user.role == 'citizen' %}
+                <small class="text-muted ms-1">
+                  {% if issue.user_has_upvoted %}
+                    ({% trans "Вы проголосовали 👍" %})
+                  {% elif issue.user_has_downvoted %}
+                    ({% trans "Вы проголосовали 👎" %})
+                  {% else %}
+                    ({% trans "Вы не голосовали" %})
+                  {% endif %}
+                </small>
+              {% endif %}
             </dd>
             <dt class="col-sm-4 text-muted small">{% trans "Фотографии" %}</dt>
             <dd class="col-sm-8">{{ issue.photos.count }}</dd>
@@ -176,4 +214,65 @@
     }
   });
 </script>
+
+<!-- CSRF для JS -->
+{% csrf_token %}
+
+<!-- JS: голосование с отменой -->
+<script>
+function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
+    let voteValue = null;
+    if (intendedValue === 1 && isUpvoted) {
+        voteValue = '0';  // отмена
+    } else if (intendedValue === -1 && isDownvoted) {
+        voteValue = '0';  // отмена
+    } else {
+        voteValue = intendedValue.toString();
+    }
+
+    const formData = new FormData();
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    formData.append('csrfmiddlewaretoken', csrf);
+    formData.append('vote', voteValue);
+
+    const buttons = document.querySelectorAll(`button[onclick*="toggleVote(${issueId},"]`);
+    buttons.forEach(b => { b.disabled = true; b.innerHTML = '⋯'; });
+
+    fetch(`/issues/${issueId}/vote/`, {
+        method: 'POST',
+        body: formData,
+        redirect: 'follow',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json().then(data => r.ok ? data : Promise.reject(data)))
+    .then(data => {
+        // Обновляем рейтинг
+        const ratingElement = document.getElementById('rating-value');
+        if (ratingElement) {
+            ratingElement.textContent = data.rating;
+        }
+
+        // Обновляем стиль кнопок
+        const up = document.querySelector(`button[onclick*="toggleVote(${issueId}, 1"]`);
+        const down = document.querySelector(`button[onclick*="toggleVote(${issueId}, -1"]`);
+        if (up && down) {
+            up.classList.toggle('btn-success', data.user_vote === 1);
+            up.classList.toggle('btn-outline-success', data.user_vote !== 1);
+            down.classList.toggle('btn-danger', data.user_vote === -1);
+            down.classList.toggle('btn-outline-danger', data.user_vote !== -1);
+        }
+    })
+    .catch(err => {
+        console.error('Vote error:', err);
+        alert(err.error || '{% trans "Ошибка голосования." %}');
+    })
+    .finally(() => {
+        const up = document.querySelector(`button[onclick*="toggleVote(${issueId}, 1"]`);
+        const down = document.querySelector(`button[onclick*="toggleVote(${issueId}, -1"]`);
+        if (up) up.innerHTML = '👍'; if (down) down.innerHTML = '👎';
+        if (up) up.disabled = false; if (down) down.disabled = false;
+    });
+}
+</script>
+
 {% endblock %}

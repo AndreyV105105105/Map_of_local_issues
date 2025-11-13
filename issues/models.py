@@ -4,6 +4,7 @@ from django.utils import timezone
 from .constants import ISSUE_CATEGORY_CHOICES
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import FileExtensionValidator
+from django.db.models import Sum
 
 User = get_user_model()
 
@@ -77,6 +78,18 @@ class Issue(models.Model):
             self.resolved_at = timezone.now()
         super().save(*args, **kwargs)
 
+    @property
+    def rating(self):
+        """
+        Возвращает текущий рейтинг (сумму голосов).
+        Если объект аннотирован через _rating — использует его (быстро).
+        Иначе — делает запрос к БД (медленно, fallback).
+        """
+        if hasattr(self, '_rating'):
+            return self._rating
+        # fallback (например, при вызове issue.rating вне аннотированного QuerySet)
+        return self.votes.aggregate(models.Sum('value'))['value__sum'] or 0
+
 class IssuePhoto(models.Model):
     issue = models.ForeignKey(
         Issue,
@@ -92,3 +105,45 @@ class IssuePhoto(models.Model):
 
     def __str__(self):
         return f"Photo for {self.issue.title}"
+
+
+
+class Vote(models.Model):
+    VOTE_UP = 1
+    VOTE_DOWN = -1
+    VOTE_CHOICES = (
+        (VOTE_UP, _('За')),
+        (VOTE_DOWN, _('Против')),
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name=_('Пользователь')
+    )
+    issue = models.ForeignKey(
+        Issue,
+        on_delete=models.CASCADE,
+        related_name='votes',
+        verbose_name=_('Обращение')
+    )
+    value = models.SmallIntegerField(
+        choices=VOTE_CHOICES,
+        verbose_name=_('Голос')
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('Голос')
+        verbose_name_plural = _('Голоса')
+        unique_together = ('user', 'issue')
+
+    def __str__(self):
+        user_repr = self.user.email if self.user and self.user.email else f"user_{self.user_id or '?'}"
+        issue_repr = self.issue.title if self.issue and self.issue.title else f"issue_{self.issue_id or '?'}"
+        value_repr = self.get_value_display()
+        return f"{user_repr} — {value_repr} — {issue_repr}"
+
+
+
+
