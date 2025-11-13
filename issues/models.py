@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from .constants import ISSUE_CATEGORY_CHOICES
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import FileExtensionValidator
 
 User = get_user_model()
 
@@ -82,7 +83,10 @@ class IssuePhoto(models.Model):
         on_delete=models.CASCADE,
         related_name='photos'
     )
-    image = models.ImageField(upload_to='issue_photos/')
+    image = models.ImageField(
+        upload_to='issue_photos/',
+        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png'])]
+    )
     caption = models.CharField(max_length=255, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
