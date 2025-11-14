@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
-from django.db.models import Prefetch, Case, When, IntegerField, Sum, BooleanField, Value as V
+from django.db.models import Prefetch, Case, When, IntegerField, Sum, BooleanField, Value as V, OuterRef, Subquery
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.translation import gettext as _
@@ -18,28 +18,29 @@ def map_view(request):
     Отображает карту со всеми обращениями.
     Доступно всем авторизованным пользователям.
     """
-    # Используем prefetch_related для оптимизации запросов к фотографиям
-    # и аннотации для голосования
+    # Подзапрос: голос текущего пользователя по каждому Issue
+    user_vote_subq = Vote.objects.filter(
+        issue=OuterRef('pk'),
+        user=request.user
+    ).values('value')[:1]
+
     issues = Issue.objects.select_related('reporter').prefetch_related(
         Prefetch('photos', queryset=IssuePhoto.objects.order_by('id'))
     ).annotate(
-        user_vote=Case(
-            When(votes__user=request.user, then='votes__value'),
-            default=None,
-            output_field=IntegerField()
-        ),
+        user_vote=Subquery(user_vote_subq, output_field=IntegerField()),
         user_has_upvoted=Case(
-            When(votes__user=request.user, votes__value=1, then=V(True)),
+            When(user_vote=1, then=V(True)),
             default=V(False),
             output_field=BooleanField()
         ),
         user_has_downvoted=Case(
-            When(votes__user=request.user, votes__value=-1, then=V(True)),
+            When(user_vote=-1, then=V(True)),
             default=V(False),
             output_field=BooleanField()
         ),
-        vote_rating=Sum('votes__value', default=0)
+        vote_rating=Sum('votes__value', default=0)  # ← этот безопасен (GROUP BY id)
     )
+
     return render(request, 'issues/map.html', {
         'issues': issues,
         'categories': ISSUE_CATEGORIES,
@@ -178,29 +179,32 @@ def delete_issue(request, issue_id):
 
 @login_required
 def issue_detail(request, pk):
-    # Получаем проблему с предзагрузкой связанных фотографий и аннотациями для голосов
-    issue = get_object_or_404(Issue.objects.prefetch_related(
-        Prefetch('photos', queryset=IssuePhoto.objects.order_by('id'))
-    ).annotate(
-        user_vote=Case(
-            When(votes__user=request.user, then='votes__value'),
-            default=None,
-            output_field=IntegerField()
-        ),
-        user_has_upvoted=Case(
-            When(votes__user=request.user, votes__value=1, then=V(True)),
-            default=V(False),
-            output_field=BooleanField()
-        ),
-        user_has_downvoted=Case(
-            When(votes__user=request.user, votes__value=-1, then=V(True)),
-            default=V(False),
-            output_field=BooleanField()
-        ),
-        vote_rating=Sum('votes__value', default=0)
-    ), pk=pk)
-    return render(request, 'issues/issue_detail.html', {'issue': issue})
+    # Подзапросы — работают без дублирования строк
+    user_vote_subq = Vote.objects.filter(
+        issue=OuterRef('pk'),
+        user=request.user
+    ).values('value')[:1]
 
+    issue = get_object_or_404(
+        Issue.objects.prefetch_related(
+            Prefetch('photos', queryset=IssuePhoto.objects.order_by('id'))
+        ).annotate(
+            user_vote=Subquery(user_vote_subq, output_field=IntegerField()),
+            user_has_upvoted=Case(
+                When(user_vote=1, then=V(True)),
+                default=V(False),
+                output_field=BooleanField()
+            ),
+            user_has_downvoted=Case(
+                When(user_vote=-1, then=V(True)),
+                default=V(False),
+                output_field=BooleanField()
+            ),
+            vote_rating=Sum('votes__value', default=0)
+        ),
+        pk=pk
+    )
+    return render(request, 'issues/issue_detail.html', {'issue': issue})
 
 @login_required
 @require_POST
