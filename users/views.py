@@ -19,10 +19,10 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, _("Регистрация прошла успешно! Добро пожаловать на платформу."))
+            messages.success(request, _("Регистрация прошла успешно! Добро пожаловать на платформу."), extra_tags='users')
             return redirect('home')
         else:
-            messages.error(request, _("Пожалуйста, исправьте ошибки ниже."))
+            messages.error(request, _("Пожалуйста, исправьте ошибки ниже."), extra_tags='users')
     else:
         form = CustomUserCreationForm()
 
@@ -30,6 +30,11 @@ def register_view(request):
 
 
 def login_view(request):
+    storage = messages.get_messages(request)
+    for message in storage:
+        pass
+    request.session.pop('messages', None)
+
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -38,14 +43,13 @@ def login_view(request):
             user = authenticate(request, username=email, password=password)
             if user is not None:
                 login(request, user)
-                messages.success(request, _("Вы успешно вошли в систему."))
+                messages.success(request, _("Вы успешно вошли в систему."), extra_tags='users')
                 next_url = request.GET.get('next', 'home')
                 return redirect(next_url)
             else:
-                messages.error(request, _("Неверный email или пароль."))
+                messages.error(request, _("Неверный email или пароль."), extra_tags='users')
         else:
-            # Форма не валидна → ошибки уже в form.errors, но для единообразия:
-            messages.error(request, _("Неверный email или пароль."))
+            messages.error(request, _("Неверный email или пароль."), extra_tags='users')
     else:
         form = CustomAuthenticationForm()
 
@@ -54,5 +58,5 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    messages.success(request, _("Вы вышли из системы."))
+    messages.success(request, _("Вы вышли из системы."), extra_tags='users')
     return redirect('home')

@@ -1,19 +1,28 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
 <div class="container mt-5">
   <div class="row">
     <div class="col-12">
-      <h1>Добро пожаловать на сайт "Карта локальных проблем"</h1>
-      <p>Это ваша домашняя страница.</p>
+      <h1>{% trans "Добро пожаловать на сайт «Карта локальных проблем»" %}</h1>
+      <p>{% trans "Это ваша домашняя страница." %}</p>
 
       {% if user.is_authenticated %}
-        <p>Здравствуйте, {{ user.email }}! Вы зарегистрированы как {{ user.get_role_display|lower }}.</p>
-        <a href="{% url 'issues:map' %}" class="btn btn-success">Карта</a>
-        <a href="{% url 'users:profile' %}" class="btn btn-primary">Профиль</a>
-        <a href="{% url 'users:logout' %}" class="btn btn-secondary">Выйти</a>
+        <p>
+          {% trans "Здравствуйте," %} <strong>{{ user.get_full_name }}</strong>!
+          {% trans "Вы зарегистрированы как" %} {{ user.get_role_display|lower }}.
+        </p>
+        <a href="{% url 'issues:map' %}" class="btn btn-success">{% trans "Карта" %}</a>
+        <a href="{% url 'users:profile' %}" class="btn btn-primary">{% trans "Профиль" %}</a>
+        <a href="{% url 'users:logout' %}" class="btn btn-secondary">{% trans "Выйти" %}</a>
       {% else %}
-        <p>Пожалуйста <a href="{% url 'users:login' %}">войдите</a> или <a href="{% url 'users:register' %}">зарегистрируйтесь</a>.</p>
+        <p>
+          {% trans "Пожалуйста," %}
+          <a href="{% url 'users:login' %}">{% trans "войдите" %}</a>
+          {% trans "или" %}
+          <a href="{% url 'users:register' %}">{% trans "зарегистрируйтесь" %}</a>.
+        </p>
       {% endif %}
     </div>
   </div>

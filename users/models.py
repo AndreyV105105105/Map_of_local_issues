@@ -1,4 +1,3 @@
-# users/models.py
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -18,14 +17,13 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
-        extra_fields.setdefault("role", "official")  # или 'citizen', по желанию
+        extra_fields.setdefault("role", "official")
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError(_("Superuser must have is_staff=True."))
         if extra_fields.get("is_superuser") is not True:
             raise ValueError(_("Superuser must have is_superuser=True."))
 
-        # Устанавливаем username = email (или оставляем None, но лучше задать)
         if "username" not in extra_fields:
             extra_fields["username"] = email
 
@@ -55,15 +53,31 @@ class CustomUser(AbstractUser):
     department = models.CharField(max_length=100, blank=True, null=True)
     profile_picture = models.ImageField(upload_to='user_profiles/', blank=True, null=True)
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []  # не требуем username
+    # Добавлено отчество
+    patronymic = models.CharField(
+        _("Отчество"),
+        max_length=150,
+        blank=True,
+        help_text=_("Необязательно")
+    )
 
-    objects = CustomUserManager()  # ← подключаем кастомный менеджер
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []  # username не требуется
+
+    objects = CustomUserManager()
 
     def save(self, *args, **kwargs):
         if not self.username:
             self.username = self.email
         super().save(*args, **kwargs)
 
+    def get_full_name(self):
+        """Возвращает ФИО (с отчеством, если указано)"""
+        parts = [self.last_name, self.first_name]
+        if self.patronymic:
+            parts.append(self.patronymic)
+        full = " ".join(filter(None, parts)).strip()
+        return full or self.email
+
     def __str__(self):
-        return self.email
+        return self.get_full_name()

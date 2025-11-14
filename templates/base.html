@@ -1,10 +1,10 @@
 {% load i18n %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Map of Local Issues</title>
+  <title>{% block title %}Карта локальных проблем{% endblock %}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -17,24 +17,50 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           {% if user.is_authenticated %}
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'users:profile' %}">{% trans "Профиль" %}</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'users:logout' %}">{% trans "Выйти" %}</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'issues:map' %}">{% trans "Карта" %}</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'users:profile' %}">{% trans "Профиль" %}</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'users:logout' %}">{% trans "Выйти" %}</a>
+            </li>
           {% else %}
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'users:login' %}">{% trans "Вход" %}</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'users:register' %}">{% trans "Регистрация" %}</a>
-          </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'users:login' %}">{% trans "Вход" %}</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'users:register' %}">{% trans "Регистрация" %}</a>
+            </li>
           {% endif %}
         </ul>
       </div>
     </div>
   </nav>
+
+  <!-- ✅ Умные сообщения — через current_namespace из context processor -->
+  {% if messages %}
+    {% for message in messages %}
+      {% comment %} Показываем, если: нет тегов, есть 'global', или текущее приложение в тегах {% endcomment %}
+      {% if message.tags == '' or 'global' in message.tags or current_namespace in message.tags %}
+        <div class="container mt-3">
+          {% if message.level == 40 or 'error' in message.tags %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          {% elif message.level == 30 or 'warning' in message.tags %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          {% elif message.level == 25 or 'success' in message.tags %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+          {% else %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+          {% endif %}
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% trans 'Закрыть' %}"></button>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
 
   <div class="container mt-4">
     {% block content %}{% endblock %}

@@ -44,7 +44,6 @@ def map_view(request):
         'issues': issues,
         'categories': ISSUE_CATEGORIES,
         'user_role': request.user.role,
-        'JAWG_TOKEN': settings.JAWG_TOKEN,
     })
 
 
@@ -55,7 +54,7 @@ def create_issue(request):
     Доступно только гражданам (role == 'citizen').
     """
     if request.user.role != 'citizen':
-        messages.error(request, "Только граждане могут сообщать о проблемах.")
+        messages.error(request, "Только граждане могут сообщать о проблемах.", extra_tags='issues')
         return redirect('issues:map')
 
     if request.method == 'POST':
@@ -68,11 +67,11 @@ def create_issue(request):
 
         # Валидация
         if not all([title, description, category, lat, lon]):
-            messages.error(request, "Все поля обязательны для заполнения.")
+            messages.error(request, "Все поля обязательны для заполнения.", extra_tags='issues')
             return redirect('issues:map')
 
         if category not in dict(ISSUE_CATEGORY_CHOICES):
-            messages.error(request, "Выбрана недопустимая категория.")
+            messages.error(request, "Выбрана недопустимая категория.", extra_tags='issues')
             return redirect('issues:map')
 
         try:
@@ -83,7 +82,7 @@ def create_issue(request):
             if not (-180 <= lon_float <= 180):
                 raise ValueError("Некорректная долгота")
         except (ValueError, TypeError):
-            messages.error(request, "Некорректные координаты.")
+            messages.error(request, "Некорректные координаты.", extra_tags='issues')
             return redirect('issues:map')
 
         # Сохраняем обращение
@@ -100,23 +99,23 @@ def create_issue(request):
             photos = request.FILES.getlist('images')  # Имя поля в форме — 'images'
             max_photos = 5  # Ограничение
             if len(photos) > max_photos:
-                messages.warning(request, f"Максимум {max_photos} фото. Лишние игнорируются.")
+                messages.warning(request, f"Максимум {max_photos} фото. Лишние игнорируются.", extra_tags='issues')
                 photos = photos[:max_photos]
 
             for photo in photos:
                 # Валидация файла (размер, формат — формат уже в модели, но размер здесь)
                 if photo.size > 5 * 1024 * 1024:  # >5MB
-                    messages.warning(request, f"Файл {photo.name} слишком большой. Игнорируется.")
+                    messages.warning(request, f"Файл {photo.name} слишком большой. Игнорируется., extra_tags='issues'")
                     continue
                 if not photo.content_type.startswith('image/'):
-                    messages.warning(request, f"Файл {photo.name} не изображение. Игнорируется.")
+                    messages.warning(request, f"Файл {photo.name} не изображение. Игнорируется.", extra_tags='issues')
                     continue
 
                 IssuePhoto.objects.create(issue=issue, image=photo)
 
-            messages.success(request, "Ваше обращение успешно зарегистрировано!")
+            messages.success(request, "Ваше обращение успешно зарегистрировано!", extra_tags='issues')
         except Exception as e:
-            messages.error(request, "Ошибка при сохранении обращения. Попробуйте позже.")
+            messages.error(request, "Ошибка при сохранении обращения. Попробуйте позже.", extra_tags='issues')
             # В продакшене логируйте ошибку: logger.exception(e)
 
         return redirect('issues:map')
@@ -134,7 +133,7 @@ def update_issue_status(request, issue_id):
     Доступно только официальным лицам (role == 'official').
     """
     if request.user.role != 'official':
-        messages.error(request, "Только официальные лица могут обрабатывать обращения.")
+        messages.error(request, "Только официальные лица могут обрабатывать обращения.", extra_tags='issues')
         return redirect('issues:map')
 
     issue = get_object_or_404(Issue, id=issue_id)
@@ -146,12 +145,12 @@ def update_issue_status(request, issue_id):
     valid_statuses = dict(Issue.STATUS_CHOICES).keys()
 
     if new_status not in valid_statuses:
-        messages.error(request, "Недопустимый статус.")
+        messages.error(request, "Недопустимый статус.", extra_tags='issues')
         return redirect('issues:map')
 
     issue.status = new_status
     issue.save(update_fields=['status', 'updated_at'])
-    messages.success(request, f"Статус изменён на «{issue.get_status_display()}».")
+    messages.success(request, f"Статус изменён на «{issue.get_status_display()}».", extra_tags='issues')
 
     return redirect('issues:map')
 
@@ -159,7 +158,7 @@ def update_issue_status(request, issue_id):
 @login_required
 def delete_issue(request, issue_id):
     if request.user.role != 'official':
-        messages.error(request, "Только должностные лица могут удалять обращения.")
+        messages.error(request, "Только должностные лица могут удалять обращения.", extra_tags='issues')
         return redirect('issues:map')
 
     issue = get_object_or_404(Issue, id=issue_id)
@@ -169,11 +168,11 @@ def delete_issue(request, issue_id):
         title = issue.title
         # Удаляем связанные фотографии (они удалятся автоматически при каскадном удалении)
         issue.delete()
-        messages.success(request, f"Обращение «{title}» успешно удалено.")
+        messages.success(request, f"Обращение «{title}» успешно удалено.", extra_tags='issues')
         return redirect('issues:map')
 
     # Если GET (кто-то вручную ввёл URL) — не удаляем, а редиректим
-    messages.warning(request, "Метод не поддерживается. Используйте кнопку «Удалить».")
+    messages.warning(request, "Метод не поддерживается. Используйте кнопку «Удалить».", extra_tags='issues')
     return redirect('issues:map')
 
 

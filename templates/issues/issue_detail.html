@@ -57,11 +57,17 @@
             {% endfor %}
           </div>
           {% endif %}
-
           <h5 class="mb-3 mt-4">{% trans "Детали" %}</h5>
           <dl class="row mb-0">
             <dt class="col-sm-4 text-muted small">{% trans "Автор" %}</dt>
-            <dd class="col-sm-8">{{ issue.reporter.get_full_name|default:issue.reporter.email }}</dd>
+            <dd class="col-sm-8">
+              {% if user.is_authenticated and user.role == 'official' %}
+                {{ issue.reporter.get_full_name }} 
+                {% if issue.reporter.email %}({{ issue.reporter.email }}){% endif %}
+              {% else %}
+                {{ issue.reporter.get_full_name }}
+              {% endif %}
+            </dd>
             <dt class="col-sm-4 text-muted small">{% trans "Статус" %}</dt>
             <dd class="col-sm-8">{{ issue.get_status_display }}</dd>
             <dt class="col-sm-4 text-muted small">{% trans "Категория" %}</dt>

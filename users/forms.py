@@ -2,8 +2,8 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
-
 User = get_user_model()
+
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
@@ -11,6 +11,27 @@ class CustomUserCreationForm(UserCreationForm):
         required=True,
         widget=forms.EmailInput(attrs={'class': 'form-control'})
     )
+    # Добавлены ФИО
+    last_name = forms.CharField(
+        label=_("Фамилия"),
+        max_length=150,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    first_name = forms.CharField(
+        label=_("Имя"),
+        max_length=150,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    patronymic = forms.CharField(
+        label=_("Отчество"),
+        max_length=150,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        help_text=_("Если есть")
+    )
+
     password1 = forms.CharField(
         label=_("Пароль"),
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
@@ -34,7 +55,10 @@ class CustomUserCreationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('email', 'role', 'phone_number', 'password1', 'password2')
+        fields = (
+            'email', 'last_name', 'first_name', 'patronymic',
+            'role', 'phone_number', 'password1', 'password2'
+        )
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -52,6 +76,9 @@ class CustomUserCreationForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]
+        user.first_name = self.cleaned_data["first_name"]
+        user.last_name = self.cleaned_data["last_name"]
+        user.patronymic = self.cleaned_data.get("patronymic", "")
         if commit:
             user.save()
         return user
@@ -67,7 +94,6 @@ class CustomAuthenticationForm(AuthenticationForm):
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
 
-    # Переводим стандартные ошибки AuthenticationForm
     error_messages = {
         'invalid_login': _(
             "Пожалуйста, введите правильную электронную почту и пароль. Учтите, что оба поля чувствительны к регистру."
