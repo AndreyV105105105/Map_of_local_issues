@@ -25,7 +25,7 @@
             </a>
           </h6>
 
-          <!-- ✅ ИСПРАВЛЕНО: vote_rating -->
+          <!-- Рейтинг и голосование -->
           <div class="d-flex align-items-center mb-2">
             <span class="badge bg-primary rounded-pill px-2 me-2">
               {{ issue.vote_rating }} {% trans "рейтинг" %}
@@ -56,6 +56,21 @@
             {% trans "Автор" %}: {{ issue.reporter.email }} |
             {{ issue.created_at|date:"d.m.Y H:i" }}
           </p>
+
+          {% if issue.photos.all %}
+            <div class="mt-2">
+              <div class="d-flex flex-wrap gap-1">
+                {% for photo in issue.photos.all|slice:":3" %}
+                  <a href="{{ photo.image.url }}" target="_blank" title="{% trans "Посмотреть фото" %}">
+                    <img src="{{ photo.image.url }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                  </a>
+                {% endfor %}
+                {% if issue.photos.count > 3 %}
+                  <span class="badge bg-secondary align-self-center">+{{ issue.photos.count|add:"-3" }}</span>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
 
           {% if user.is_authenticated and user.role == 'official' %}
             <div class="mt-2">
@@ -148,8 +163,10 @@
                   <small>
                     Статус: <strong>{{ issue.get_status_display }}</strong><br>
                     Категория: {{ issue.get_category_display }}<br>
-                    <!-- ✅ ИСПРАВЛЕНО: vote_rating -->
                     Рейтинг: <strong>{{ issue.vote_rating }}</strong>
+                    {% if issue.photos.all %}
+                      <br>📸 {{ issue.photos.count }} {% trans "фото" %}
+                    {% endif %}
                   </small>
                 `);
 
@@ -215,17 +232,17 @@
 
   map.on('error', (e) => {
     console.error('Map error:', e);
-    document.getElementById('map').innerHTML = 
+    document.getElementById('map').innerHTML =
       `<div class="alert alert-danger p-3">❌ Ошибка карты: ${e.error?.message || 'неизвестная ошибка'}</div>`;
   });
 </script>
 
-<!-- Модальное окно -->
+<!-- Модальное окно для граждан -->
 {% if user.is_authenticated and user.role == 'citizen' %}
 <div id="modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:999;"></div>
 <div id="report-form-modal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:white; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:1000; width:90%; max-width:500px;">
   <h5>{% trans "Сообщить о проблеме" %}</h5>
-  <form method="post" action="{% url 'issues:create_issue' %}">
+  <form method="post" action="{% url 'issues:create_issue' %}" enctype="multipart/form-data">
     {% csrf_token %}
     <input type="hidden" id="id_lat" name="lat">
     <input type="hidden" id="id_lon" name="lon">
@@ -238,20 +255,80 @@
         {% endfor %}
       </select>
     </div>
+    <!-- Поле для загрузки фотографий -->
+    <div class="mb-3">
+      <label for="modal-images" class="form-label">{% trans "Фотографии" %} (до 5, JPG/PNG, макс. 5MB)</label>
+      <input type="file" class="form-control" id="modal-images" name="images" multiple accept="image/jpeg, image/png">
+      <div id="modal-preview" class="mt-2 d-flex flex-wrap gap-1"></div>
+      <small class="form-text text-muted">{% trans "Можно выбрать несколько файлов" %}</small>
+    </div>
     <div class="d-flex justify-content-end">
       <button type="button" class="btn btn-secondary me-2"
-              onclick="document.getElementById('report-form-modal').style.display='none';document.getElementById('modal-backdrop').style.display='none';">
+              onclick="document.getElementById('report-form-modal').style.display='none';document.getElementById('modal-backdrop').style.display='none';if (typeof tempMarker !== 'undefined' && tempMarker !== null) { tempMarker.remove(); tempMarker = null; }">
         {% trans "Отмена" %}
       </button>
       <button type="submit" class="btn btn-success">{% trans "Отправить" %}</button>
     </div>
   </form>
 </div>
+
+<script>
+  // Скрипт для предпросмотра изображений в модальном окне
+  document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('modal-images');
+    if (imageInput) {
+      imageInput.addEventListener('change', function() {
+        const preview = document.getElementById('modal-preview');
+        preview.innerHTML = '';  // Очистка
+
+        if (this.files.length > 5) {
+          alert('{% trans "Максимум 5 фотографий. Будут загружены только первые 5." %}');
+        }
+
+        // Показываем максимум 5 изображений
+        const filesToShow = Array.from(this.files).slice(0, 5);
+
+        filesToShow.forEach(file => {
+          if (file.size > 5 * 1024 * 1024) {
+            const warning = document.createElement('div');
+            warning.className = 'text-danger small mt-1';
+            warning.textContent = `⚠️ ${file.name} {% trans "слишком большой (макс. 5MB)" %}`;
+            preview.appendChild(warning);
+            return;
+          }
+
+          if (!file.type.match('image.*')) {
+            const warning = document.createElement('div');
+            warning.className = 'text-danger small mt-1';
+            warning.textContent = `⚠️ ${file.name} {% trans "не является изображением" %}`;
+            preview.appendChild(warning);
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.width = '60px';
+            img.style.height = '60px';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '4px';
+            img.style.border = '1px solid #ddd';
+            img.title = file.name;
+            preview.appendChild(img);
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+    }
+  });
+</script>
 {% endif %}
 
-<!-- CSRF -->
+<!-- CSRF для JS -->
 {% csrf_token %}
 
+<!-- JS: голосование с отменой -->
 <script>
 function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
     let voteValue = null;
@@ -268,7 +345,11 @@ function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
     formData.append('csrfmiddlewaretoken', csrf);
     formData.append('vote', voteValue);
 
-    const buttons = document.querySelectorAll(`button[onclick*="toggleVote(${issueId},"]`);
+    // Найти карточку с проблемой
+    const card = document.querySelector(`.card[data-issue-id="${issueId}"]`);
+    if (!card) return;
+
+    const buttons = card.querySelectorAll(`button[onclick*="toggleVote(${issueId},"]`);
     buttons.forEach(b => { b.disabled = true; b.innerHTML = '⋯'; });
 
     fetch(`/issues/${issueId}/vote/`, {
@@ -279,18 +360,29 @@ function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
     })
     .then(r => r.json().then(data => r.ok ? data : Promise.reject(data)))
     .then(data => {
-        // ✅ Обновляем ВСЕ элементы рейтинга с нужным data-issue-id
-        document.querySelectorAll(`.rating-value[data-issue-id="${issueId}"]`).forEach(el => {
-            if (el.classList.contains('h5')) {
-                el.textContent = data.rating;
-            } else {
-                el.textContent = data.rating + ' {% trans "рейтинг" %}';
+        // Обновляем рейтинг в карточке
+        const ratingBadge = card.querySelector('.badge.bg-primary');
+        if (ratingBadge) {
+            ratingBadge.innerHTML = `${data.rating} {% trans "рейтинг" %}`;
+        }
+
+        // Обновляем рейтинг в popup на карте
+        document.querySelectorAll('.maplibregl-popup-content').forEach(popup => {
+            if (popup.innerHTML.includes(`/issues/${issueId}/`)) {
+                const ratingElement = popup.querySelector('small');
+                if (ratingElement) {
+                    // Обновляем только часть с рейтингом
+                    ratingElement.innerHTML = ratingElement.innerHTML.replace(
+                        /Рейтинг: <strong>\d+<\/strong>/,
+                        `Рейтинг: <strong>${data.rating}</strong>`
+                    );
+                }
             }
         });
 
         // Обновляем стиль кнопок
-        const up = document.querySelector(`button[onclick*="toggleVote(${issueId}, 1"]`);
-        const down = document.querySelector(`button[onclick*="toggleVote(${issueId}, -1"]`);
+        const up = card.querySelector(`button[onclick*="toggleVote(${issueId}, 1"]`);
+        const down = card.querySelector(`button[onclick*="toggleVote(${issueId}, -1"]`);
         if (up && down) {
             up.classList.toggle('btn-success', data.user_vote === 1);
             up.classList.toggle('btn-outline-success', data.user_vote !== 1);
@@ -303,8 +395,8 @@ function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
         alert(err.error || '{% trans "Ошибка голосования." %}');
     })
     .finally(() => {
-        const up = document.querySelector(`button[onclick*="toggleVote(${issueId}, 1"]`);
-        const down = document.querySelector(`button[onclick*="toggleVote(${issueId}, -1"]`);
+        const up = card.querySelector(`button[onclick*="toggleVote(${issueId}, 1"]`);
+        const down = card.querySelector(`button[onclick*="toggleVote(${issueId}, -1"]`);
         if (up) up.innerHTML = '👍'; if (down) down.innerHTML = '👎';
         if (up) up.disabled = false; if (down) down.disabled = false;
     });

@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container mt-4">
   <h2>Report a New Issue</h2>
-  <form method="post">
+  <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="mb-3">
       <label for="title" class="form-label">Title</label>
@@ -18,8 +18,8 @@
       <label for="category" class="form-label">Category</label>
       <select class="form-select" id="category" name="category" required>
         <option value="">-- Select --</option>
-        {% for cat in categories %}
-          <option value="{{ cat.id }}">{{ cat.name }}</option>
+        {% for value, label in categories %}
+          <option value="{{ value }}">{{ label }}</option>
         {% endfor %}
       </select>
     </div>
@@ -35,8 +35,27 @@
       </div>
       <div class="form-text">You can get coordinates from any online map (e.g., right-click on Google Maps).</div>
     </div>
+    <div class="mb-3">
+      <label for="images" class="form-label">Upload Photos (up to 5, JPG/PNG, max 5MB each)</label>
+      <input type="file" class="form-control" id="images" name="images" multiple accept="image/jpeg, image/png">
+      <div id="preview" class="mt-2"></div>
+    </div>
     <button type="submit" class="btn btn-success">Submit Issue</button>
     <a href="{% url 'issues:map' %}" class="btn btn-secondary">Cancel</a>
   </form>
 </div>
+
+<script>
+  document.getElementById('images').addEventListener('change', function() {
+    const preview = document.getElementById('preview');
+    preview.innerHTML = '';  // Очистка
+    for (let file of this.files) {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.style.width = '100px';  // Миниатюра
+      img.style.margin = '5px';
+      preview.appendChild(img);
+    }
+  });
+</script>
 {% endblock %}
