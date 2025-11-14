@@ -9,4 +9,5 @@ urlpatterns = [
     path('update-status/<int:issue_id>/', views.update_issue_status, name='update_issue_status'),
     path('<int:issue_id>/delete/', views.delete_issue, name='delete_issue'),
     path('<int:pk>/', views.issue_detail, name='issue_detail'),
+    path('<int:issue_id>/vote/', views.vote_issue, name='vote_issue'),
 ]
