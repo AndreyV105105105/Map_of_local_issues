@@ -1,6 +1,9 @@
+# users/models.py
+import uuid
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 
 class CustomUserManager(BaseUserManager):
@@ -52,8 +55,6 @@ class CustomUser(AbstractUser):
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     department = models.CharField(max_length=100, blank=True, null=True)
     profile_picture = models.ImageField(upload_to='user_profiles/', blank=True, null=True)
-
-    # Добавлено отчество
     patronymic = models.CharField(
         _("Отчество"),
         max_length=150,
@@ -61,8 +62,24 @@ class CustomUser(AbstractUser):
         help_text=_("Необязательно")
     )
 
+    # 🔑 ПОДТВЕРЖДЕНИЕ EMAIL
+    email_verified = models.BooleanField(
+        _("Email подтверждён"),
+        default=False,
+        help_text=_("Указывает, подтверждён ли email пользователя.")
+    )
+    verification_token = models.UUIDField(
+        _("Токен подтверждения"),
+        default=uuid.uuid4,
+        editable=False
+    )
+    verification_token_created = models.DateTimeField(
+        _("Время создания токена"),
+        default=timezone.now
+    )
+
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []  # username не требуется
+    REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
 
@@ -72,7 +89,6 @@ class CustomUser(AbstractUser):
         super().save(*args, **kwargs)
 
     def get_full_name(self):
-        """Возвращает ФИО (с отчеством, если указано)"""
         parts = [self.last_name, self.first_name]
         if self.patronymic:
             parts.append(self.patronymic)
@@ -81,3 +97,7 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.get_full_name()
+
+
+
+
