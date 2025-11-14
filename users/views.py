@@ -78,7 +78,6 @@ def register_view(request):
             user.email_verified = False
             user.save()
 
-            # ... (остальная логика отправки письма — как у вас)
 
             messages.success(
                 request,
