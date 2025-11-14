@@ -8,10 +8,6 @@
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
 {% endblock %}
 
-{% block extra_js %}
-    <script src="{% static 'home.js' %}"></script>
-{% endblock %}
-
 {% block content %}
     <div class="banner-wrapper">
         <div class="help-banner full-width">
@@ -131,4 +127,8 @@
         </div>
     </section>
 
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'home.js' %}"></script> 
 {% endblock %}

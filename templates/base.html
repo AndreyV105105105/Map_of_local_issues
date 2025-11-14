@@ -1,61 +1,82 @@
+{% load static %}
 {% load i18n %}
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Карта локальных проблем{% endblock %}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- УДАЛЕНО: Bootstrap CSS -->
+  <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+  
+  <!-- ВАШИ СТИЛИ -->
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/alerts.css' %}">
+  
+  {% block extra_css %}{% endblock %}
+  {% block extra_js %}{% endblock %}
 </head>
-<body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-      <a class="navbar-brand" href="{% url 'home' %}">Карта локальных проблем</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          {% if user.is_authenticated %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'issues:map' %}">{% trans "Карта" %}</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'users:profile' %}">{% trans "Профиль" %}</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'users:logout' %}">{% trans "Выйти" %}</a>
-            </li>
-          {% else %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'users:login' %}">{% trans "Вход" %}</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'users:register' %}">{% trans "Регистрация" %}</a>
-            </li>
-          {% endif %}
-        </ul>
-      </div>
-    </div>
-  </nav>
 
-  <!-- ✅ Умные сообщения — через current_namespace из context processor -->
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header__logo">
+                <img src="{% static 'icons/лого.svg' %}" alt="логотип проекта" class="logo-icon">
+                <a class="navbar-brand" href="{% url 'home' %}"><h1>КАРТА ЛОКАЛЬНЫХ<br>ПРОБЛЕМ</h1></a>
+            </div>
+
+            <nav class="header__nav">
+                <ul class="list_nav">
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'issues:map' %}" class="{% if request.resolver_match.url_name == 'map' %}active{% endif %}">карта</a></li>
+                    {% else %}
+                        <li><a href="{% url 'users:login' %}" class="{% if request.resolver_match.url_name == 'map' %}active{% endif %}">карта</a></li>
+                    {% endif %}
+
+                    <li><a href="#" class="{% if request.resolver_match.url_name == 'themes' %}active{% endif %}">темы</a></li>
+                    <li><a href="#" class="{% if request.resolver_match.url_name == 'results' %}active{% endif %}">результаты</a></li>
+                </ul>
+            </nav>
+
+            <div class="header_main_nav">
+                <ul>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'users:profile' %}"><img src="{% static 'icons/user.svg' %}" alt=""></a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'users:login' %}">{% trans "Вход" %}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'users:register' %}">{% trans "Регистрация" %}</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </header>
+
+  <!-- ✅ Умные сообщения с кастомным CSS -->
   {% if messages %}
     {% for message in messages %}
       {% comment %} Показываем, если: нет тегов, есть 'global', или текущее приложение в тегах {% endcomment %}
       {% if message.tags == '' or 'global' in message.tags or current_namespace in message.tags %}
-        <div class="container mt-3">
+        <div class="custom-container custom-mt-3">
           {% if message.level == 40 or 'error' in message.tags %}
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="custom-alert custom-alert-danger custom-alert-dismissible fade show" role="alert">
           {% elif message.level == 30 or 'warning' in message.tags %}
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <div class="custom-alert custom-alert-warning custom-alert-dismissible fade show" role="alert">
           {% elif message.level == 25 or 'success' in message.tags %}
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="custom-alert custom-alert-success custom-alert-dismissible fade show" role="alert">
           {% else %}
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <div class="custom-alert custom-alert-info custom-alert-dismissible fade show" role="alert">
           {% endif %}
             {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% trans 'Закрыть' %}"></button>
+            <button type="button" class="custom-btn-close" data-dismiss="alert" aria-label="{% trans 'Закрыть' %}"></button>
           </div>
         </div>
       {% endif %}
@@ -66,6 +87,37 @@
     {% block content %}{% endblock %}
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-text">
+                    <div class="footer-links">
+                        <a href="#">0 проекте</a>
+                        <a href="#">Ответы на вопросы</a>
+                    </div>
+                    <div class="footer-copyright">
+                        <p>© 2025, Активный гражданин. Все права защищены</p>
+                        <p>Свидетельство на товарный знак от 13.02.2022 № 000000</p>
+                    </div>
+                </div>
+
+                <div class="footer-social">
+                    <a href="https://vk.com/" class="social-icon" target="_blank">
+                        <img src="{% static 'icons/vk.svg' %}" alt="ВКонтакте">
+                    </a>
+                    <a href="https://web.telegram.org/" class="social-icon" target="_blank">
+                        <img src="{% static 'icons/tg.svg' %}" alt="Telegram">
+                    </a>
+                    <a href="https://ok.ru/" class="social-icon" target="_blank">
+                        <img src="{% static 'icons/odnokl.svg' %}" alt="Одноклассники">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+  <script src="{% static 'alerts.js' %}"></script>
+
 </body>
 </html>

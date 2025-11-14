@@ -119,18 +119,6 @@ function initGallery() {
         // Добавляем обработчик прокрутки
         gallery.addEventListener('scroll', handleGalleryScroll);
 
-        // Обработчики для кнопок навигации (если они есть)
-        const prevBtn = document.querySelector('.gallery-prev');
-        const nextBtn = document.querySelector('.gallery-next');
-        
-        if (prevBtn) {
-            prevBtn.addEventListener('click', scrollPrev);
-        }
-        
-        if (nextBtn) {
-            nextBtn.addEventListener('click', scrollNext);
-        }
-
         // Инициализируем обработчики касания
         initTouchHandlers();
 

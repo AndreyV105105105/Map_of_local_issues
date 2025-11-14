@@ -18,16 +18,21 @@
             
             <div class="profile-info">
 
-              <div class="info-item">
-                  <!-- <div class="info-icon">
-                      <img src="{% static 'icons/role.svg' %}" alt="{% trans 'Роль' %}">
-                  </div> -->
+                <div class="info-item">
 
-                  <div class="info-content">
-                      <label>{% trans "Роль" %}</label>
-                      <p>{{ user.get_role_display }}</p>
-                  </div>
-              </div>
+                    <div class="info-content">
+                        <label>{% trans "ФИО" %}</label>
+                        <p>{{ user.get_full_name }}</p>
+                    </div>
+                </div>
+
+                <div class="info-item">
+
+                    <div class="info-content">
+                        <label>{% trans "Роль" %}</label>
+                        <p>{{ user.get_role_display }}</p>
+                    </div>
+                </div>
 
                 <div class="info-item">
 
