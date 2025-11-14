@@ -9,6 +9,7 @@
     <title>{% block title %}Карта локальных проблем{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     {% block extra_css %}{% endblock %}
+    {% block extra_js %}{% endblock %}
 </head>
 <body>
     <!-- Header -->
@@ -22,7 +23,8 @@
             <nav class="header__nav">
                 <ul class="list_nav">
                     <li><a href="{% url 'issues:map' %}" class="{% if request.resolver_match.url_name == 'map' %}active{% endif %}">карта</a></li>
-                    <li><a href="#" class="{% if request.resolver_match.url_name == 'themes' %}active{% endif %}">темы</a></li>
+                    <li><a href="#
+                    ' %}" class="{% if request.resolver_match.url_name == 'themes' %}active{% endif %}">темы</a></li>
                     <li><a href="#" class="{% if request.resolver_match.url_name == 'results' %}active{% endif %}">результаты</a></li>
                 </ul>
             </nav>
@@ -62,7 +64,6 @@
                 <div class="footer-text">
                     <div class="footer-links">
                         <a href="#">0 проекте</a>
-                        <a href="#">Обратная связь</a>
                         <a href="#">Ответы на вопросы</a>
                     </div>
                     <div class="footer-copyright">
@@ -72,13 +73,13 @@
                 </div>
                 
                 <div class="footer-social">
-                    <a href="#" class="social-icon">
+                    <a href="https://vk.com/" class="social-icon" target="_blank">
                         <img src="{% static 'icons/vk.svg' %}" alt="ВКонтакте">
                     </a>
-                    <a href="#" class="social-icon">
+                    <a href="https://web.telegram.org/" class="social-icon" target="_blank">
                         <img src="{% static 'icons/tg.svg' %}" alt="Telegram">
                     </a>
-                    <a href="#" class="social-icon">
+                    <a href="https://ok.ru/" class="social-icon" target="_blank">
                         <img src="{% static 'icons/odnokl.svg' %}" alt="Одноклассники">
                     </a>
                 </div>
