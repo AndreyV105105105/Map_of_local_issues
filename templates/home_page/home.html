@@ -50,6 +50,7 @@
             <div class="map-wrapper">
                 <div class="map-container">
                     <img src="{% static 'icons/map.svg' %}" alt="Карта города" class="map-image">
+
                     {% if user.is_authenticated %}
                         <a href="{% url 'issues:map' %}"><button class="map-cta">ОТМЕТИТЬ ПРОБЛЕМУ</button></a>
                     {% else %}

@@ -7,11 +7,11 @@
 }
 
 :root {
-    --primary-color: #E75A7C; /* Розовый цвет из макета */
-    --secondary-color: #E0F2F7; /* Светло-голубой фон из макета */
+    --primary-color: #E75A7C; /* Розовый цвет */
+    --secondary-color: #E0F2F7; /* Светло-голубой фон */
     --text-color: #333;
     --light-text: #666;
-    --card-bg: #FFCDD2; /* Розовый фон карточек */
+    --card-bg: #FFCDD2; /* светло-розовый фон карточек и других элемнтов */
 }
 
 body {
@@ -75,7 +75,7 @@ body {
     gap: 15px;
 }
 
-.header__nav a {
+.header__nav a{
     text-decoration: none;
     color: var(--text-color);
     font-weight: 500;
@@ -84,6 +84,18 @@ body {
 
 .header__nav a:hover,
 .header__nav a.active {
+    color: var(--primary-color);
+}
+
+.nav-item a{    
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.nav-item a:hover,
+.nav-item a.active {
     color: var(--primary-color);
 }
 

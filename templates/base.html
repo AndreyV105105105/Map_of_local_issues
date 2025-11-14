@@ -22,9 +22,14 @@
 
             <nav class="header__nav">
                 <ul class="list_nav">
-                    <li><a href="{% url 'issues:map' %}" class="{% if request.resolver_match.url_name == 'map' %}active{% endif %}">карта</a></li>
-                    <li><a href="#
-                    ' %}" class="{% if request.resolver_match.url_name == 'themes' %}active{% endif %}">темы</a></li>
+
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'issues:map' %}" class="{% if request.resolver_match.url_name == 'map' %}active{% endif %}">карта</a></li>
+                    {% else %}
+                        <li><a href="{% url 'users:login' %}" class="{% if request.resolver_match.url_name == 'map' %}active{% endif %}">карта</a></li>
+                    {% endif %}
+
+                    <li><a href="#" class="{% if request.resolver_match.url_name == 'themes' %}active{% endif %}">темы</a></li>
                     <li><a href="#" class="{% if request.resolver_match.url_name == 'results' %}active{% endif %}">результаты</a></li>
                 </ul>
             </nav>
@@ -35,10 +40,12 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'users:profile' %}"><img src="{% static 'icons/user.svg' %}" alt=""></a>
                     </li>
+                    
                     <!-- СДЕЛАЙТЬ ЧТОБЫ ВЫПАДАЛИ ВАРИАНТЫ LINES -->
                     <!-- <li class="nav-item">
                         <a class="nav-link" href="{% url 'users:profile' %}"><img src="{% static 'icons/lines.svg' %}" alt=""></a>
                     </li> -->
+
                     {% else %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'users:login' %}">{% trans "Вход" %}</a>
