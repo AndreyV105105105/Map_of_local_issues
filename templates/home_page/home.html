@@ -1,30 +1,134 @@
+
 {% extends "base.html" %}
-{% load i18n %}
+
+{% load static %}
+{% block title %}Карта локальных проблем - Главная{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'home.js' %}"></script>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-  <div class="row">
-    <div class="col-12">
-      <h1>{% trans "Добро пожаловать на сайт «Карта локальных проблем»" %}</h1>
-      <p>{% trans "Это ваша домашняя страница." %}</p>
-
-      {% if user.is_authenticated %}
-        <p>
-          {% trans "Здравствуйте," %} <strong>{{ user.get_full_name }}</strong>!
-          {% trans "Вы зарегистрированы как" %} {{ user.get_role_display|lower }}.
-        </p>
-        <a href="{% url 'issues:map' %}" class="btn btn-success">{% trans "Карта" %}</a>
-        <a href="{% url 'users:profile' %}" class="btn btn-primary">{% trans "Профиль" %}</a>
-        <a href="{% url 'users:logout' %}" class="btn btn-secondary">{% trans "Выйти" %}</a>
-      {% else %}
-        <p>
-          {% trans "Пожалуйста," %}
-          <a href="{% url 'users:login' %}">{% trans "войдите" %}</a>
-          {% trans "или" %}
-          <a href="{% url 'users:register' %}">{% trans "зарегистрируйтесь" %}</a>.
-        </p>
-      {% endif %}
+    <div class="banner-wrapper">
+        <div class="help-banner full-width">
+            <div class="help-banner-content">
+                <div class="banner-text-content">
+                    <h2 class="banner-left">ПОМОГИ ХАНТЫ-МАНСИЙСКУ</h2>
+                    <h2 class="banner-right">ВМЕСТЕ МЫ СТАНЕМ ЛУЧШЕ!</h2>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
+
+    <div class="content-grid">
+        <section class="info-section">
+            <h3>ЧТО МЫ МОЖЕМ ?</h3>
+            <a href="#"><p class="info-subtitle">Информация о портале</p></a>
+            
+            <div class="info-item">
+                <img src="{% static 'icons/in_work.svg' %}" alt="Иконка проблем в работе">
+                <div>
+                    <span>0</span>
+                    <p>Проблем сейчас в работе</p>
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <img src="{% static 'icons/done.svg' %}" alt="Иконка решенных проблем">
+                <div>
+                    <span>0</span>
+                    <p>Проблем решено</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="map-section">
+            <div class="map-wrapper">
+                <div class="map-container">
+                    <img src="{% static 'icons/map.svg' %}" alt="Карта города" class="map-image">
+
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'issues:map' %}"><button class="map-cta">ОТМЕТИТЬ ПРОБЛЕМУ</button></a>
+                    {% else %}
+                        <a href="{% url 'users:login' %}"><button class="map-cta">ОТМЕТИТЬ ПРОБЛЕМУ</button></a>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="divider"></div>
+
+    <section class="problem-cards">
+        <h3>Ваш проблема может быть здесь</h3>
+        
+        <div class="cards-container">
+            <div class="card">
+                <img src="{% static 'icons/road.svg' %}" alt="Иконка дороги">
+                <div class="card-content">
+                    <h4>ДОРОГА</h4>
+                    <p>Неисправность освещения на тротуаре/проезжей части</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <img src="{% static 'icons/yard.svg' %}" alt="Иконка двора">
+                <div class="card-content">
+                    <h4>ДВОР</h4>
+                    <p>Неубранная территория</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <img src="{% static 'icons/road.svg' %}" alt="Иконка дороги">
+                <div class="card-content">
+                    <h4>ДОРОГА</h4>
+                    <p>Неисправность освещения на проезжей части</p>
+                </div>
+            </div>
+        </div>
+        
+        <a href="#" class="more-themes">Другие темы</a>
+    </section>
+
+    <section class="results-section full-width">
+        <div class="results-header">
+            <div class="result-info">
+                <a href="#"><button class="result-btn"> <p>Результаты нашей работы</p></button></a>
+            </div>
+        </div>
+        
+        <div class="results-gallery-container">
+            <div class="results-gallery" id="resultsGallery">
+                <div class="gallery-item">
+                    <img src="{% static 'icons/image1.png' %}" alt="Волонтеры убирают парк">
+                </div>
+                <div class="gallery-item">
+                    <img src="{% static 'icons/image2.png' %}" alt="Роспись стены">
+                </div>
+                <div class="gallery-item">
+                    <img src="{% static 'icons/image2.png' %}" alt="Роспись стены">
+                </div>
+                <div class="gallery-item">
+                    <img src="{% static 'icons/image2.png' %}" alt="Роспись стены">
+                </div>
+                <div class="gallery-item">
+                    <img src="{% static 'icons/image2.png' %}" alt="Роспись стены">
+                </div>
+                <div class="gallery-item">
+                    <img src="{% static 'icons/image2.png' %}" alt="Роспись стены">
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="{% static 'icons/image3.png' %}" alt="Сортировка мусора">
+                </div>
+            </div>
+            
+        </div>
+    </section>
+
 {% endblock %}
