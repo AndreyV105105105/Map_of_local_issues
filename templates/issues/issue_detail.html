@@ -1,284 +1,172 @@
 {% extends "base.html" %}
+{% load static %}
 {% load i18n %}
 
+{% block title %}{{ issue.title }} - {% trans "Детали проблемы" %}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/issue_detail.css' %}">
+    <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h1 class="h3 mb-1">{{ issue.title }}</h1>
-  <p class="text-muted small mb-4">
-    {{ issue.created_at|date:"d.m.Y H:i" }} ·
-    {{ issue.get_category_display }} ·
-    <span class="badge bg-light text-dark border">{{ issue.get_status_display }}</span>
-  </p>
-
-  <div class="row g-4">
-    <div class="col-lg-8">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="mb-3">{% trans "Описание" %}</h5>
-          <div class="bg-light p-3 rounded mb-4" style="min-height: 120px;">
-            <p class="mb-0" style="white-space: pre-wrap;">{{ issue.description|default:"—" }}</p>
-          </div>
-
-          <!-- Голосование -->
-          <div class="d-flex align-items-center justify-content-between mt-4 pt-3 border-top">
-            <div>
-              <span class="h5 mb-0" data-issue-id="{{ issue.id }}" id="rating-value">{{ issue.vote_rating }}</span>
-              <span class="text-muted ms-1">{% trans "рейтинг" %}</span>
+    <div class="issue-detail-container">
+        <div class="issue-header">
+            <h1 class="issue-title">{{ issue.title }}</h1>
+            <div class="issue-meta">
+                <span class="meta-date">{{ issue.created_at|date:"d.m.Y H:i" }}</span>
+                <span class="meta-separator">·</span>
+                <span class="meta-category">{{ issue.get_category_display }}</span>
+                <span class="meta-separator">·</span>
+                <span class="issue-status-badge status-{{ issue.status }}">{{ issue.get_status_display }}</span>
             </div>
-
-            {% if user.is_authenticated and user.role == 'citizen' %}
-              <div class="btn-group" role="group">
-                <button type="button"
-                        class="btn btn-sm {% if issue.user_has_upvoted %}btn-success{% else %}btn-outline-success{% endif %}"
-                        onclick="toggleVote({{ issue.id }}, 1, {{ issue.user_has_upvoted|yesno:'true,false' }}, {{ issue.user_has_downvoted|yesno:'true,false' }})">
-                  👍
-                </button>
-                <button type="button"
-                        class="btn btn-sm {% if issue.user_has_downvoted %}btn-danger{% else %}btn-outline-danger{% endif %}"
-                        onclick="toggleVote({{ issue.id }}, -1, {{ issue.user_has_upvoted|yesno:'true,false' }}, {{ issue.user_has_downvoted|yesno:'true,false' }})">
-                  👎
-                </button>
-              </div>
-            {% endif %}
-          </div>
-
-          {% if issue.photos.all %}
-          <h5 class="mb-3 mt-4">{% trans "Фотографии проблемы" %}</h5>
-          <div class="row g-2 mb-4">
-            {% for photo in issue.photos.all %}
-            <div class="col-6 col-md-4 col-lg-3">
-              <a href="{{ photo.image.url }}" target="_blank" class="d-block text-center">
-                <img src="{{ photo.image.url }}" class="img-fluid rounded"
-                     alt="Фото проблемы {{ forloop.counter }}"
-                     style="max-height: 150px; object-fit: cover; width: 100%;">
-                <small class="d-block mt-1 text-muted">{{ forloop.counter }}/{{ issue.photos.count }}</small>
-              </a>
-            </div>
-            {% endfor %}
-          </div>
-          {% endif %}
-          <h5 class="mb-3 mt-4">{% trans "Детали" %}</h5>
-          <dl class="row mb-0">
-            <dt class="col-sm-4 text-muted small">{% trans "Автор" %}</dt>
-            <dd class="col-sm-8">
-              {% if user.is_authenticated and user.role == 'official' %}
-                {{ issue.reporter.get_full_name }} 
-                {% if issue.reporter.email %}({{ issue.reporter.email }}){% endif %}
-              {% else %}
-                {{ issue.reporter.get_full_name }}
-              {% endif %}
-            </dd>
-            <dt class="col-sm-4 text-muted small">{% trans "Статус" %}</dt>
-            <dd class="col-sm-8">{{ issue.get_status_display }}</dd>
-            <dt class="col-sm-4 text-muted small">{% trans "Категория" %}</dt>
-            <dd class="col-sm-8">{{ issue.get_category_display }}</dd>
-            <dt class="col-sm-4 text-muted small">{% trans "Координаты" %}</dt>
-            <dd class="col-sm-8">
-              <code>{{ issue.location.x|floatformat:6 }}, {{ issue.location.y|floatformat:6 }}</code>
-            </dd>
-            <dt class="col-sm-4 text-muted small">{% trans "Рейтинг" %}</dt>
-            <dd class="col-sm-8">
-              <span class="badge bg-primary">{{ issue.vote_rating }}</span>
-              {% if user.is_authenticated and user.role == 'citizen' %}
-                <small class="text-muted ms-1">
-                  {% if issue.user_has_upvoted %}
-                    ({% trans "Вы проголосовали 👍" %})
-                  {% elif issue.user_has_downvoted %}
-                    ({% trans "Вы проголосовали 👎" %})
-                  {% else %}
-                    ({% trans "Вы не голосовали" %})
-                  {% endif %}
-                </small>
-              {% endif %}
-            </dd>
-            <dt class="col-sm-4 text-muted small">{% trans "Фотографии" %}</dt>
-            <dd class="col-sm-8">{{ issue.photos.count }}</dd>
-          </dl>
         </div>
-      </div>
 
-      <div class="mt-4">
-        <a href="{% url 'issues:map' %}" class="btn btn-secondary">
-          ← {% trans "К карте" %}
-        </a>
+        <div class="issue-content-grid">
+            <main class="issue-main-content">
+                <section class="issue-description">
+                    <h3>{% trans "Описание проблемы" %}</h3>
+                    <div class="description-content">
+                        <p>{{ issue.description|default:"—" }}</p>
+                    </div>
+                </section>
 
-        {% if user.is_authenticated and user.role == 'official' %}
-          <form method="post" action="{% url 'issues:delete_issue' issue.id %}"
-                onsubmit="return confirm('{% trans "❗ Удалить обращение? Действие нельзя отменить." %}');"
-                class="d-inline ms-2">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-outline-danger">
-              {% trans "Удалить" %}
-            </button>
-          </form>
-        {% endif %}
-      </div>
+                {% if issue.photos.all %}
+                <section class="issue-photos">
+                    <h3>{% trans "Фотографии проблемы" %}</h3>
+                    <div class="photos-grid">
+                        {% for photo in issue.photos.all %}
+                        <div class="photo-item">
+                            <a href="{{ photo.image.url }}" target="_blank">
+                                <img src="{{ photo.image.url }}" alt="Фото проблемы {{ forloop.counter }}">
+                            </a>
+                            <div class="photo-caption">
+                                <span>{{ forloop.counter }}/{{ issue.photos.count }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+
+                <section class="issue-voting">
+                    <div class="voting-header">
+                        <span class="rating-value" data-issue-id="{{ issue.id }}">{{ issue.vote_rating }}</span>
+                        <span class="rating-label">{% trans "рейтинг" %}</span>
+                    </div>
+
+                    {% if user.is_authenticated and user.role == 'citizen' %}
+                        <div class="vote-buttons">
+                            <button type="button" 
+                                    class="vote-btn upvote-btn {% if issue.user_has_upvoted %}active{% endif %}"
+                                    data-issue-id="{{ issue.id }}"
+                                    data-direction="1">
+                                <img src="{% static 'icons/upvote.svg' %}" alt="Нравится">
+                            </button>
+                            <button type="button" 
+                                    class="vote-btn downvote-btn {% if issue.user_has_downvoted %}active{% endif %}"
+                                    data-issue-id="{{ issue.id }}"
+                                    data-direction="-1">
+                                <img src="{% static 'icons/downvote.svg' %}" alt="Не нравится">
+                            </button>
+                        </div>
+                    {% endif %}
+                </section>
+
+                <section class="issue-details">
+                    <h3>{% trans "Детали проблемы" %}</h3>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">{% trans "Автор" %}</span>
+                            <span class="detail-value">
+                                {% if user.is_authenticated and user.role == 'official' %}
+                                    {{ issue.reporter.get_full_name }} 
+                                    {% if issue.reporter.email %}({{ issue.reporter.email }}){% endif %}
+                                {% else %}
+                                    {{ issue.reporter.get_full_name }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{% trans "Статус" %}</span>
+                            <span class="detail-value">{{ issue.get_status_display }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{% trans "Категория" %}</span>
+                            <span class="detail-value">{{ issue.get_category_display }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{% trans "Координаты" %}</span>
+                            <span class="detail-value coordinates">
+                                {{ issue.location.x|floatformat:6 }}, {{ issue.location.y|floatformat:6 }}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{% trans "Рейтинг" %}</span>
+                            <span class="detail-value">
+                                <span class="rating-badge">{{ issue.vote_rating }}</span>
+                                {% if user.is_authenticated and user.role == 'citizen' %}
+                                    <small class="user-vote-status">
+                                        {% if issue.user_has_upvoted %}
+                                            ({% trans "Вы проголосовали за" %})
+                                        {% elif issue.user_has_downvoted %}
+                                            ({% trans "Вы проголосовали против" %})
+                                        {% else %}
+                                            ({% trans "Вы не голосовали" %})
+                                        {% endif %}
+                                    </small>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{% trans "Фотографии" %}</span>
+                            <span class="detail-value">{{ issue.photos.count }}</span>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="issue-actions">
+                    <a href="{% url 'issues:map' %}" class="btn btn-secondary">
+                        ← {% trans "Вернуться к карте" %}
+                    </a>
+
+                    {% if user.is_authenticated and user.role == 'official' %}
+                        <form method="post" action="{% url 'issues:delete_issue' issue.id %}"
+                              onsubmit="return confirm('{% trans "Удалить обращение? Действие нельзя отменить." %}');"
+                              class="delete-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                {% trans "Удалить проблему" %}
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </main>
+
+            <aside class="issue-sidebar">
+                <div class="location-card">
+                    <h4>{% trans "Местоположение" %}</h4>
+                    <div id="mini-map" class="map-container"></div>
+                </div>
+
+                {% if issue.photos.all %}
+                <div class="main-photo-card">
+                    <h4>{% trans "Основное фото" %}</h4>
+                    <div class="main-photo-container">
+                        <a href="{{ issue.photos.first.image.url }}" target="_blank">
+                            <img src="{{ issue.photos.first.image.url }}" alt="Основное фото проблемы">
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </aside>
+        </div>
     </div>
 
-    <div class="col-lg-4">
-      <div class="card h-100">
-        <div class="card-header py-2">
-          <h6 class="mb-0 small text-uppercase text-muted">{% trans "Местоположение" %}</h6>
-        </div>
-        <div class="card-body p-0">
-          <div id="mini-map" style="height: 240px; width: 100%;"></div>
-        </div>
-      </div>
+    {% csrf_token %}
+{% endblock %}
 
-      {% if issue.photos.all %}
-      <div class="card mt-4">
-        <div class="card-header py-2">
-          <h6 class="mb-0 small text-uppercase text-muted">{% trans "Основное фото" %}</h6>
-        </div>
-        <div class="card-body text-center">
-          <a href="{{ issue.photos.first.image.url }}" target="_blank">
-            <img src="{{ issue.photos.first.image.url }}" class="img-fluid rounded"
-                 alt="Основное фото проблемы"
-                 style="max-height: 200px; object-fit: contain; width: 100%;">
-          </a>
-        </div>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-</div>
-
-<!-- MapLibre GL -->
-<script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
-<link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const mapDiv = document.getElementById('mini-map');
-    if (!mapDiv) return;
-
-    const lng = {{ issue.location.x|floatformat:6 }};
-    const lat = {{ issue.location.y|floatformat:6 }};
-
-    try {
-      const miniMap = new maplibregl.Map({
-        container: 'mini-map',
-        style: {
-          version: 8,
-          sources: {
-            'osm-de': {
-              type: 'raster',
-              tiles: ['https://tile.openstreetmap.de/{z}/{x}/{y}.png'],
-              tileSize: 256,
-              attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }
-          },
-          layers: [{
-            id: 'osm-de-tiles',
-            type: 'raster',
-            source: 'osm-de',
-            minzoom: 0,
-            maxzoom: 19
-          }]
-        },
-        center: [lng, lat],
-        zoom: 14,
-        interactive: false,
-        attributionControl: true
-      });
-
-      // Маркер
-      new maplibregl.Marker({ color: '#e74c3c' })
-        .setLngLat([lng, lat])
-        .addTo(miniMap);
-
-      // Убираем логотип MapLibre
-      miniMap.on('load', () => {
-        const logo = miniMap.getContainer().querySelector('.maplibregl-ctrl-logo');
-        if (logo) logo.style.display = 'none';
-      });
-
-      // При ошибке — fallback
-      miniMap.on('error', (e) => {
-        console.warn('Mini-map warning (non-fatal):', e);
-      });
-
-    } catch (e) {
-      console.error('Mini-map init failed:', e);
-      mapDiv.innerHTML = `
-        <div class="h-100 d-flex flex-column">
-          <div class="flex-grow-1 bg-light d-flex align-items-center justify-content-center">
-            <div class="text-center p-3">
-              <div class="text-muted mb-2">📍</div>
-              <a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}"
-                 target="_blank"
-                 class="btn btn-sm btn-outline-secondary">
-                Открыть в OpenStreetMap
-              </a>
-            </div>
-          </div>
-          <div class="px-3 py-2 small text-muted border-top bg-light">
-            <code>${lng.toFixed(6)}, ${lat.toFixed(6)}</code>
-          </div>
-        </div>
-      `;
-    }
-  });
-</script>
-
-<!-- CSRF для JS -->
-{% csrf_token %}
-
-<!-- JS: голосование с отменой -->
-<script>
-function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
-    let voteValue = null;
-    if (intendedValue === 1 && isUpvoted) {
-        voteValue = '0';  // отмена
-    } else if (intendedValue === -1 && isDownvoted) {
-        voteValue = '0';  // отмена
-    } else {
-        voteValue = intendedValue.toString();
-    }
-
-    const formData = new FormData();
-    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    formData.append('csrfmiddlewaretoken', csrf);
-    formData.append('vote', voteValue);
-
-    const buttons = document.querySelectorAll(`button[onclick*="toggleVote(${issueId},"]`);
-    buttons.forEach(b => { b.disabled = true; b.innerHTML = '⋯'; });
-
-    fetch(`/issues/${issueId}/vote/`, {
-        method: 'POST',
-        body: formData,
-        redirect: 'follow',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(r => r.json().then(data => r.ok ? data : Promise.reject(data)))
-    .then(data => {
-        // Обновляем рейтинг
-        const ratingElement = document.getElementById('rating-value');
-        if (ratingElement) {
-            ratingElement.textContent = data.rating;
-        }
-
-        // Обновляем стиль кнопок
-        const up = document.querySelector(`button[onclick*="toggleVote(${issueId}, 1"]`);
-        const down = document.querySelector(`button[onclick*="toggleVote(${issueId}, -1"]`);
-        if (up && down) {
-            up.classList.toggle('btn-success', data.user_vote === 1);
-            up.classList.toggle('btn-outline-success', data.user_vote !== 1);
-            down.classList.toggle('btn-danger', data.user_vote === -1);
-            down.classList.toggle('btn-outline-danger', data.user_vote !== -1);
-        }
-    })
-    .catch(err => {
-        console.error('Vote error:', err);
-        alert(err.error || '{% trans "Ошибка голосования." %}');
-    })
-    .finally(() => {
-        const up = document.querySelector(`button[onclick*="toggleVote(${issueId}, 1"]`);
-        const down = document.querySelector(`button[onclick*="toggleVote(${issueId}, -1"]`);
-        if (up) up.innerHTML = '👍'; if (down) down.innerHTML = '👎';
-        if (up) up.disabled = false; if (down) down.disabled = false;
-    });
-}
-</script>
-
+{% block extra_js %}
+    <script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
+    <script src="{% static 'issue_detail.js' %}"></script>
 {% endblock %}
