@@ -79,6 +79,29 @@ def register_view(request):
             user.save()
 
 
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+
+            verify_url = request.build_absolute_uri(
+                reverse('users:verify_email', kwargs={'uidb64': uid, 'token': token})
+            )
+            verify_url = re.sub(r'[\u200b\u200c\u200d\u2060\u00ad\ufeff]', '', verify_url)
+
+            subject = _("Подтвердите ваш email")
+            message = render_to_string('emails/email_verification_body.txt', {
+                'user': user,
+                'verify_url': verify_url,
+            })
+
+            send_mail(
+                subject,
+                message,
+                from_email=None,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+
+
             messages.success(
                 request,
                 _("Регистрация завершена. Пожалуйста, проверьте почту и подтвердите адрес."),
