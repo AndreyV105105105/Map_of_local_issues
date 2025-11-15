@@ -1,0 +1,388 @@
+/* Сброс и основные стили */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f8f9fa;
+  color: #212529;
+  line-height: 1.6;
+}
+
+/* Контейнер для всего содержимого страницы */
+.issue-detail-container {
+  padding: 20px 0;
+  min-height: calc(100vh - 60px); /* Примерная высота шапки */
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+/* Заголовок проблемы */
+.issue-header {
+  margin-bottom: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.issue-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 10px;
+}
+
+.issue-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  font-size: 0.75em;
+  font-weight: 500;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-open {
+  background-color: #e7f3ff;
+  color: #0066cc;
+}
+
+.status-in_progress {
+  background-color: #fff8e1;
+  color: #ff8f00;
+}
+
+.status-resolved {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-closed {
+  background-color: #f5f5f5;
+  color: #616161;
+}
+
+/* Основной контент и боковая панель */
+.issue-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 992px) {
+  .issue-content {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.main-content {
+  /* Оставлено для логического разделения */
+}
+
+.sidebar {
+  /* Оставлено для логического разделения */
+}
+
+/* Стили карточек */
+.card {
+  background-color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 12px 16px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6c757d;
+  margin: 0;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+/* Разделы */
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #212529;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* Описание проблемы */
+.issue-description {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 24px;
+  min-height: 120px;
+  white-space: pre-wrap;
+  font-size: 1rem;
+  color: #495057;
+}
+
+/* Сетка фото */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.photo-link {
+  position: relative;
+  display: block;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+}
+
+.photo-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.photo-thumb {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-number {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 2px 0;
+}
+
+/* Детали */
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 12px 24px;
+  margin-bottom: 24px;
+}
+
+.detail-item {
+  display: contents;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #6c757d;
+  font-size: 0.875rem;
+  align-self: flex-start;
+  padding-top: 5px; /* Выравнивание по верху */
+}
+
+.detail-value {
+  font-size: 0.875rem;
+  color: #495057;
+  word-break: break-word;
+}
+
+.email {
+  font-style: italic;
+  color: #0066cc;
+}
+
+.coordinates code {
+  font-size: 0.8rem;
+  background-color: #e9ecef;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+/* Голосование */
+.vote-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid #e9ecef;
+  margin-top: 16px;
+}
+
+.vote-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rating-label {
+  font-weight: 500;
+  color: #6c757d;
+}
+
+.rating-value {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #212529;
+}
+
+.vote-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.vote-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.vote-btn:hover {
+  background-color: #e9ecef;
+}
+
+.vote-btn.active {
+  border-color: currentColor;
+}
+
+.vote-btn.upvote.active {
+  color: #28a745;
+  background-color: #d4edda;
+}
+
+.vote-btn.downvote.active {
+  color: #dc3545;
+  background-color: #f8d7da;
+}
+
+.user-vote-status {
+  color: #6c757d;
+  font-size: 0.75rem;
+  margin-left: 8px;
+}
+
+/* Кнопки действий */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  padding-top: 20px;
+}
+
+.btn {
+  display: inline-block;
+  font-weight: 500;
+  text-align: center;
+  vertical-align: middle;
+  user-select: none;
+  border: 1px solid transparent;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-radius: 0.375rem;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  text-decoration: none;
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  color: #fff;
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+}
+
+.delete-form {
+  display: inline-block;
+  margin: 0;
+}
+
+.delete-btn {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.delete-btn:hover {
+  color: #fff;
+  background-color: #dc3545;
+}
+
+/* Карта */
+.map-container {
+  width: 100%;
+  height: 240px;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #e9ecef; /* Fallback */
+}
+
+/* Карточка фото */
+.main-photo-link {
+  display: block;
+  text-align: center;
+}
+
+.main-photo {
+  max-width: 100%;
+  height: auto;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
