@@ -1,0 +1,94 @@
+{% load i18n %}
+
+<h4>{% trans "Все обращения" %} ({{ issues.count }})</h4>
+{% if issues %}
+  {% for issue in issues %}
+    <div class="card mb-3" data-issue-id="{{ issue.id }}" data-category="{{ issue.category }}" data-status="{{ issue.status }}">
+      <div class="card-body">
+        <h6 class="mb-1">
+          <a href="{% url 'issues:issue_detail' issue.id %}" class="text-decoration-none text-dark">
+            {{ issue.title }}
+          </a>
+        </h6>
+
+        <!-- Рейтинг и голосование -->
+        <div class="d-flex align-items-center mb-2">
+          <span class="badge bg-primary rounded-pill px-2 me-2">
+            {{ issue.vote_rating }} {% trans "рейтинг" %}
+          </span>
+
+          {% if user.is_authenticated and user.role == 'citizen' %}
+            <div class="btn-group" role="group">
+              <button type="button"
+                      class="btn btn-sm {% if issue.user_has_upvoted %}btn-success{% else %}btn-outline-success{% endif %}"
+                      onclick="toggleVote({{ issue.id }}, 1, {{ issue.user_has_upvoted|yesno:'true,false' }}, {{ issue.user_has_downvoted|yesno:'true,false' }})">
+                👍
+              </button>
+              <button type="button"
+                      class="btn btn-sm {% if issue.user_has_downvoted %}btn-danger{% else %}btn-outline-danger{% endif %}"
+                      onclick="toggleVote({{ issue.id }}, -1, {{ issue.user_has_upvoted|yesno:'true,false' }}, {{ issue.user_has_downvoted|yesno:'true,false' }})">
+                👎
+              </button>
+            </div>
+          {% endif %}
+        </div>
+
+        <p class="text-muted small mb-1">
+          {{ issue.description|truncatewords:15 }}
+        </p>
+        <p class="text-muted small mb-0">
+          {% trans "Категория" %}: {{ issue.get_category_display }} |
+          {% trans "Статус" %}: {{ issue.get_status_display }} |
+          {% trans "Автор" %}:
+          {% if user.is_authenticated and user.role == 'official' %}
+            {{ issue.reporter.get_full_name }}
+            {% if issue.reporter.email %}({{ issue.reporter.email }}){% endif %}
+          {% else %}
+            {{ issue.reporter.get_full_name }}
+          {% endif %} |
+          {{ issue.created_at|date:"d.m.Y H:i" }}
+        </p>
+
+        {% if issue.photos.all %}
+          <div class="mt-2">
+            <div class="d-flex flex-wrap gap-1">
+              {% for photo in issue.photos.all|slice:":3" %}
+                <a href="{{ photo.image.url }}" target="_blank" title="{% trans "Посмотреть фото" %}">
+                  <img src="{{ photo.image.url }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                </a>
+              {% endfor %}
+              {% if issue.photos.count > 3 %}
+                <span class="badge bg-secondary align-self-center">+{{ issue.photos.count|add:"-3" }}</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        {% if user.is_authenticated and user.role == 'official' %}
+          <div class="mt-2">
+            <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="d-inline">
+              {% csrf_token %}
+              <select name="status" class="form-select form-select-sm d-inline w-auto" style="width: auto; display: inline-block; margin-right: 5px;">
+                {% for key, label in issue.STATUS_CHOICES %}
+                  <option value="{{ key }}" {% if issue.status == key %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-sm btn-outline-primary">{% trans "Обновить" %}</button>
+            </form>
+
+            <form method="post" action="{% url 'issues:delete_issue' issue.id %}"
+                  onsubmit="return confirm('❗ Удалить обращение «{{ issue.title|escapejs }}»? Действие нельзя отменить.');"
+                  class="d-inline ms-2">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                🗑️ {% trans "Удалить" %}
+              </button>
+            </form>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+{% else %}
+  <p>{% trans "Не найдено обращений по заданным критериям." %}</p>
+{% endif %}

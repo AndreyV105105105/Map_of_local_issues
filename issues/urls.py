@@ -5,6 +5,7 @@ app_name = 'issues'
 
 urlpatterns = [
     path('map/', views.map_view, name='map'),
+    path('map/geojson/', views.get_issues_geojson, name='map_geojson'),
     path('create/', views.create_issue, name='create_issue'),
     path('update-status/<int:issue_id>/', views.update_issue_status, name='update_issue_status'),
     path('<int:issue_id>/delete/', views.delete_issue, name='delete_issue'),

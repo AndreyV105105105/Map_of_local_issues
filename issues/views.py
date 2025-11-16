@@ -1,10 +1,10 @@
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
-from django.db.models import Prefetch, Case, When, IntegerField, Sum, BooleanField, Value as V, OuterRef, Subquery
+from django.db.models import Q, Prefetch, Case, When, IntegerField, Sum, BooleanField, Value as V, OuterRef, Subquery
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
@@ -15,15 +15,22 @@ from .models import Issue, IssuePhoto, Vote
 @login_required
 def map_view(request):
     """
-    Отображает карту со всеми обращениями.
+    Отображает карту со всеми обращениями с возможностью фильтрации.
     Доступно всем авторизованным пользователям.
     """
+    # Получаем параметры фильтрации из GET-запроса
+    category = request.GET.get('category')
+    status = request.GET.get('status')
+    search = request.GET.get('search', '').strip()
+    sort = request.GET.get('sort', '-created_at')  # сортировка по умолчанию
+
     # Подзапрос: голос текущего пользователя по каждому Issue
     user_vote_subq = Vote.objects.filter(
         issue=OuterRef('pk'),
         user=request.user
     ).values('value')[:1]
 
+    # Базовый QuerySet
     issues = Issue.objects.select_related('reporter').prefetch_related(
         Prefetch('photos', queryset=IssuePhoto.objects.order_by('id'))
     ).annotate(
@@ -38,14 +45,47 @@ def map_view(request):
             default=V(False),
             output_field=BooleanField()
         ),
-        vote_rating=Sum('votes__value', default=0)  # ← этот безопасен (GROUP BY id)
+        vote_rating=Sum('votes__value', default=0)
     )
 
-    return render(request, 'issues/map.html', {
+    # Применяем фильтры
+    if category and category in dict(ISSUE_CATEGORY_CHOICES).keys():
+        issues = issues.filter(category=category)
+
+    if status and status in dict(Issue.STATUS_CHOICES).keys():
+        issues = issues.filter(status=status)
+
+    if search:
+        issues = issues.filter(
+            Q(title__icontains=search) |
+            Q(description__icontains=search) |
+            Q(reporter__email__icontains=search) |
+            Q(reporter__first_name__icontains=search) |
+            Q(reporter__last_name__icontains=search)
+        )
+
+    # Применяем сортировку
+    valid_sort_fields = ['-created_at', 'created_at', '-vote_rating', 'vote_rating', 'title']
+    if sort not in valid_sort_fields:
+        sort = '-created_at'
+    issues = issues.order_by(sort)
+
+    context = {
         'issues': issues,
         'categories': ISSUE_CATEGORIES,
         'user_role': request.user.role,
-    })
+        'selected_category': category,
+        'selected_status': status,
+        'search_query': search,
+        'selected_sort': sort,
+        'status_choices': Issue.STATUS_CHOICES,
+    }
+
+    # Если запрос AJAX, возвращаем только список проблем
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'issues/partials/issues_list.html', context)
+
+    return render(request, 'issues/map.html', context)
 
 
 @login_required
@@ -206,6 +246,7 @@ def issue_detail(request, pk):
     )
     return render(request, 'issues/issue_detail.html', {'issue': issue})
 
+
 @login_required
 @require_POST
 def vote_issue(request, issue_id):
@@ -247,3 +288,66 @@ def vote_issue(request, issue_id):
         'user_vote': user_vote,  # null, 1 или -1
         'issue_id': issue_id
     })
+
+
+@login_required
+def get_issues_geojson(request):
+    """
+    Возвращает GeoJSON с данными об обращениях для карты с учетом фильтров.
+    """
+    # Получаем параметры фильтрации
+    category = request.GET.get('category')
+    status = request.GET.get('status')
+    search = request.GET.get('search', '').strip()
+
+    # Базовый QuerySet
+    issues = Issue.objects.select_related('reporter').annotate(
+        vote_rating=Sum('votes__value', default=0)
+    )
+
+    # Применяем фильтры
+    if category and category in dict(ISSUE_CATEGORY_CHOICES).keys():
+        issues = issues.filter(category=category)
+
+    if status and status in dict(Issue.STATUS_CHOICES).keys():
+        issues = issues.filter(status=status)
+
+    if search:
+        issues = issues.filter(
+            Q(title__icontains=search) |
+            Q(description__icontains=search) |
+            Q(reporter__email__icontains=search) |
+            Q(reporter__first_name__icontains=search) |
+            Q(reporter__last_name__icontains=search)
+        )
+
+    # Формируем GeoJSON
+    features = []
+    for issue in issues:
+        if issue.location:
+            feature = {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [issue.location.x, issue.location.y]
+                },
+                'properties': {
+                    'id': issue.id,
+                    'title': issue.title,
+                    'status': issue.status,
+                    'status_display': issue.get_status_display(),
+                    'category': issue.category,
+                    'category_display': issue.get_category_display(),
+                    'vote_rating': issue.vote_rating,
+                    'photos_count': issue.photos.count(),
+                    'url': reverse('issues:issue_detail', args=[issue.id])
+                }
+            }
+            features.append(feature)
+
+    geojson = {
+        'type': 'FeatureCollection',
+        'features': features
+    }
+
+    return JsonResponse(geojson)

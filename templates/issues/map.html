@@ -2,6 +2,43 @@
 {% load static %}
 {% load i18n %}
 
+{% block extra_css %}
+<style>
+  .filter-container {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #e9ecef;
+  }
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .filter-item {
+    flex: 1;
+    min-width: 150px;
+  }
+  .filter-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    align-items: flex-end;
+  }
+  .filter-badge {
+    cursor: pointer;
+  }
+  #map {
+    height: 600px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
   <h2>{% trans "Карта локальных проблем (Ханты-Мансийск)" %}</h2>
@@ -14,97 +51,81 @@
 
   <div id="map" style="height: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px;"></div>
 
-  <div class="mt-4">
-    <h4>{% trans "Все обращения" %} ({{ issues.count }})</h4>
-    {% for issue in issues %}
-      <div class="card mb-3" data-issue-id="{{ issue.id }}">
-        <div class="card-body">
-          <h6 class="mb-1">
-            <a href="{% url 'issues:issue_detail' issue.id %}" class="text-decoration-none text-dark">
-              {{ issue.title }}
-            </a>
-          </h6>
-
-          <!-- Рейтинг и голосование -->
-          <div class="d-flex align-items-center mb-2">
-            <span class="badge bg-primary rounded-pill px-2 me-2">
-              {{ issue.vote_rating }} {% trans "рейтинг" %}
-            </span>
-
-            {% if user.is_authenticated and user.role == 'citizen' %}
-              <div class="btn-group" role="group">
-                <button type="button"
-                        class="btn btn-sm {% if issue.user_has_upvoted %}btn-success{% else %}btn-outline-success{% endif %}"
-                        onclick="toggleVote({{ issue.id }}, 1, {{ issue.user_has_upvoted|yesno:'true,false' }}, {{ issue.user_has_downvoted|yesno:'true,false' }})">
-                  👍
-                </button>
-                <button type="button"
-                        class="btn btn-sm {% if issue.user_has_downvoted %}btn-danger{% else %}btn-outline-danger{% endif %}"
-                        onclick="toggleVote({{ issue.id }}, -1, {{ issue.user_has_upvoted|yesno:'true,false' }}, {{ issue.user_has_downvoted|yesno:'true,false' }})">
-                  👎
-                </button>
-              </div>
-            {% endif %}
-          </div>
-
-          <p class="text-muted small mb-1">
-            {{ issue.description|truncatewords:15 }}
-          </p>
-          <p class="text-muted small mb-0">
-            {% trans "Категория" %}: {{ issue.get_category_display }} |
-            {% trans "Статус" %}: {{ issue.get_status_display }} |
-            {% trans "Автор" %}: 
-            {% if user.is_authenticated and user.role == 'official' %}
-              {{ issue.reporter.get_full_name }}
-              {% if issue.reporter.email %}({{ issue.reporter.email }}){% endif %}
-            {% else %}
-              {{ issue.reporter.get_full_name }}
-            {% endif %} |
-            {{ issue.created_at|date:"d.m.Y H:i" }}
-          </p>
-
-          {% if issue.photos.all %}
-            <div class="mt-2">
-              <div class="d-flex flex-wrap gap-1">
-                {% for photo in issue.photos.all|slice:":3" %}
-                  <a href="{{ photo.image.url }}" target="_blank" title="{% trans "Посмотреть фото" %}">
-                    <img src="{{ photo.image.url }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
-                  </a>
-                {% endfor %}
-                {% if issue.photos.count > 3 %}
-                  <span class="badge bg-secondary align-self-center">+{{ issue.photos.count|add:"-3" }}</span>
-                {% endif %}
-              </div>
-            </div>
-          {% endif %}
-
-          {% if user.is_authenticated and user.role == 'official' %}
-            <div class="mt-2">
-              <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="d-inline">
-                {% csrf_token %}
-                <select name="status" class="form-select form-select-sm d-inline w-auto" style="width: auto; display: inline-block; margin-right: 5px;">
-                  {% for key, label in issue.STATUS_CHOICES %}
-                    <option value="{{ key }}" {% if issue.status == key %}selected{% endif %}>{{ label }}</option>
-                  {% endfor %}
-                </select>
-                <button type="submit" class="btn btn-sm btn-outline-primary">{% trans "Обновить" %}</button>
-              </form>
-
-              <form method="post" action="{% url 'issues:delete_issue' issue.id %}"
-                    onsubmit="return confirm('❗ Удалить обращение «{{ issue.title|escapejs }}»? Действие нельзя отменить.');"
-                    class="d-inline ms-2">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-outline-danger">
-                  🗑️ {% trans "Удалить" %}
-                </button>
-              </form>
-            </div>
-          {% endif %}
-        </div>
+  <!-- Форма фильтрации -->
+  <div class="filter-container mt-4">
+    <h5 class="mb-3">{% trans "Фильтрация обращений" %}</h5>
+    <form id="filter-form" class="filter-row">
+      <div class="filter-item">
+        <label for="category-filter" class="form-label small">{% trans "Категория" %}</label>
+        <select id="category-filter" name="category" class="form-select form-select-sm">
+          <option value="">{% trans "Все категории" %}</option>
+          {% for value, label in categories %}
+            <option value="{{ value }}" {% if selected_category == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
       </div>
-    {% empty %}
-      <p>{% trans "Пока нет обращений." %}</p>
-    {% endfor %}
+
+      <div class="filter-item">
+        <label for="status-filter" class="form-label small">{% trans "Статус" %}</label>
+        <select id="status-filter" name="status" class="form-select form-select-sm">
+          <option value="">{% trans "Все статусы" %}</option>
+          {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="search-filter" class="form-label small">{% trans "Поиск" %}</label>
+        <input type="text" id="search-filter" name="search" class="form-control form-control-sm"
+               placeholder="{% trans "Название, описание, автор..." %}" value="{{ search_query }}">
+      </div>
+
+      <div class="filter-item">
+        <label for="sort-filter" class="form-label small">{% trans "Сортировка" %}</label>
+        <select id="sort-filter" name="sort" class="form-select form-select-sm">
+          <option value="-created_at" {% if selected_sort == "-created_at" %}selected{% endif %}>{% trans "Сначала новые" %}</option>
+          <option value="created_at" {% if selected_sort == "created_at" %}selected{% endif %}>{% trans "Сначала старые" %}</option>
+          <option value="-vote_rating" {% if selected_sort == "-vote_rating" %}selected{% endif %}>{% trans "Сначала с высоким рейтингом" %}</option>
+          <option value="vote_rating" {% if selected_sort == "vote_rating" %}selected{% endif %}>{% trans "Сначала с низким рейтингом" %}</option>
+          <option value="title" {% if selected_sort == "title" %}selected{% endif %}>{% trans "По названию" %}</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button type="submit" class="btn btn-primary btn-sm">{% trans "Применить" %}</button>
+        <button type="button" id="reset-filters" class="btn btn-outline-secondary btn-sm">{% trans "Сбросить" %}</button>
+      </div>
+    </form>
+
+    <!-- Активные фильтры -->
+    {% if selected_category or selected_status or search_query %}
+    <div class="mt-3">
+      <small class="text-muted">{% trans "Активные фильтры:" %}</small>
+      {% if selected_category %}
+        <span class="badge bg-info filter-badge me-1" data-filter="category">
+          {% for value, label in categories %}
+            {% if value == selected_category %}{{ label }}{% endif %}
+          {% endfor %}
+        </span>
+      {% endif %}
+      {% if selected_status %}
+        <span class="badge bg-warning filter-badge me-1" data-filter="status">
+          {% for value, label in status_choices %}
+            {% if value == selected_status %}{{ label }}{% endif %}
+          {% endfor %}
+        </span>
+      {% endif %}
+      {% if search_query %}
+        <span class="badge bg-success filter-badge me-1" data-filter="search">{{ search_query }}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Контейнер для списка обращений -->
+  <div id="issues-container">
+    {% include "issues/partials/issues_list.html" %}
   </div>
 </div>
 
@@ -117,6 +138,9 @@
     [68.75, 60.75],
     [69.30, 61.15]
   ];
+
+  // Храним все маркеры
+  let markers = [];
 
   const map = new maplibregl.Map({
     container: 'map',
@@ -146,7 +170,251 @@
   map.addControl(new maplibregl.NavigationControl(), 'top-right');
   map.addControl(new maplibregl.ScaleControl({ maxWidth: 100 }), 'bottom-left');
 
+  // Функция для обновления маркеров на карте
+  function updateMapMarkers(filters) {
+    // Удаляем старые маркеры
+    markers.forEach(marker => marker.remove());
+    markers = [];
+
+    // Загружаем новые данные для карты
+    fetch(`/issues/map/geojson/?${new URLSearchParams(filters)}`)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Ошибка сервера при загрузке данных для карты');
+        }
+        return response.json();
+    })
+    .then(geojson => {
+        // Добавляем новые маркеры
+        geojson.features.forEach(feature => {
+            const lng = feature.geometry.coordinates[0];
+            const lat = feature.geometry.coordinates[1];
+            const props = feature.properties;
+
+            if (!isNaN(lng) && !isNaN(lat)) {
+                const popupContent = `
+                    <a href="${props.url}"
+                       style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
+                        ${props.title}
+                    </a>
+                    <small>
+                        Статус: <strong>${props.status_display}</strong><br>
+                        Категория: ${props.category_display}<br>
+                        Рейтинг: <strong>${props.vote_rating}</strong>
+                        ${props.photos_count > 0 ? `<br>📸 ${props.photos_count} {% trans "фото" %}` : ''}
+                    </small>
+                `;
+
+                const popup = new maplibregl.Popup({
+                    closeButton: false,
+                    closeOnClick: false,
+                    anchor: 'top',
+                    offset: [0, -8],
+                    maxWidth: '220px'
+                }).setHTML(popupContent);
+
+                const marker = new maplibregl.Marker({ color: '#e74c3c' })
+                    .setLngLat([lng, lat])
+                    .setPopup(popup)
+                    .addTo(map);
+
+                const markerEl = marker.getElement();
+                if (markerEl) {
+                    markerEl.addEventListener('mouseenter', (e) => {
+                        e.stopPropagation();
+                        popup.addTo(map);
+                    });
+                    markerEl.addEventListener('mouseleave', (e) => {
+                        e.stopPropagation();
+                        if (popup.isOpen()) popup.remove();
+                    });
+
+                    markerEl.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        window.location.href = props.url;
+                    });
+                }
+
+                markers.push(marker);
+            }
+        });
+    })
+    .catch(error => {
+        console.error('Error updating map markers:', error);
+        // Восстанавливаем первоначальные маркеры при ошибке
+        setTimeout(() => {
+            // Удаляем текущие маркеры
+            markers.forEach(marker => marker.remove());
+            markers = [];
+
+            // Восстанавливаем первоначальные маркеры
+            {% for issue in issues %}
+              {% if issue.location and issue.location.x is not None and issue.location.y is not None %}
+                {% with lng=issue.location.x|floatformat:"6" lat=issue.location.y|floatformat:"6" %}
+                  {% if lng != "None" and lat != "None" %}
+                    {
+                      const lng = parseFloat("{{ lng }}");
+                      const lat = parseFloat("{{ lat }}");
+                      if (!isNaN(lng) && !isNaN(lat)) {
+                        const popup = new maplibregl.Popup({
+                          closeButton: false,
+                          closeOnClick: false,
+                          anchor: 'top',
+                          offset: [0, -8],
+                          maxWidth: '220px'
+                        }).setHTML(`
+                          <a href="{% url 'issues:issue_detail' issue.id %}"
+                             style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
+                            {{ issue.title|escapejs }}
+                          </a>
+                          <small>
+                            Статус: <strong>{{ issue.get_status_display }}</strong><br>
+                            Категория: {{ issue.get_category_display }}<br>
+                            Рейтинг: <strong>{{ issue.vote_rating }}</strong>
+                            {% if issue.photos.all %}
+                              <br>📸 {{ issue.photos.count }} {% trans "фото" %}
+                            {% endif %}
+                          </small>
+                        `);
+
+                        const marker = new maplibregl.Marker({ color: '#e74c3c' })
+                          .setLngLat([lng, lat])
+                          .addTo(map);
+
+                        const markerEl = marker.getElement();
+                        if (markerEl) {
+                          markerEl.addEventListener('mouseenter', (e) => {
+                            e.stopPropagation();
+                            popup.setLngLat(marker.getLngLat()).addTo(map);
+                          });
+                          markerEl.addEventListener('mouseleave', (e) => {
+                            e.stopPropagation();
+                            if (popup.isOpen()) popup.remove();
+                          });
+
+                          markerEl.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            window.location.href = "{% url 'issues:issue_detail' issue.id %}";
+                          });
+                        }
+
+                        markers.push(marker);
+                      }
+                    }
+                  {% endif %}
+                {% endwith %}
+              {% endif %}
+            {% endfor %}
+        }, 500);
+    });
+  }
+
+  // Функция для загрузки данных с фильтрами
+  function loadIssuesWithFilters(filters) {
+    // Обновляем URL
+    const url = new URL(window.location.href);
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) {
+        url.searchParams.set(key, value);
+      } else {
+        url.searchParams.delete(key);
+      }
+    });
+    history.pushState({}, '', url);
+
+    document.querySelector('#filter-form button[type="submit"]').disabled = true;
+    document.querySelector('#filter-form button[type="submit"]').innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+
+    return fetch(`/issues/map/?${new URLSearchParams(filters)}`, {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Ошибка сервера');
+      }
+      return response.text();
+    })
+    .then(html => {
+      // Обновляем список обращений
+      document.getElementById('issues-container').innerHTML = html;
+
+      // Обновляем карту с теми же фильтрами
+      updateMapMarkers(filters);
+    })
+    .catch(error => {
+      console.error('Error loading filtered issues:', error);
+      alert('{% trans "Ошибка при загрузке данных. Попробуйте позже." %}');
+    })
+    .finally(() => {
+      document.querySelector('#filter-form button[type="submit"]').disabled = false;
+      document.querySelector('#filter-form button[type="submit"]').innerHTML = '{% trans "Применить" %}';
+    });
+  }
+
+  // Обработчик отправки формы фильтрации
+  document.getElementById('filter-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const filters = Object.fromEntries(formData.entries());
+
+    loadIssuesWithFilters(filters);
+  });
+
+  // Обработчик сброса фильтров
+  document.getElementById('reset-filters').addEventListener('click', function() {
+    document.getElementById('category-filter').value = '';
+    document.getElementById('status-filter').value = '';
+    document.getElementById('search-filter').value = '';
+    document.getElementById('sort-filter').value = '-created_at';
+
+    document.querySelectorAll('.filter-badge').forEach(badge => badge.remove());
+
+    const formData = new FormData(document.getElementById('filter-form'));
+    const filters = Object.fromEntries(formData.entries());
+
+    loadIssuesWithFilters(filters);
+  });
+
+  // Обработчик клика на бейджи фильтров
+  document.querySelectorAll('.filter-badge').forEach(badge => {
+    badge.addEventListener('click', function() {
+      const filterType = this.dataset.filter;
+      if (filterType === 'category') {
+        document.getElementById('category-filter').value = '';
+      } else if (filterType === 'status') {
+        document.getElementById('status-filter').value = '';
+      } else if (filterType === 'search') {
+        document.getElementById('search-filter').value = '';
+      }
+
+      this.remove();
+
+      const formData = new FormData(document.getElementById('filter-form'));
+      const filters = Object.fromEntries(formData.entries());
+
+      loadIssuesWithFilters(filters);
+    });
+  });
+
+  // Автообновление при вводе в поле поиска (с задержкой)
+  let searchTimeout;
+  document.getElementById('search-filter').addEventListener('input', function(e) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      if (e.target.value.length > 2 || e.target.value.length === 0) {
+        const formData = new FormData(document.getElementById('filter-form'));
+        const filters = Object.fromEntries(formData.entries());
+        loadIssuesWithFilters(filters);
+      }
+    }, 500);
+  });
+
+  // Инициализация карты и первоначальных маркеров
   map.on('load', () => {
+    // Добавляем первоначальные маркеры
     {% for issue in issues %}
       {% if issue.location and issue.location.x is not None and issue.location.y is not None %}
         {% with lng=issue.location.x|floatformat:"6" lat=issue.location.y|floatformat:"6" %}
@@ -196,6 +464,8 @@
                     window.location.href = "{% url 'issues:issue_detail' issue.id %}";
                   });
                 }
+
+                markers.push(marker);
               }
             }
           {% endif %}
