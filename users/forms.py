@@ -1,7 +1,14 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import SetPasswordForm
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.password_validation import (
+    validate_password,
+    get_default_password_validators,
+)
+from django.core.exceptions import ValidationError
+
 User = get_user_model()
 
 
@@ -100,3 +107,42 @@ class CustomAuthenticationForm(AuthenticationForm):
         ),
         'inactive': _("Эта учетная запись неактивна."),
     }
+
+
+class CustomSetPasswordForm(SetPasswordForm):
+    new_password1 = forms.CharField(
+        label=_("Новый пароль"),
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        help_text=_(
+            "• Не должен быть похож на ваши личные данные.<br>"
+            "• Должен содержать не менее 12 символов.<br>"
+            "• Не должен быть распространённым.<br>"
+            "• Не должен состоять только из цифр."
+        ),
+    )
+    new_password2 = forms.CharField(
+        label=_("Подтверждение нового пароля"),
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+    )
+
+    def clean_new_password1(self):
+        password = self.cleaned_data.get('new_password1')
+        if not password:
+            return password
+
+        # Создаём кастомный список валидаторов с min_length=12
+        from django.contrib.auth.password_validation import MinimumLengthValidator
+        validators = get_default_password_validators()
+
+        # Заменяем MinimumLengthValidator на версию с min_length=12
+        for i, v in enumerate(validators):
+            if v.__class__.__name__ == 'MinimumLengthValidator':
+                validators[i] = MinimumLengthValidator(min_length=12)
+                break
+
+        try:
+            validate_password(password, self.user, password_validators=validators)
+        except ValidationError as e:
+            raise forms.ValidationError(e.messages)
+
+        return password

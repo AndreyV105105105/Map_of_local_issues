@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from django.utils.translation import gettext_lazy as _
 
 # Load environment variables from .env file (install python-dotenv first)
 load_dotenv()
@@ -174,6 +175,10 @@ if not DEBUG:
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'webmaster@localhost')
+
+SITE_ID = 1
+
+
 
 # Logging configuration
 LOGGING = {

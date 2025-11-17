@@ -12,6 +12,7 @@ from django.contrib.auth import get_user_model
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from django.utils.translation import gettext_lazy as _
 import re
+from .forms import CustomSetPasswordForm
 User = get_user_model()
 
 
