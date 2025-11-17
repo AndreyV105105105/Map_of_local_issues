@@ -1,12 +1,15 @@
-from django.contrib.gis.db import models
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.utils import timezone
-from .constants import ISSUE_CATEGORY_CHOICES
-from django.utils.translation import gettext_lazy as _
+from django.contrib.gis.db import models
 from django.core.validators import FileExtensionValidator
 from django.db.models import Sum
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
+from .constants import ISSUE_CATEGORY_CHOICES
 
 User = get_user_model()
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -19,6 +22,7 @@ class Category(models.Model):
 
     class Meta:
         verbose_name_plural = "Categories"
+
 
 class Issue(models.Model):
     STATUS_OPEN = 'OPEN'
@@ -90,6 +94,7 @@ class Issue(models.Model):
         # fallback (например, при вызове issue.rating вне аннотированного QuerySet)
         return self.votes.aggregate(models.Sum('value'))['value__sum'] or 0
 
+
 class IssuePhoto(models.Model):
     issue = models.ForeignKey(
         Issue,
@@ -105,7 +110,6 @@ class IssuePhoto(models.Model):
 
     def __str__(self):
         return f"Photo for {self.issue.title}"
-
 
 
 class Vote(models.Model):
@@ -145,5 +149,36 @@ class Vote(models.Model):
         return f"{user_repr} — {value_repr} — {issue_repr}"
 
 
+class Comment(models.Model):
+    issue = models.ForeignKey(
+        'Issue',
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name="Обращение"
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='issue_comments',
+        verbose_name="Автор"
+    )
+    text = models.TextField(
+        verbose_name="Комментарий",
+        help_text="Введите ваш комментарий"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата создания"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Дата обновления"
+    )
 
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Комментарий"
+        verbose_name_plural = "Комментарии"
 
+    def __str__(self):
+        return f"Комментарий от {self.author.get_full_name()} к обращению {self.issue.id}"
