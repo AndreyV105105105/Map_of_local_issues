@@ -25,7 +25,7 @@ def issue_detail(request, pk):
     issue = get_object_or_404(
         Issue.objects.prefetch_related(
             Prefetch('photos', queryset=IssuePhoto.objects.order_by('id')),
-            Prefetch('comments', queryset=Comment.objects.order_by('-created_at'))  # New
+            Prefetch('comments', queryset=Comment.objects.select_related('author').order_by('-created_at'))
         ).annotate(
             user_vote=Subquery(user_vote_subq, output_field=IntegerField()),
             user_has_upvoted=Case(
@@ -43,8 +43,8 @@ def issue_detail(request, pk):
         pk=pk
     )
 
-    # Handle comment form
-    if request.method == 'POST' and request.user.role == 'citizen':
+    # Handle comment form - allow both citizens and officials
+    if request.method == 'POST':
         comment_form = CommentForm(request.POST)
         if comment_form.is_valid():
             comment = comment_form.save(commit=False)
@@ -57,7 +57,7 @@ def issue_detail(request, pk):
 
     return render(request, 'issues/issue_detail.html', {
         'issue': issue,
-        'comment_form': comment_form  # Pass form to template
+        'comment_form': comment_form
     })
 
 
