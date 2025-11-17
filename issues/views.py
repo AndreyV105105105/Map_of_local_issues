@@ -9,7 +9,56 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from .constants import ISSUE_CATEGORIES, ISSUE_CATEGORY_CHOICES
+from .forms import CommentForm
+from .models import Comment
 from .models import Issue, IssuePhoto, Vote
+
+
+@login_required
+def issue_detail(request, pk):
+    # Add prefetch for comments
+    user_vote_subq = Vote.objects.filter(
+        issue=OuterRef('pk'),
+        user=request.user
+    ).values('value')[:1]
+
+    issue = get_object_or_404(
+        Issue.objects.prefetch_related(
+            Prefetch('photos', queryset=IssuePhoto.objects.order_by('id')),
+            Prefetch('comments', queryset=Comment.objects.select_related('author').order_by('-created_at'))
+        ).annotate(
+            user_vote=Subquery(user_vote_subq, output_field=IntegerField()),
+            user_has_upvoted=Case(
+                When(user_vote=1, then=V(True)),
+                default=V(False),
+                output_field=BooleanField()
+            ),
+            user_has_downvoted=Case(
+                When(user_vote=-1, then=V(True)),
+                default=V(False),
+                output_field=BooleanField()
+            ),
+            vote_rating=Sum('votes__value', default=0)
+        ),
+        pk=pk
+    )
+
+    # Handle comment form - allow both citizens and officials
+    if request.method == 'POST':
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            comment = comment_form.save(commit=False)
+            comment.issue = issue
+            comment.author = request.user
+            comment.save()
+            return redirect('issues:issue_detail', pk=issue.pk)
+    else:
+        comment_form = CommentForm()
+
+    return render(request, 'issues/issue_detail.html', {
+        'issue': issue,
+        'comment_form': comment_form
+    })
 
 
 @login_required
@@ -215,36 +264,6 @@ def delete_issue(request, issue_id):
     # Если GET (кто-то вручную ввёл URL) — не удаляем, а редиректим
     messages.warning(request, "Метод не поддерживается. Используйте кнопку «Удалить».", extra_tags='issues')
     return redirect('issues:map')
-
-
-@login_required
-def issue_detail(request, pk):
-    # Подзапросы — работают без дублирования строк
-    user_vote_subq = Vote.objects.filter(
-        issue=OuterRef('pk'),
-        user=request.user
-    ).values('value')[:1]
-
-    issue = get_object_or_404(
-        Issue.objects.prefetch_related(
-            Prefetch('photos', queryset=IssuePhoto.objects.order_by('id'))
-        ).annotate(
-            user_vote=Subquery(user_vote_subq, output_field=IntegerField()),
-            user_has_upvoted=Case(
-                When(user_vote=1, then=V(True)),
-                default=V(False),
-                output_field=BooleanField()
-            ),
-            user_has_downvoted=Case(
-                When(user_vote=-1, then=V(True)),
-                default=V(False),
-                output_field=BooleanField()
-            ),
-            vote_rating=Sum('votes__value', default=0)
-        ),
-        pk=pk
-    )
-    return render(request, 'issues/issue_detail.html', {'issue': issue})
 
 
 @login_required
