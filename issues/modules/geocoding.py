@@ -237,12 +237,9 @@ def geocode_address(address: str) -> Optional[Tuple[str, Point]]:
     return None
 
 
-import requests
-import time
-import logging
-from django.core.cache import cache
 
-logger = logging.getLogger(__name__)
+
+
 
 
 def reverse_geocode(lat: float, lon: float) -> str:
