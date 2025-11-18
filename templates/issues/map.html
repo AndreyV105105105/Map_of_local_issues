@@ -36,6 +36,58 @@
     border: 1px solid #ccc;
     border-radius: 4px;
   }
+  /* Стили для поиска */
+  .map-search-container {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    width: 500px;
+    max-width: 90vw;
+  }
+  .map-search-input-group {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    border-radius: 24px;
+    overflow: hidden;
+  }
+  .map-search-input {
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    outline: none;
+  }
+  .map-search-btn {
+    background: #fff;
+    border: none;
+    padding: 0 16px;
+    cursor: pointer;
+  }
+  .map-search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1001;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .map-search-result-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+  }
+  .map-search-result-item:hover {
+    background-color: #f5f5f5;
+  }
+  .map-search-result-item.active {
+    background-color: #e3f2fd;
+  }
 </style>
 {% endblock %}
 
@@ -45,12 +97,26 @@
 
   {% if user.is_authenticated and user.role == 'citizen' %}
     <div class="alert alert-info">
-      {% trans "Кликните по карте, чтобы сообщить о проблеме." %}
+      {% trans "Кликните по карте или начните вводить адрес — подсказки появятся автоматически." %}
     </div>
   {% endif %}
+</div>
 
-  <div id="map" style="height: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px;"></div>
+<!-- Поиск по адресу — поверх карты -->
+<div class="map-search-container">
+  <div class="input-group map-search-input-group">
+    <input type="text" id="map-address-search" class="form-control map-search-input"
+           placeholder="{% trans 'Начните вводить адрес: Ленина, Мира, Нефтяников...' %}">
+    <button class="map-search-btn" type="button" id="map-search-btn">
+      <i class="bi bi-search"></i>
+    </button>
+  </div>
+  <div id="map-search-results" class="map-search-results" style="display:none;"></div>
+</div>
 
+<div id="map" style="height: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px;"></div>
+
+<div class="container mt-4">
   <!-- Форма фильтрации -->
   <div class="filter-container mt-4">
     <h5 class="mb-3">{% trans "Фильтрация обращений" %}</h5>
@@ -139,8 +205,8 @@
     [69.30, 61.15]
   ];
 
-  // Храним все маркеры
   let markers = [];
+  let tempMarker = null;
 
   const map = new maplibregl.Map({
     container: 'map',
@@ -170,22 +236,17 @@
   map.addControl(new maplibregl.NavigationControl(), 'top-right');
   map.addControl(new maplibregl.ScaleControl({ maxWidth: 100 }), 'bottom-left');
 
-  // Функция для обновления маркеров на карте
+  // === МАРКЕРЫ И ФИЛЬТРЫ (оставлены без изменений) ===
   function updateMapMarkers(filters) {
-    // Удаляем старые маркеры
     markers.forEach(marker => marker.remove());
     markers = [];
 
-    // Загружаем новые данные для карты
     fetch(`/issues/map/geojson/?${new URLSearchParams(filters)}`)
     .then(response => {
-        if (!response.ok) {
-            throw new Error('Ошибка сервера при загрузке данных для карты');
-        }
+        if (!response.ok) throw new Error('Ошибка сервера');
         return response.json();
     })
     .then(geojson => {
-        // Добавляем новые маркеры
         geojson.features.forEach(feature => {
             const lng = feature.geometry.coordinates[0];
             const lat = feature.geometry.coordinates[1];
@@ -241,13 +302,9 @@
     })
     .catch(error => {
         console.error('Error updating map markers:', error);
-        // Восстанавливаем первоначальные маркеры при ошибке
         setTimeout(() => {
-            // Удаляем текущие маркеры
             markers.forEach(marker => marker.remove());
             markers = [];
-
-            // Восстанавливаем первоначальные маркеры
             {% for issue in issues %}
               {% if issue.location and issue.location.x is not None and issue.location.y is not None %}
                 {% with lng=issue.location.x|floatformat:"6" lat=issue.location.y|floatformat:"6" %}
@@ -309,38 +366,26 @@
     });
   }
 
-  // Функция для загрузки данных с фильтрами
   function loadIssuesWithFilters(filters) {
-    // Обновляем URL
     const url = new URL(window.location.href);
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) {
-        url.searchParams.set(key, value);
-      } else {
-        url.searchParams.delete(key);
-      }
+      value ? url.searchParams.set(key, value) : url.searchParams.delete(key);
     });
     history.pushState({}, '', url);
 
-    document.querySelector('#filter-form button[type="submit"]').disabled = true;
-    document.querySelector('#filter-form button[type="submit"]').innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+    const btn = document.querySelector('#filter-form button[type="submit"]');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
 
-    return fetch(`/issues/map/?${new URLSearchParams(filters)}`, {
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+    fetch(`/issues/map/?${new URLSearchParams(filters)}`, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
     .then(response => {
-      if (!response.ok) {
-        throw new Error('Ошибка сервера');
-      }
+      if (!response.ok) throw new Error('Ошибка сервера');
       return response.text();
     })
     .then(html => {
-      // Обновляем список обращений
       document.getElementById('issues-container').innerHTML = html;
-
-      // Обновляем карту с теми же фильтрами
       updateMapMarkers(filters);
     })
     .catch(error => {
@@ -348,73 +393,157 @@
       alert('{% trans "Ошибка при загрузке данных. Попробуйте позже." %}');
     })
     .finally(() => {
-      document.querySelector('#filter-form button[type="submit"]').disabled = false;
-      document.querySelector('#filter-form button[type="submit"]').innerHTML = '{% trans "Применить" %}';
+      const btn = document.querySelector('#filter-form button[type="submit"]');
+      btn.disabled = false;
+      btn.innerHTML = '{% trans "Применить" %}';
     });
   }
 
-  // Обработчик отправки формы фильтрации
-  document.getElementById('filter-form').addEventListener('submit', function(e) {
+  document.getElementById('filter-form')?.addEventListener('submit', function(e) {
     e.preventDefault();
-
     const formData = new FormData(this);
     const filters = Object.fromEntries(formData.entries());
-
     loadIssuesWithFilters(filters);
   });
 
-  // Обработчик сброса фильтров
-  document.getElementById('reset-filters').addEventListener('click', function() {
-    document.getElementById('category-filter').value = '';
-    document.getElementById('status-filter').value = '';
-    document.getElementById('search-filter').value = '';
-    document.getElementById('sort-filter').value = '-created_at';
-
-    document.querySelectorAll('.filter-badge').forEach(badge => badge.remove());
-
+  document.getElementById('reset-filters')?.addEventListener('click', function() {
+    ['category-filter', 'status-filter', 'search-filter', 'sort-filter'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = el.id === 'sort-filter' ? '-created_at' : '';
+    });
+    document.querySelectorAll('.filter-badge').forEach(el => el.remove());
+    
     const formData = new FormData(document.getElementById('filter-form'));
-    const filters = Object.fromEntries(formData.entries());
-
-    loadIssuesWithFilters(filters);
+    loadIssuesWithFilters(Object.fromEntries(formData.entries()));
   });
 
-  // Обработчик клика на бейджи фильтров
   document.querySelectorAll('.filter-badge').forEach(badge => {
     badge.addEventListener('click', function() {
-      const filterType = this.dataset.filter;
-      if (filterType === 'category') {
-        document.getElementById('category-filter').value = '';
-      } else if (filterType === 'status') {
-        document.getElementById('status-filter').value = '';
-      } else if (filterType === 'search') {
-        document.getElementById('search-filter').value = '';
-      }
-
+      const f = this.dataset.filter;
+      const el = document.getElementById(f + '-filter');
+      if (el) el.value = '';
       this.remove();
-
       const formData = new FormData(document.getElementById('filter-form'));
-      const filters = Object.fromEntries(formData.entries());
-
-      loadIssuesWithFilters(filters);
+      loadIssuesWithFilters(Object.fromEntries(formData.entries()));
     });
   });
 
-  // Автообновление при вводе в поле поиска (с задержкой)
   let searchTimeout;
-  document.getElementById('search-filter').addEventListener('input', function(e) {
+  document.getElementById('search-filter')?.addEventListener('input', function(e) {
     clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      if (e.target.value.length > 2 || e.target.value.length === 0) {
+    if (e.target.value.length > 2 || e.target.value.length === 0) {
+      searchTimeout = setTimeout(() => {
         const formData = new FormData(document.getElementById('filter-form'));
-        const filters = Object.fromEntries(formData.entries());
-        loadIssuesWithFilters(filters);
-      }
-    }, 500);
+        loadIssuesWithFilters(Object.fromEntries(formData.entries()));
+      }, 500);
+    }
   });
 
-  // Инициализация карты и первоначальных маркеров
+  // === АВТОДОПОЛНЕНИЕ ПО АДРЕСУ ===
+  function clearSearchResults() {
+    const div = document.getElementById('map-search-results');
+    if (div) { div.innerHTML = ''; div.style.display = 'none'; }
+  }
+
+  function showSearchResults(results) {
+    const div = document.getElementById('map-search-results');
+    if (!div) return;
+    div.innerHTML = '';
+    if (!results || results.length === 0) return clearSearchResults();
+
+    results.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'map-search-result-item';
+      const road = r.address?.road || '';
+      const city = r.address?.city || r.address?.town || '';
+      const sub = [road, city].filter(Boolean).join(', ') || '';
+      item.innerHTML = `<div><strong>${r.display_name}</strong></div><small class="text-muted">${sub}</small>`;
+      item.onclick = () => {
+        const lat = r.lat, lon = r.lon, addr = r.display_name;
+        map.flyTo({ center: [lon, lat], zoom: 16 });
+        clearSearchResults();
+        if (tempMarker) tempMarker.remove();
+        tempMarker = new maplibregl.Marker({ color: '#3498db' })
+          .setLngLat([lon, lat])
+          .setPopup(new maplibregl.Popup().setText(addr))
+          .addTo(map);
+        tempMarker.togglePopup();
+        if ({% if user.is_authenticated and user.role == 'citizen' %}true{% else %}false{% endif %}) {
+          showReportButton(lat, lon, addr);
+        }
+      };
+      div.appendChild(item);
+    });
+    div.style.display = 'block';
+  }
+
+  let searchDebounce;
+  const searchInput = document.getElementById('map-address-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchDebounce);
+      const q = this.value.trim();
+      if (q.length < 2) return clearSearchResults();
+      searchDebounce = setTimeout(async () => {
+        try {
+          const res = await fetch(`/issues/api/search-address/?q=${encodeURIComponent(q)}`);
+          const data = await res.json();
+          showSearchResults(data.results);
+        } catch (e) {
+          console.warn('Search failed:', e);
+          clearSearchResults();
+        }
+      }, 300);
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const div = document.getElementById('map-search-results');
+        const first = div?.querySelector('.map-search-result-item');
+        if (first) first.click();
+        else if (searchInput.value.trim()) searchInput.dispatchEvent(new Event('input'));
+      }
+    });
+  }
+
+  document.getElementById('map-search-btn')?.addEventListener('click', () => {
+    if (searchInput) searchInput.dispatchEvent(new Event('input'));
+  });
+
+  document.addEventListener('click', e => {
+    const container = document.querySelector('.map-search-container');
+    if (container && !container.contains(e.target)) clearSearchResults();
+  });
+
+  // === КНОПКА «СООБЩИТЬ» ===
+  function showReportButton(lat, lon, address) {
+    const old = document.getElementById('map-report-btn');
+    if (old) old.remove();
+
+    const btn = Object.assign(document.createElement('button'), {
+      id: 'map-report-btn',
+      className: 'btn btn-success btn-sm',
+      innerHTML: '📍 {% trans "Сообщить о проблеме здесь" %}',
+      style: 'position:absolute;top:10px;right:10px;z-index:2'
+    });
+
+    btn.onclick = () => {
+      const url = new URL('{% url "issues:create_issue" %}', location.origin);
+      url.searchParams.set('lat', lat.toFixed(6));
+      url.searchParams.set('lon', lon.toFixed(6));
+      url.searchParams.set('address', address);
+      location.href = url.toString();
+    };
+
+    document.getElementById('map').appendChild(btn);
+  }
+
+  // === ИНИЦИАЛИЗАЦИЯ ===
+  const userIsCitizen = {% if user.is_authenticated and user.role == 'citizen' %}true{% else %}false{% endif %};
+
   map.on('load', () => {
-    // Добавляем первоначальные маркеры
+    // Маркеры (уже есть выше — не дублируем)
     {% for issue in issues %}
       {% if issue.location and issue.location.x is not None and issue.location.y is not None %}
         {% with lng=issue.location.x|floatformat:"6" lat=issue.location.y|floatformat:"6" %}
@@ -443,28 +572,13 @@
                     {% endif %}
                   </small>
                 `);
-
-                const marker = new maplibregl.Marker({ color: '#e74c3c' })
-                  .setLngLat([lng, lat])
-                  .addTo(map);
-
-                const markerEl = marker.getElement();
-                if (markerEl) {
-                  markerEl.addEventListener('mouseenter', (e) => {
-                    e.stopPropagation();
-                    popup.setLngLat(marker.getLngLat()).addTo(map);
-                  });
-                  markerEl.addEventListener('mouseleave', (e) => {
-                    e.stopPropagation();
-                    if (popup.isOpen()) popup.remove();
-                  });
-
-                  markerEl.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    window.location.href = "{% url 'issues:issue_detail' issue.id %}";
-                  });
+                const marker = new maplibregl.Marker({ color: '#e74c3c' }).setLngLat([lng, lat]).addTo(map);
+                const el = marker.getElement();
+                if (el) {
+                  el.addEventListener('mouseenter', () => popup.setLngLat(marker.getLngLat()).addTo(map));
+                  el.addEventListener('mouseleave', () => popup.isOpen() && popup.remove());
+                  el.addEventListener('click', () => location.href = "{% url 'issues:issue_detail' issue.id %}");
                 }
-
                 markers.push(marker);
               }
             }
@@ -473,47 +587,46 @@
       {% endif %}
     {% endfor %}
 
-    {% if user.is_authenticated and user.role == 'citizen' %}
-      let tempMarker = null;
-      map.on('click', function(e) {
-        const clickedOnMarker = e.originalEvent.target.closest('.maplibregl-marker');
-        if (clickedOnMarker) return;
-
-        const lng = e.lngLat.lng.toFixed(6);
-        const lat = e.lngLat.lat.toFixed(6);
+    // Клик по карте → обратное геокодирование + кнопка
+    if (userIsCitizen) {
+        map.on('click', async function(e) {
+          if (e.originalEvent.target.closest('.maplibregl-marker, .maplibregl-popup')) return;
+        
+          const lng = e.lngLat.lng;
+          const lat = e.lngLat.lat;
+        
+          // Обратное геокодирование → ОБЯЗАТЕЛЬНО!
+          let address = `Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+          try {
+            const resp = await fetch(`/issues/api/reverse-geocode/?lat=${lat}&lon=${lng}`);
+            const data = await resp.json();
+            if (data.address) {
+              address = data.address;
+            }
+          } catch (err) {
+            console.warn('Reverse geocode failed:', err);
+        }
 
         if (tempMarker) tempMarker.remove();
-
         tempMarker = new maplibregl.Marker({ color: '#3498db' })
           .setLngLat([lng, lat])
-          .setPopup(new maplibregl.Popup().setText("{% trans 'Нажмите «Сообщить» ниже, чтобы отправить' %}"))
+          .setPopup(new maplibregl.Popup().setText(address))
           .addTo(map);
-
         tempMarker.togglePopup();
 
-        const latInput = document.getElementById('id_lat');
-        const lonInput = document.getElementById('id_lon');
-        if (latInput) latInput.value = lat;
-        if (lonInput) lonInput.value = lng;
-
-        const modal = document.getElementById('report-form-modal');
-        const backdrop = document.getElementById('modal-backdrop');
-        if (modal && backdrop) {
-          modal.style.display = 'block';
-          backdrop.style.display = 'block';
-        }
+        showReportButton(lat, lng, address);
       });
-    {% endif %}
+    }
   });
 
-  map.on('error', (e) => {
+  map.on('error', e => {
     console.error('Map error:', e);
     document.getElementById('map').innerHTML =
       `<div class="alert alert-danger p-3">❌ Ошибка карты: ${e.error?.message || 'неизвестная ошибка'}</div>`;
   });
 </script>
 
-<!-- Модальное окно для граждан -->
+<!-- Модальное окно (оставлено без изменений) -->
 {% if user.is_authenticated and user.role == 'citizen' %}
 <div id="modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:999;"></div>
 <div id="report-form-modal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:white; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:1000; width:90%; max-width:500px;">
@@ -531,7 +644,6 @@
         {% endfor %}
       </select>
     </div>
-    <!-- Поле для загрузки фотографий -->
     <div class="mb-3">
       <label for="modal-images" class="form-label">{% trans "Фотографии" %} (до 5, JPG/PNG, макс. 5MB)</label>
       <input type="file" class="form-control" id="modal-images" name="images" multiple accept="image/jpeg, image/png">
@@ -549,79 +661,42 @@
 </div>
 
 <script>
-  // Скрипт для предпросмотра изображений в модальном окне
-  document.addEventListener('DOMContentLoaded', function() {
-    const imageInput = document.getElementById('modal-images');
-    if (imageInput) {
-      imageInput.addEventListener('change', function() {
-        const preview = document.getElementById('modal-preview');
-        preview.innerHTML = '';  // Очистка
-
-        if (this.files.length > 5) {
-          alert('{% trans "Максимум 5 фотографий. Будут загружены только первые 5." %}');
-        }
-
-        // Показываем максимум 5 изображений
-        const filesToShow = Array.from(this.files).slice(0, 5);
-
-        filesToShow.forEach(file => {
-          if (file.size > 5 * 1024 * 1024) {
-            const warning = document.createElement('div');
-            warning.className = 'text-danger small mt-1';
-            warning.textContent = `⚠️ ${file.name} {% trans "слишком большой (макс. 5MB)" %}`;
-            preview.appendChild(warning);
-            return;
-          }
-
-          if (!file.type.match('image.*')) {
-            const warning = document.createElement('div');
-            warning.className = 'text-danger small mt-1';
-            warning.textContent = `⚠️ ${file.name} {% trans "не является изображением" %}`;
-            preview.appendChild(warning);
-            return;
-          }
-
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.style.width = '60px';
-            img.style.height = '60px';
-            img.style.objectFit = 'cover';
-            img.style.borderRadius = '4px';
-            img.style.border = '1px solid #ddd';
-            img.title = file.name;
-            preview.appendChild(img);
-          };
-          reader.readAsDataURL(file);
-        });
+  document.addEventListener('DOMContentLoaded', () => {
+    const inp = document.getElementById('modal-images');
+    if (!inp) return;
+    inp.addEventListener('change', function() {
+      const preview = document.getElementById('modal-preview');
+      preview.innerHTML = '';
+      if (this.files.length > 5) alert('{% trans "Максимум 5 фотографий. Будут загружены только первые 5." %}');
+      Array.from(this.files).slice(0, 5).forEach(file => {
+        if (file.size > 5 * 1024 * 1024) return preview.appendChild(Object.assign(document.createElement('div'), { className: 'text-danger small mt-1', textContent: `⚠️ ${file.name} {% trans "слишком большой" %}` }));
+        if (!file.type.match('image.*')) return preview.appendChild(Object.assign(document.createElement('div'), { className: 'text-danger small mt-1', textContent: `⚠️ ${file.name} {% trans "не изображение" %}` }));
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = Object.assign(document.createElement('img'), {
+            src: e.target.result,
+            style: 'width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #ddd'
+          });
+          preview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
       });
-    }
+    });
   });
 </script>
 {% endif %}
 
-<!-- CSRF для JS -->
 {% csrf_token %}
 
-<!-- JS: голосование с отменой -->
 <script>
 function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
-    let voteValue = null;
-    if (intendedValue === 1 && isUpvoted) {
-        voteValue = '0';  // отмена
-    } else if (intendedValue === -1 && isDownvoted) {
-        voteValue = '0';  // отмена
-    } else {
-        voteValue = intendedValue.toString();
-    }
+    let voteValue = intendedValue.toString();
+    if ((intendedValue === 1 && isUpvoted) || (intendedValue === -1 && isDownvoted)) voteValue = '0';
 
     const formData = new FormData();
-    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    formData.append('csrfmiddlewaretoken', csrf);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
     formData.append('vote', voteValue);
 
-    // Найти карточку с проблемой
     const card = document.querySelector(`.card[data-issue-id="${issueId}"]`);
     if (!card) return;
 
@@ -631,39 +706,26 @@ function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
     fetch(`/issues/${issueId}/vote/`, {
         method: 'POST',
         body: formData,
-        redirect: 'follow',
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
-    .then(r => r.json().then(data => r.ok ? data : Promise.reject(data)))
+    .then(r => r.json().then(d => r.ok ? d : Promise.reject(d)))
     .then(data => {
-        // Обновляем рейтинг в карточке
-        const ratingBadge = card.querySelector('.badge.bg-primary');
-        if (ratingBadge) {
-            ratingBadge.innerHTML = `${data.rating} {% trans "рейтинг" %}`;
-        }
-
-        // Обновляем рейтинг в popup на карте
-        document.querySelectorAll('.maplibregl-popup-content').forEach(popup => {
-            if (popup.innerHTML.includes(`/issues/${issueId}/`)) {
-                const ratingElement = popup.querySelector('small');
-                if (ratingElement) {
-                    // Обновляем только часть с рейтингом
-                    ratingElement.innerHTML = ratingElement.innerHTML.replace(
-                        /Рейтинг: <strong>\d+<\/strong>/,
-                        `Рейтинг: <strong>${data.rating}</strong>`
-                    );
-                }
+        const badge = card.querySelector('.badge.bg-primary');
+        if (badge) badge.innerHTML = `${data.rating} {% trans "рейтинг" %}`;
+        document.querySelectorAll('.maplibregl-popup-content').forEach(p => {
+            if (p.innerHTML.includes(`/issues/${issueId}/`)) {
+                const small = p.querySelector('small');
+                if (small) small.innerHTML = small.innerHTML.replace(
+                    /Рейтинг: <strong>\d+<\/strong>/,
+                    `Рейтинг: <strong>${data.rating}</strong>`
+                );
             }
         });
-
-        // Обновляем стиль кнопок
         const up = card.querySelector(`button[onclick*="toggleVote(${issueId}, 1"]`);
         const down = card.querySelector(`button[onclick*="toggleVote(${issueId}, -1"]`);
         if (up && down) {
-            up.classList.toggle('btn-success', data.user_vote === 1);
-            up.classList.toggle('btn-outline-success', data.user_vote !== 1);
-            down.classList.toggle('btn-danger', data.user_vote === -1);
-            down.classList.toggle('btn-outline-danger', data.user_vote !== -1);
+            up.className = up.className.replace(/\b(btn-success|btn-outline-success)\b/g, data.user_vote === 1 ? 'btn-success' : 'btn-outline-success');
+            down.className = down.className.replace(/\b(btn-danger|btn-outline-danger)\b/g, data.user_vote === -1 ? 'btn-danger' : 'btn-outline-danger');
         }
     })
     .catch(err => {
@@ -673,8 +735,10 @@ function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
     .finally(() => {
         const up = card.querySelector(`button[onclick*="toggleVote(${issueId}, 1"]`);
         const down = card.querySelector(`button[onclick*="toggleVote(${issueId}, -1"]`);
-        if (up) up.innerHTML = '👍'; if (down) down.innerHTML = '👎';
-        if (up) up.disabled = false; if (down) down.disabled = false;
+        if (up) up.innerHTML = '👍';
+        if (down) down.innerHTML = '👎';
+        if (up) up.disabled = false;
+        if (down) down.disabled = false;
     });
 }
 </script>

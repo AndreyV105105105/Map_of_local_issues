@@ -57,43 +57,62 @@
             {% endfor %}
           </div>
           {% endif %}
-          <h5 class="mb-3 mt-4">{% trans "Детали" %}</h5>
-          <dl class="row mb-0">
-            <dt class="col-sm-4 text-muted small">{% trans "Автор" %}</dt>
-            <dd class="col-sm-8">
-              {% if user.is_authenticated and user.role == 'official' %}
-                {{ issue.reporter.get_full_name }} 
-                {% if issue.reporter.email %}({{ issue.reporter.email }}){% endif %}
-              {% else %}
-                {{ issue.reporter.get_full_name }}
-              {% endif %}
-            </dd>
-            <dt class="col-sm-4 text-muted small">{% trans "Статус" %}</dt>
-            <dd class="col-sm-8">{{ issue.get_status_display }}</dd>
-            <dt class="col-sm-4 text-muted small">{% trans "Категория" %}</dt>
-            <dd class="col-sm-8">{{ issue.get_category_display }}</dd>
-            <dt class="col-sm-4 text-muted small">{% trans "Координаты" %}</dt>
-            <dd class="col-sm-8">
-              <code>{{ issue.location.x|floatformat:6 }}, {{ issue.location.y|floatformat:6 }}</code>
-            </dd>
-            <dt class="col-sm-4 text-muted small">{% trans "Рейтинг" %}</dt>
-            <dd class="col-sm-8">
-              <span class="badge bg-primary">{{ issue.vote_rating }}</span>
-              {% if user.is_authenticated and user.role == 'citizen' %}
-                <small class="text-muted ms-1">
-                  {% if issue.user_has_upvoted %}
-                    ({% trans "Вы проголосовали 👍" %})
-                  {% elif issue.user_has_downvoted %}
-                    ({% trans "Вы проголосовали 👎" %})
-                  {% else %}
-                    ({% trans "Вы не голосовали" %})
-                  {% endif %}
-                </small>
-              {% endif %}
-            </dd>
-            <dt class="col-sm-4 text-muted small">{% trans "Фотографии" %}</dt>
-            <dd class="col-sm-8">{{ issue.photos.count }}</dd>
-          </dl>
+            <h5 class="mb-3 mt-4">{% trans "Детали" %}</h5>
+            <dl class="row mb-0 gx-3">
+              <dt class="col-sm-4 text-muted small">{% trans "Автор" %}</dt>
+              <dd class="col-sm-8">
+                {% if user.is_authenticated and user.role == 'official' %}
+                  {{ issue.reporter.get_full_name }} 
+                  {% if issue.reporter.email %}({{ issue.reporter.email }}){% endif %}
+                {% else %}
+                  {{ issue.reporter.get_full_name }}
+                {% endif %}
+              </dd>
+              
+              <dt class="col-sm-4 text-muted small">{% trans "Статус" %}</dt>
+              <dd class="col-sm-8">{{ issue.get_status_display }}</dd>
+              
+              <dt class="col-sm-4 text-muted small">{% trans "Категория" %}</dt>
+              <dd class="col-sm-8">{{ issue.get_category_display }}</dd>
+            
+              <!-- ✅ АДРЕС — красиво, с переносами -->
+              <dt class="col-sm-4 text-muted small">{% trans "Адрес" %}</dt>
+              <dd class="col-sm-8">
+                {% if issue.address %}
+                  <div class="bg-light p-2 rounded small" style="word-break: break-word; line-height: 1.4;">
+                    {{ issue.address }}
+                  </div>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </dd>
+            
+              <!-- ✅ КООРДИНАТЫ — компактно, без ссылки -->
+              <dt class="col-sm-4 text-muted small">{% trans "Координаты" %}</dt>
+              <dd class="col-sm-8">
+                <code class="small">{{ issue.location.y|floatformat:6 }}, {{ issue.location.x|floatformat:6 }}</code>
+                <small class="text-muted d-block mt-1">({% trans "широта, долгота" %})</small>
+              </dd>
+            
+              <dt class="col-sm-4 text-muted small">{% trans "Рейтинг" %}</dt>
+              <dd class="col-sm-8">
+                <span class="badge bg-primary">{{ issue.vote_rating }}</span>
+                {% if user.is_authenticated and user.role == 'citizen' %}
+                  <small class="text-muted ms-1">
+                    {% if issue.user_has_upvoted %}
+                      ({% trans "Вы проголосовали 👍" %})
+                    {% elif issue.user_has_downvoted %}
+                      ({% trans "Вы проголосовали 👎" %})
+                    {% else %}
+                      ({% trans "Вы не голосовали" %})
+                    {% endif %}
+                  </small>
+                {% endif %}
+              </dd>
+              
+              <dt class="col-sm-4 text-muted small">{% trans "Фотографии" %}</dt>
+              <dd class="col-sm-8">{{ issue.photos.count }}</dd>
+            </dl>
         </div>
       </div>
 

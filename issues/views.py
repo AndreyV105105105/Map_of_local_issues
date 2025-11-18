@@ -7,11 +7,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
-
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views import View
+from .modules.geocoding import geocode_address, reverse_geocode, search_address
 from .constants import ISSUE_CATEGORIES, ISSUE_CATEGORY_CHOICES
 from .forms import CommentForm
-from .models import Comment
-from .models import Issue, IssuePhoto, Vote
+from .models import Comment, Issue, IssuePhoto, Vote
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -139,81 +145,148 @@ def map_view(request):
 
 @login_required
 def create_issue(request):
-    """
-    Создаёт новое обращение.
-    Доступно только гражданам (role == 'citizen').
-    """
     if request.user.role != 'citizen':
         messages.error(request, "Только граждане могут сообщать о проблемах.", extra_tags='issues')
         return redirect('issues:map')
 
+    # --- Инициализация: поддержка pre-fill из GET (карта → кнопка «Сообщить»)
+    initial = {
+        'title': '',
+        'description': '',
+        'category': '',
+        'address': '',
+        'lat': '',
+        'lon': '',
+    }
+
+    if request.method == 'GET':
+        # Получаем данные из URL (lat, lon, address)
+        lat = request.GET.get('lat')
+        lon = request.GET.get('lon')
+        address = request.GET.get('address', '').strip()
+
+        if lat and lon:
+            try:
+                lat_f = float(lat)
+                lon_f = float(lon)
+                initial.update(lat=f"{lat_f:.6f}", lon=f"{lon_f:.6f}")
+                # Обратное геокодирование для заполнения адреса (но не для изменения координат!)
+                if not address:
+                    address = reverse_geocode(lat_f, lon_f) or f"Координаты: {lat_f:.6f}, {lon_f:.6f}"
+                initial['address'] = address
+            except (ValueError, TypeError):
+                pass
+        # Передаём в шаблон
+        return render(request, 'issues/create_issue.html', {
+            'categories': ISSUE_CATEGORY_CHOICES,
+            'initial': initial,
+        })
+
+    # --- POST: обработка формы
     if request.method == 'POST':
-        # Получаем данные
         title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '').strip()
         category = request.POST.get('category', '').strip()
+        address = request.POST.get('address', '').strip()
         lat = request.POST.get('lat', '').strip()
         lon = request.POST.get('lon', '').strip()
 
-        # Валидация
-        if not all([title, description, category, lat, lon]):
-            messages.error(request, "Все поля обязательны для заполнения.", extra_tags='issues')
-            return redirect('issues:map')
+        # Валидация обязательных полей
+        if not all([title, description, category]):
+            messages.error(request, "Все поля (название, описание, категория) обязательны.", extra_tags='issues')
+            return render(request, 'issues/create_issue.html', {
+                'categories': ISSUE_CATEGORY_CHOICES,
+                'initial': request.POST.dict(),
+            })
 
         if category not in dict(ISSUE_CATEGORY_CHOICES):
             messages.error(request, "Выбрана недопустимая категория.", extra_tags='issues')
-            return redirect('issues:map')
+            return render(request, 'issues/create_issue.html', {
+                'categories': ISSUE_CATEGORY_CHOICES,
+                'initial': request.POST.dict(),
+            })
+
+        # --- Определение координат и адреса: ПРИОРИТЕТ — РУЧНЫЕ КООРДИНАТЫ!
+        lat_f = lon_f = None
+        address_to_save = address
 
         try:
-            lat_float = float(lat)
-            lon_float = float(lon)
-            if not (-90 <= lat_float <= 90):
-                raise ValueError("Некорректная широта")
-            if not (-180 <= lon_float <= 180):
-                raise ValueError("Некорректная долгота")
-        except (ValueError, TypeError):
-            messages.error(request, "Некорректные координаты.", extra_tags='issues')
-            return redirect('issues:map')
+            # 🔑 Приоритет 1: координаты из формы (точка клика)
+            if lat and lon:
+                lat_f = float(lat)
+                lon_f = float(lon)
+                if not (-90 <= lat_f <= 90) or not (-180 <= lon_f <= 180):
+                    raise ValueError("Координаты вне допустимого диапазона")
 
-        # Сохраняем обращение
+                # Только для отображения — получаем адрес по координатам (но не перезаписываем lat/lon!)
+                if not address_to_save.strip():
+                    address_to_save = reverse_geocode(lat_f, lon_f) or f"Координаты: {lat_f:.6f}, {lon_f:.6f}"
+
+            # 🔑 Приоритет 2: если координат нет — геокодируем адрес
+            elif address:
+                result = geocode_address(address)
+                if result:
+                    display_name, point = result
+                    lat_f, lon_f = point.y, point.x
+                    address_to_save = display_name
+                else:
+                    messages.error(request, "Не удалось найти адрес. Проверьте написание.", extra_tags='issues')
+                    return render(request, 'issues/create_issue.html', {
+                        'categories': ISSUE_CATEGORY_CHOICES,
+                        'initial': request.POST.dict(),
+                    })
+            else:
+                messages.error(request, "Укажите либо адрес, либо координаты.", extra_tags='issues')
+                return render(request, 'issues/create_issue.html', {
+                    'categories': ISSUE_CATEGORY_CHOICES,
+                    'initial': request.POST.dict(),
+                })
+
+        except (ValueError, TypeError) as e:
+            logger.info(f"Coordinate parsing error: {e}")
+            messages.error(request, "Некорректные координаты.", extra_tags='issues')
+            return render(request, 'issues/create_issue.html', {
+                'categories': ISSUE_CATEGORY_CHOICES,
+                'initial': request.POST.dict(),
+            })
+
+        # --- Сохранение
         try:
             issue = Issue.objects.create(
                 title=title,
                 description=description,
                 category=category,
-                location=Point(lon_float, lat_float, srid=4326),
+                location=Point(lon_f, lat_f, srid=4326),  # ← ТОЧНЫЕ КООРДИНАТЫ КЛИКА!
+                address=address_to_save,  # ← Адрес для отображения
                 reporter=request.user,
             )
 
-            # Обработка фото (множественные)
-            photos = request.FILES.getlist('images')  # Имя поля в форме — 'images'
-            max_photos = 5  # Ограничение
+            # Фото
+            photos = request.FILES.getlist('images')
+            max_photos = 5
             if len(photos) > max_photos:
                 messages.warning(request, f"Максимум {max_photos} фото. Лишние игнорируются.", extra_tags='issues')
                 photos = photos[:max_photos]
 
             for photo in photos:
-                # Валидация файла (размер, формат — формат уже в модели, но размер здесь)
-                if photo.size > 5 * 1024 * 1024:  # >5MB
-                    messages.warning(request, f"Файл {photo.name} слишком большой. Игнорируется., extra_tags='issues'")
+                if photo.size > 5 * 1024 * 1024:
+                    messages.warning(request, f"Файл {photo.name} слишком большой. Игнорируется.", extra_tags='issues')
                     continue
                 if not photo.content_type.startswith('image/'):
                     messages.warning(request, f"Файл {photo.name} не изображение. Игнорируется.", extra_tags='issues')
                     continue
-
                 IssuePhoto.objects.create(issue=issue, image=photo)
 
             messages.success(request, "Ваше обращение успешно зарегистрировано!", extra_tags='issues')
+            return redirect('issues:map')
+
         except Exception as e:
+            logger.info(f"Error creating issue: {e}")
             messages.error(request, "Ошибка при сохранении обращения. Попробуйте позже.", extra_tags='issues')
-            # В продакшене логируйте ошибку: logger.exception(e)
-
-        return redirect('issues:map')
-
-    # Для GET: рендерим форму (добавлено, поскольку шаблон существует)
-    return render(request, 'issues/create_issue.html', {
-        'categories': ISSUE_CATEGORY_CHOICES,  # Передаем choices для выпадающего списка
-    })
+            return render(request, 'issues/create_issue.html', {
+                'categories': ISSUE_CATEGORY_CHOICES,
+                'initial': request.POST.dict(),
+            })
 
 
 @login_required
@@ -370,3 +443,47 @@ def get_issues_geojson(request):
     }
 
     return JsonResponse(geojson)
+
+
+@method_decorator(login_required, name='dispatch')
+class GeocodeAPIView(View):
+    def get(self, request):
+        q = request.GET.get("q", "").strip()
+        if not q:
+            return JsonResponse({"error": "q required"}, status=400)
+
+        result = geocode_address(q)
+        if result:
+            display_name, point = result
+            return JsonResponse({
+                "address": display_name,
+                "lat": point.y,
+                "lon": point.x,
+            })
+        return JsonResponse({"error": "Адрес не найден"}, status=404)
+
+
+@method_decorator(login_required, name='dispatch')
+class ReverseGeocodeAPIView(View):
+    def get(self, request):
+        try:
+            lat = float(request.GET.get("lat"))
+            lon = float(request.GET.get("lon"))
+        except (TypeError, ValueError):
+            return JsonResponse({"error": "lat/lon required and must be numeric"}, status=400)
+
+        address = reverse_geocode(lat, lon)
+        if address:
+            return JsonResponse({"address": address})
+        return JsonResponse({"error": "Не удалось определить адрес"}, status=404)
+
+
+@method_decorator(login_required, name='dispatch')
+class SearchAddressAPIView(View):
+    def get(self, request):
+        q = request.GET.get("q", "").strip()
+        if len(q) < 2:  # минимум 2 символа
+            return JsonResponse({"results": []})
+
+        results = search_address(q, limit=5)
+        return JsonResponse({"results": results})

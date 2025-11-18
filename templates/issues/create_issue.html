@@ -3,58 +3,194 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h2>Report a New Issue</h2>
-  <form method="post" enctype="multipart/form-data">
+  <h2>{% trans "Сообщить о проблеме" %}</h2>
+
+  <form method="post" enctype="multipart/form-data" id="issue-form">
     {% csrf_token %}
+    
+    <!-- Поиск по адресу -->
     <div class="mb-3">
-      <label for="title" class="form-label">Title</label>
-      <input type="text" class="form-control" id="title" name="title" required>
+      <label for="address-search" class="form-label">{% trans "Начните вводить адрес" %}</label>
+      <div class="input-group">
+        <input type="text" class="form-control" id="address-search" 
+               placeholder="ул. Ленина, 10, Ханты-Мансийск"
+               value="{{ initial.address_search|default:'' }}">
+        <button class="btn btn-outline-secondary" type="button" id="search-btn">
+          <i class="bi bi-search"></i> {% trans "Найти" %}
+        </button>
+      </div>
+      <div class="form-text">
+        {% trans "Подсказки появятся автоматически. Или укажите координаты вручную ниже." %}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="title" class="form-label">{% trans "Заголовок" %}</label>
+      <input type="text" class="form-control" id="title" name="title" 
+             value="{{ initial.title }}" required>
     </div>
     <div class="mb-3">
-      <label for="description" class="form-label">Description</label>
-      <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+      <label for="description" class="form-label">{% trans "Описание" %}</label>
+      <textarea class="form-control" id="description" name="description" rows="4" required>{{ initial.description }}</textarea>
     </div>
     <div class="mb-3">
-      <label for="category" class="form-label">Category</label>
+      <label for="category" class="form-label">{% trans "Категория" %}</label>
       <select class="form-select" id="category" name="category" required>
-        <option value="">-- Select --</option>
+        <option value="">{% trans "-- Выберите --" %}</option>
         {% for value, label in categories %}
-          <option value="{{ value }}">{{ label }}</option>
+          <option value="{{ value }}" {% if initial.category == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
     </div>
-    <div class="mb-3">
-      <label class="form-label">Location (coordinates)</label>
-      <div class="row">
-        <div class="col-md-6">
-          <input type="text" class="form-control" name="lat" placeholder="Latitude (e.g. 61.0045)" required>
-        </div>
-        <div class="col-md-6">
-          <input type="text" class="form-control" name="lon" placeholder="Longitude (e.g. 69.0500)" required>
+
+    <!-- Адрес -->
+    <div class="row g-3 mb-3">
+      <div class="col-md-8">
+        <label for="address" class="form-label">{% trans "Адрес" %}</label>
+        <input type="text" class="form-control" id="address" name="address" 
+               value="{{ initial.address }}" readonly>
+        <div class="form-text text-muted">
+          {% trans "Заполняется автоматически при поиске или клике по карте." %}
         </div>
       </div>
-      <div class="form-text">You can get coordinates from any online map (e.g., right-click on Google Maps).</div>
+      <div class="col-md-4">
+        <label class="form-label">{% trans "Координаты" %}</label>
+        <div class="input-group">
+          <span class="input-group-text">.lat</span>
+          <input type="text" class="form-control" name="lat" id="lat" 
+                 value="{{ initial.lat|default:'' }}" required>
+        </div>
+      </div>
+      <div class="col-md-4 offset-md-8">
+        <div class="input-group mt-1">
+          <span class="input-group-text">.lon</span>
+          <input type="text" class="form-control" name="lon" id="lon" 
+                 value="{{ initial.lon|default:'' }}" required>
+        </div>
+      </div>
     </div>
+
+    <!-- Фото -->
     <div class="mb-3">
-      <label for="images" class="form-label">Upload Photos (up to 5, JPG/PNG, max 5MB each)</label>
+      <label for="images" class="form-label">
+        {% trans "Фотографии (до 5, JPG/PNG, макс. 5 МБ)" %}
+      </label>
       <input type="file" class="form-control" id="images" name="images" multiple accept="image/jpeg, image/png">
       <div id="preview" class="mt-2"></div>
     </div>
-    <button type="submit" class="btn btn-success">Submit Issue</button>
-    <a href="{% url 'issues:map' %}" class="btn btn-secondary">Cancel</a>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-success">
+        {% trans "Отправить обращение" %}
+      </button>
+      <a href="{% url 'issues:map' %}" class="btn btn-secondary">
+        {% trans "Отмена" %}
+      </a>
+    </div>
   </form>
 </div>
 
 <script>
-  document.getElementById('images').addEventListener('change', function() {
+  // Preview фото
+  document.getElementById('images')?.addEventListener('change', function() {
     const preview = document.getElementById('preview');
-    preview.innerHTML = '';  // Очистка
+    if (!preview) return;
+    preview.innerHTML = '';
     for (let file of this.files) {
       const img = document.createElement('img');
       img.src = URL.createObjectURL(file);
-      img.style.width = '100px';  // Миниатюра
-      img.style.margin = '5px';
+      img.style.cssText = 'width:100px;height:100px;object-fit:cover;margin:5px;border-radius:4px';
       preview.appendChild(img);
+    }
+  });
+
+  // === АВТОДОПОЛНЕНИЕ ===
+  let searchDebounce;
+  const addressSearch = document.getElementById('address-search');
+  const addressInput = document.getElementById('address');
+  const latInput = document.getElementById('lat');
+  const lonInput = document.getElementById('lon');
+
+  if (addressSearch) {
+    addressSearch.addEventListener('input', function() {
+      clearTimeout(searchDebounce);
+      const q = this.value.trim();
+      if (q.length < 2) return;
+
+      searchDebounce = setTimeout(async () => {
+        try {
+          const res = await fetch(`/issues/api/search-address/?q=${encodeURIComponent(q)}`);
+          const data = await res.json();
+          if (data.results && data.results.length > 0) {
+            const r = data.results[0];
+            latInput.value = r.lat.toFixed(6);
+            lonInput.value = r.lon.toFixed(6);
+            addressInput.value = r.display_name;
+            addressSearch.value = r.display_name; // подставляем полный адрес
+          }
+        } catch (e) {
+          console.warn('Autocomplete failed:', e);
+        }
+      }, 300);
+    });
+
+    // Enter → взять первый результат
+    addressSearch.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addressSearch.dispatchEvent(new Event('input'));
+      }
+    });
+  }
+
+  // === ОБРАТНОЕ ГЕОКОДИРОВАНИЕ ПРИ РУЧНОМ ВВОДЕ ===
+  let reverseDebounce;
+  [latInput, lonInput].forEach(el => {
+    el?.addEventListener('input', () => {
+      clearTimeout(reverseDebounce);
+      reverseDebounce = setTimeout(async () => {
+        const lat = parseFloat(latInput.value);
+        const lon = parseFloat(lonInput.value);
+        if (isNaN(lat) || isNaN(lon)) return;
+        try {
+          const res = await fetch(`/issues/api/reverse-geocode/?lat=${lat}&lon=${lon}`);
+          const data = await res.json();
+          if (data.address) addressInput.value = data.address;
+        } catch (e) {
+          console.warn('Reverse geocode failed:', e);
+        }
+      }, 800);
+    });
+  });
+
+  // === ИНИЦИАЛИЗАЦИЯ: ЕСЛИ ПЕРЕДАНЫ ПАРАМЕТРЫ — ПОДСТАВИТЬ ===
+  document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lat = urlParams.get('lat');
+    const lon = urlParams.get('lon');
+    const address = urlParams.get('address');
+
+    if (lat && lon) {
+      latInput.value = parseFloat(lat).toFixed(6);
+      lonInput.value = parseFloat(lon).toFixed(6);
+      if (address) {
+        addressInput.value = address;
+        addressSearch.value = address;
+      } else {
+        // Обратное геокодирование при загрузке
+        setTimeout(async () => {
+          try {
+            const res = await fetch(`/issues/api/reverse-geocode/?lat=${lat}&lon=${lon}`);
+            const data = await res.json();
+            if (data.address) {
+              addressInput.value = data.address;
+              addressSearch.value = data.address;
+            }
+          } catch (e) {
+            console.warn('Reverse geocode on load failed:', e);
+          }
+        }, 100);
+      }
     }
   });
 </script>

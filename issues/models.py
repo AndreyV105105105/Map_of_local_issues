@@ -45,6 +45,12 @@ class Issue(models.Model):
         default=STATUS_OPEN,
         db_index=True
     )
+    address = models.CharField(
+        _("Адрес"),
+        max_length=500,
+        blank=True,
+        help_text=_("Заполняется автоматически при геокодировании или клике по карте")
+    )
     category = models.CharField(
         max_length=20,
         choices=ISSUE_CATEGORY_CHOICES,

@@ -5,6 +5,9 @@ from . import views
 app_name = 'issues'
 
 urlpatterns = [
+    path('api/geocode/', views.GeocodeAPIView.as_view(), name='geocode_api'),
+    path('api/search-address/', views.SearchAddressAPIView.as_view(), name='search_address_api'),
+    path('api/reverse-geocode/', views.ReverseGeocodeAPIView.as_view(), name='reverse_geocode_api'),
     path('map/', views.map_view, name='map'),
     path('map/geojson/', views.get_issues_geojson, name='map_geojson'),
     path('create/', views.create_issue, name='create_issue'),
