@@ -178,15 +178,13 @@ if not DEBUG:
 
 SITE_ID = 1
 
-
-
-# Logging configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
         },
         'file': {
             'level': 'ERROR',
@@ -200,5 +198,21 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'issues.modules.geocoding': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
 }
