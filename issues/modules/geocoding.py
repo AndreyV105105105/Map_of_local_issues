@@ -122,7 +122,7 @@ def _request_nominatim(endpoint: str, params: dict, timeout: float = REQUEST_TIM
     cache_key = f"nominatim_{endpoint}_{hash(tuple(sorted(params.items())))}"
     cached = cache.get(cache_key)
     if cached is not None:
-        logger.debug("💾 Кэш найден для Nominatim")
+        logger.debug("Кэш найден для Nominatim")
         return cached
 
     try:
@@ -139,14 +139,14 @@ def _request_nominatim(endpoint: str, params: dict, timeout: float = REQUEST_TIM
             data = resp.json()
             # Кэшируем успешные результаты
             cache.set(cache_key, data, CACHE_TIMEOUT)
-            logger.info(f"✅ Nominatim {endpoint} ответил за {duration:.2f}с")
+            logger.info(f"Nominatim {endpoint} ответил за {duration:.2f}с")
             return data
         else:
-            logger.warning(f"❌ Nominatim {endpoint} вернул {resp.status_code}")
+            logger.warning(f"Nominatim {endpoint} вернул {resp.status_code}")
     except requests.exceptions.Timeout:
-        logger.warning(f"⏱️ Nominatim {endpoint} превысил таймаут {timeout}с")
+        logger.warning(f"Nominatim {endpoint} превысил таймаут {timeout}с")
     except Exception as e:
-        logger.error(f"🔥 Nominatim {endpoint} ошибка: {e}")
+        logger.error(f" Nominatim {endpoint} ошибка: {e}")
 
     return None
 
@@ -208,7 +208,7 @@ def search_address(query: str, limit: int = 5) -> List[Dict]:
         }]
 
     duration = time.time() - start_time
-    logger.info(f"🔍 '{query}': {len(results)} адресов за {duration:.2f}с")
+    logger.info(f"'{query}': {len(results)} адресов за {duration:.2f}с")
 
     # Сохраняем в кэш
     cache.set(cache_key, results, CACHE_TIMEOUT)
@@ -265,7 +265,7 @@ def reverse_geocode(lat: float, lon: float) -> str:
     }
 
     try:
-        # ⏸️ Добавляем задержку, чтобы избежать 403
+        #  Добавляем задержку, чтобы избежать 403
         time.sleep(0.5)  # ~2 запроса/сек максимум
 
         resp = requests.get(
@@ -287,14 +287,14 @@ def reverse_geocode(lat: float, lon: float) -> str:
             return display_name
 
         elif resp.status_code == 403:
-            logger.error("❌ Nominatim вернул 403: проверьте User-Agent и частоту запросов")
+            logger.error("Nominatim вернул 403: проверьте User-Agent и частоту запросов")
         elif resp.status_code == 429:
-            logger.error("⚠️ Слишком много запросов к Nominatim — ограничение 1/сек")
+            logger.error("Слишком много запросов к Nominatim — ограничение 1/сек")
 
     except requests.exceptions.Timeout:
-        logger.warning("⏱️ Nominatim таймаут (8с) — сервер недоступен/медленный")
+        logger.warning("Nominatim таймаут (8с) — сервер недоступен/медленный")
     except Exception as e:
-        logger.error(f"🔥 Ошибка Nominatim: {e}")
+        logger.error(f"Ошибка Nominatim: {e}")
 
     # 🔚 Фолбэк (как у вас — он рабочий!)
     if 68.5 <= lon <= 69.5 and 60.5 <= lat <= 61.5:
