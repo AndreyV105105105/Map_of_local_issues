@@ -58,7 +58,6 @@
         </div>
     </header>
 
-  <!-- ✅ Умные сообщения с кастомным CSS -->
   {% if messages %}
     {% for message in messages %}
       {% comment %} Показываем, если: нет тегов, есть 'global', или текущее приложение в тегах {% endcomment %}
@@ -90,8 +89,7 @@
             <div class="footer-content">
                 <div class="footer-text">
                     <div class="footer-links">
-                        <a href="#">0 проекте</a>
-                        <a href="#">Ответы на вопросы</a>
+                        <a href="{% url 'about_site' %}">O проекте</a>
                     </div>
                     <div class="footer-copyright">
                         <p>© 2025, Активный гражданин. Все права защищены</p>
