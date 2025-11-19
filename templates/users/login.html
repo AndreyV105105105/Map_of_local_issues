@@ -74,6 +74,7 @@
                 <p>
                     {% trans "Нет аккаунта?" %}
                     <a href="{% url 'users:register' %}">{% trans "Зарегистрироваться" %}</a>
+                    <p><a href="{% url 'users:password_reset' %}">{% trans "Забыли пароль?" %}</a></p>
                 </p>
             </div>
         </div>

@@ -126,7 +126,8 @@
 
 .issue-description h3,
 .issue-photos h3,
-.issue-details h3 {
+.issue-details h3,
+.issue-comments h3 {
     font-size: 20px;
     font-weight: 600;
     margin: 0 0 16px 0;
@@ -220,6 +221,7 @@
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
+    position: relative;
 }
 
 .vote-btn:hover {
@@ -238,10 +240,17 @@
     height: 20px;
 }
 
+.vote-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .details-grid {
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: 16px 24px;
+    margin-bottom: 24px;
 }
 
 .detail-item {
@@ -259,6 +268,14 @@
 .detail-value {
     color: var(--text-color);
     font-size: 14px;
+    word-break: break-word;
+}
+
+.detail-value.address {
+    background-color: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
     word-break: break-word;
 }
 
@@ -286,6 +303,137 @@
     color: var(--light-text);
 }
 
+/* Comments Section */
+.issue-comments {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 2px solid var(--primary-color);
+}
+
+.comments-list {
+    margin-bottom: 24px;
+}
+
+.comment-item {
+    display: flex;
+    gap: 15px;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.comment-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    overflow: hidden;
+    background-color: #f8f9fa;
+}
+
+.comment-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.comment-content {
+    flex: 1;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.comment-author-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.comment-role {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background-color: #6c757d;
+    color: white;
+}
+
+.comment-role.role-official {
+    background-color: #17a2b8;
+}
+
+.comment-text {
+    margin: 0;
+    color: var(--text-color);
+    line-height: 1.5;
+}
+
+.comment-time {
+    font-size: 12px;
+    color: var(--light-text);
+}
+
+.no-comments {
+    text-align: center;
+    color: var(--light-text);
+    font-style: italic;
+    margin: 20px 0;
+}
+
+.comment-form {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.comment-form .form-group {
+    margin-bottom: 15px;
+}
+
+.comment-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+}
+
+.comment-form textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.comment-form .btn {
+    margin-bottom: 10px;
+}
+
+.form-text {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: var(--light-text);
+}
+
 .issue-actions {
     display: flex;
     gap: 12px;
@@ -294,7 +442,30 @@
     border-top: 2px solid var(--primary-color);
 }
 
-.btn {
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    border: 2px solid var(--primary-color);
+}
+
+.btn-primary:hover {
+    background: white;
+    color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn-secondary {
     padding: 12px 24px;
     border-radius: 50px;
     font-weight: 600;
@@ -312,7 +483,7 @@
 }
 
 .btn-secondary:hover {
-    background-color: #5a6268;
+    background-color: #4c5257;
     transform: translateY(-1px);
 }
 
@@ -329,6 +500,19 @@
 .delete-form {
     margin: 0;
 }
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
 
 /* Responsive */
 @media (max-width: 992px) {
@@ -371,14 +555,20 @@
         grid-template-columns: 1fr;
     }
     
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 10px;
+    }
+    
     .detail-label {
-        grid-column: 1;
+        grid-column: auto;
         font-weight: 600;
         margin-bottom: 4px;
     }
     
     .detail-value {
-        grid-column: 1;
+        grid-column: auto;
     }
     
     .issue-actions {
@@ -387,6 +577,12 @@
     
     .photos-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .comment-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
     }
 }
 
