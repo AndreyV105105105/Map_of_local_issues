@@ -37,9 +37,7 @@
                     <div class="photos-grid">
                         {% for photo in issue.photos.all %}
                         <div class="photo-item">
-                            <a href="{{ photo.image.url }}" target="_blank">
-                                <img src="{{ photo.image.url }}" alt="Фото проблемы {{ forloop.counter }}">
-                            </a>
+                            <img src="{{ photo.image.url }}" alt="Фото проблемы {{ forloop.counter }}">
                             <div class="photo-caption">
                                 <span>{{ forloop.counter }}/{{ issue.photos.count }}</span>
                             </div>
@@ -229,138 +227,23 @@
         </div>
     </div>
 
+    <!-- Photo Modal -->
+    <div id="photoModal" class="photo-modal" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closePhotoModal()">&times;</span>
+            <img id="modalImage" src="" alt="Увеличенное фото">
+            <div class="modal-counter" id="modalCounter"></div>
+            <div class="modal-nav">
+                <button class="modal-nav-btn prev" onclick="navigatePhoto('prev')"><</button>
+                <button class="modal-nav-btn next" onclick="navigatePhoto('next')">></button>
+            </div>
+        </div>
+    </div>
+
     {% csrf_token %}
 {% endblock %}
 
 {% block extra_js %}
     <script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
-    <script>
-        // Карта
-        document.addEventListener('DOMContentLoaded', () => {
-            const mapDiv = document.getElementById('mini-map');
-            if (!mapDiv) return;
-
-            const lng = {{ issue.location.x|floatformat:6 }};
-            const lat = {{ issue.location.y|floatformat:6 }};
-
-            try {
-                const miniMap = new maplibregl.Map({
-                    container: 'mini-map',
-                    style: {
-                        version: 8,
-                        sources: {
-                            'osm-de': {
-                                type: 'raster',
-                                tiles: ['https://tile.openstreetmap.de/{z}/{x}/{y}.png'],
-                                tileSize: 256,
-                                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                            }
-                        },
-                        layers: [{
-                            id: 'osm-de-tiles',
-                            type: 'raster',
-                            source: 'osm-de',
-                            minzoom: 0,
-                            maxzoom: 19
-                        }]
-                    },
-                    center: [lng, lat],
-                    zoom: 14,
-                    interactive: false,
-                    attributionControl: true
-                });
-
-                // Маркер
-                new maplibregl.Marker({ color: '#e74c3c' })
-                    .setLngLat([lng, lat])
-                    .addTo(miniMap);
-
-                // Убираем логотип MapLibre
-                miniMap.on('load', () => {
-                    const logo = miniMap.getContainer().querySelector('.maplibregl-ctrl-logo');
-                    if (logo) logo.style.display = 'none';
-                });
-
-                // При ошибке — fallback
-                miniMap.on('error', (e) => {
-                    console.warn('Mini-map warning (non-fatal):', e);
-                });
-
-            } catch (e) {
-                console.error('Mini-map init failed:', e);
-                mapDiv.innerHTML = `
-                    <div class="h-100 d-flex flex-column">
-                        <div class="flex-grow-1 bg-light d-flex align-items-center justify-content-center">
-                            <div class="text-center p-3">
-                                <div class="text-muted mb-2">📍</div>
-                                <a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}"
-                                  target="_blank"
-                                  class="btn btn-sm btn-outline-secondary">
-                                    Открыть в OpenStreetMap
-                                </a>
-                            </div>
-                        </div>
-                        <div class="px-3 py-2 small text-muted border-top bg-light">
-                            <code>${lng.toFixed(6)}, ${lat.toFixed(6)}</code>
-                        </div>
-                    </div>
-                `;
-            }
-        });
-
-        // Голосование
-        function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
-            let voteValue = null;
-            if (intendedValue === 1 && isUpvoted) {
-                voteValue = '0';  // отмена
-            } else if (intendedValue === -1 && isDownvoted) {
-                voteValue = '0';  // отмена
-            } else {
-                voteValue = intendedValue.toString();
-            }
-
-            const formData = new FormData();
-            const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            formData.append('csrfmiddlewaretoken', csrf);
-            formData.append('vote', voteValue);
-
-            const upBtn = document.querySelector(`.upvote-btn[data-issue-id="${issueId}"]`);
-            const downBtn = document.querySelector(`.downvote-btn[data-issue-id="${issueId}"]`);
-            if (upBtn && downBtn) {
-                upBtn.disabled = true;
-                downBtn.disabled = true;
-            }
-
-            fetch(`/issues/${issueId}/vote/`, {
-                method: 'POST',
-                body: formData,
-                redirect: 'follow',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(r => r.json().then(data => r.ok ? data : Promise.reject(data)))
-            .then(data => {
-                // Обновляем рейтинг
-                const ratingElement = document.querySelector('.rating-value');
-                if (ratingElement) {
-                    ratingElement.textContent = data.rating;
-                }
-
-                // Обновляем стиль кнопок
-                if (upBtn) {
-                    upBtn.classList.toggle('active', data.user_vote === 1);
-                }
-                if (downBtn) {
-                    downBtn.classList.toggle('active', data.user_vote === -1);
-                }
-            })
-            .catch(err => {
-                console.error('Vote error:', err);
-                alert(err.error || '{% trans "Ошибка голосования." %}');
-            })
-            .finally(() => {
-                if (upBtn) upBtn.disabled = false;
-                if (downBtn) downBtn.disabled = false;
-            });
-        }
-    </script>
+    <script src="{% static 'issue_detail.js' %}"></script>
 {% endblock %}
