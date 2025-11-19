@@ -61,7 +61,6 @@ class CustomUser(AbstractUser):
         help_text=_("Необязательно")
     )
 
-    # 🔑 ПОДТВЕРЖДЕНИЕ EMAIL
     email_verified = models.BooleanField(
         _("Email подтверждён"),
         default=False,

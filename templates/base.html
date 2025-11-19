@@ -18,6 +18,9 @@
         <ul class="navbar-nav ms-auto">
           {% if user.is_authenticated %}
             <li class="nav-item">
+              <a class="nav-link" href="{% url 'about_site' %}">{% trans "О сайте" %}</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="{% url 'issues:map' %}">{% trans "Карта" %}</a>
             </li>
             <li class="nav-item">
@@ -27,6 +30,9 @@
               <a class="nav-link" href="{% url 'users:logout' %}">{% trans "Выйти" %}</a>
             </li>
           {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'about_site' %}">{% trans "О сайте" %}</a>
+            </li>
             <li class="nav-item">
               <a class="nav-link" href="{% url 'users:login' %}">{% trans "Вход" %}</a>
             </li>
