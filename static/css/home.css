@@ -1,0 +1,476 @@
+html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+* {
+    box-sizing: border-box;
+}
+
+.main-content {
+    margin-bottom: 32px;
+}
+
+.banner-wrapper {
+    position: relative;
+    margin-bottom: 32px;
+}
+
+.help-banner.full-width {
+    background-color: var(--primary-color);
+    border-radius: 0 40px 40px 0;
+    padding: 20px 170px;
+    margin: 24px 0;
+    color: white;
+    box-shadow: 0 10px 12px rgba(0,0,0,0.4); 
+    width: 80vw; /* На всю ширину viewport */
+    position: relative;
+    left: calc(-50vw + 50%); /* Сдвигаем влево до края */
+    margin-left: 0;
+    margin-right: 20%;
+    box-sizing: border-box;
+    z-index: 3;
+
+}
+.map-wrapper {
+    position: relative;
+    margin-top: -100px; /* Карта заходит на баннер */
+}
+
+.help-banner-content h2 {
+    font-size: 30px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-transform: uppercase;
+}
+
+
+.banner-left {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-transform: uppercase;
+    text-align: left;
+    margin-top: 15px;
+    align-self: flex-start; /* Прижимаем к левому краю */
+}
+
+.banner-right {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 100;
+    text-transform: uppercase;
+    text-align: right;
+    margin-bottom:15px ;
+    align-self: flex-end; /* Прижимаем к правому краю */
+    margin-top: auto; /* Опускаем вниз контейнера */
+}
+
+/* Content grid - как в макете */
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 32px;
+}
+
+.info-section a{
+    text-decoration: none;
+}
+/* Info section - как в макете */
+.info-section h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.info-subtitle {
+    color: var(--light-text);
+    margin-bottom: 24px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.info-item img {
+    width: 32px;
+}
+
+.info-item span {
+    font-weight: 700;
+    font-size: 18px;
+    display: block;
+}
+
+/* Map section - как в макете */
+.map-container {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.map-image {
+    width: 100%;
+    display: block;
+    height: 400px; /* Фиксированная высота */
+    object-fit: contain; /* Показывает все изображение без обрезки */
+    object-position: center; /* Центрирует изображение */
+}
+
+.map-cta {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white; /* Белая кнопка, как в макете */
+    border: 2px solid var(--primary-color); /* Розовая граница */
+    border-radius: 50px;
+    padding: 12px 24px;
+    font-weight: 700;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    cursor: pointer;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--primary-color); /* Розовый текст */
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.map-cta:hover {
+    background-color: var(--primary-color); /* При наведении фон становится розовым */
+    color: white; /* Текст белым */
+}
+
+/* Problem cards - как в макете */
+.problem-cards h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.card {
+    background-color: var(--card-bg); /* Розовый фон карточки, как в макете */
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    border: 1px solid rgba(0,0,0,0.05); /* Тонкая граница */
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.card img {
+    width: 32px;
+    height: 32px;
+}
+
+.card-content h4 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.card-content p {
+    font-size: 14px;
+    color: var(--light-text);
+}
+
+.more-themes {
+    display: block;
+    text-align: right;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+
+.other-themes {
+    text-align: right;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 16px;
+    display: block;
+}
+
+/* Результаты нашей работы - полная ширина экрана */
+.results-section {
+    background-color: var(--card-bg); /* Розовый фон */
+    padding: 32px 0;
+    margin-top: 32px;
+}
+
+.results-section.full-width {
+    width: 100vw; /* На всю ширину окна */
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    padding: 32px 0; /* Убираем горизонтальные отступы */
+    max-width: none; /* Игнорируем max-width */
+    box-sizing: border-box; /* Важно для правильного расчета ширины */
+}
+
+/* .results-header {
+    background-color: white;
+    border-radius: 50px;
+    padding: 12px 24px;
+    max-width: 600px;
+    margin: 0 auto 24px;
+} */
+
+/* .results-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--primary-color);
+    text-align: center;
+} */
+
+/* Контейнер для галереи */
+.results-gallery-container {
+    position: relative;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* Сама галерея */
+.results-gallery {
+    display: flex;
+    gap: 20px;
+    padding: 0 20px;
+    scroll-behavior: smooth;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Скрываем scrollbar */
+.results-gallery {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+/* 
+.results-gallery::-webkit-scrollbar {
+    display: none;
+} */
+
+/* Элементы галереи */
+.gallery-item {
+    scroll-snap-align: start;
+    min-width: 250px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+
+.gallery-prev:hover, .gallery-next:hover {
+    opacity: 1;
+}
+
+.gallery-prev {
+    left: 10px;
+}
+
+.gallery-next {
+    right: 10px;
+}
+
+
+/* Обновляем стили для белой полоски */
+.results-header {
+    background-color: white;
+    border-radius: 50px;
+    padding: 0; /* Убираем padding, так как ссылка будет занимать всё пространство */
+    max-width: 600px;
+    margin: 0 auto 24px;
+    transition: background-color 0.3s;
+    overflow: hidden; /* Чтобы скругленные углы работали с ссылкой */
+}
+
+/* Стили для ссылки, которая занимает всю белую полоску */
+.result-link {
+    display: block;
+    text-decoration: none;
+    padding: 12px 24px; /* Добавляем padding самой ссылке */
+    text-align: center;
+    transition: all 0.3s;
+}
+
+/* Эффект при наведении на белую полоску */
+.results-header:hover {
+    background-color: var(--primary-color);
+}
+
+/* Эффект при наведении на текст */
+.results-header:hover .result-text {
+    color: white;
+}
+
+.results-header {
+    background-color: white;
+    border-radius: 50px;
+    padding: 0;
+    max-width: 600px;
+    margin: 0 auto 24px;
+    transition: background-color 0.3s ease;
+    overflow: hidden;
+}
+
+.result-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    text-transform: uppercase;
+    color: var(--primary-color);
+    transition: color 0.3s ease;
+}
+
+.results-header:hover {
+    background-color: var(--primary-color);
+}
+
+.results-header:hover .result-btn {
+    color: white;
+}
+
+.results-info a{
+    text-decoration: none;
+}
+
+.results-info h2 {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+
+/* Скрываем кнопки на мобильных */
+@media (max-width: 768px) {
+    .gallery-prev, .gallery-next {
+        display: none;
+    }
+}
+
+
+@media (max-width: 992px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .cards-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .help-banner {
+        width: 100%;
+        border-radius: 0 40px 40px 0;
+        padding: 24px;
+        margin: 24px 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .cards-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .header .container {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .help-banner {
+        padding: 24px 16px;
+    }
+    
+    .help-banner-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .help-banner h2,
+    .help-banner p {
+        text-align: left;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-grid {
+        gap: 20px;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .info-item img {
+        margin-bottom: 8px;
+    }
+    
+    .map-container {
+        height: 200px;
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .banner-text-container {
+        flex-direction: column;
+        align-items: stretch;
+        min-height: auto;
+        gap: 10px;
+    }
+    
+    .banner-left,
+    .banner-right {
+        font-size: 20px;
+        text-align: center;
+        align-self: center;
+        margin-top: 0;
+    }
+    
+    .help-banner.full-width-left {
+        padding: 20px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .banner-left,
+    .banner-right {
+        font-size: 18px;
+    }
+}
