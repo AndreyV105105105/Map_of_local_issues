@@ -35,8 +35,6 @@
                     {% else %}
                         <li><a href="{% url 'users:login' %}" class="{% if request.resolver_match.url_name == 'map' %}active{% endif %}">карта</a></li>
                     {% endif %}
-
-                    <li><a href="#" class="{% if request.resolver_match.url_name == 'themes' %}active{% endif %}">темы</a></li>
                     <li><a href="#" class="{% if request.resolver_match.url_name == 'results' %}active{% endif %}">результаты</a></li>
                 </ul>
             </nav>
@@ -117,7 +115,7 @@
     </footer>
 
 
-  <script src="{% static 'alerts.js' %}"></script>
+  <script src="{% static 'js/alerts.js' %}"></script>
 
 </body>
 </html>

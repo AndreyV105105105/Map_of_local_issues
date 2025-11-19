@@ -549,6 +549,7 @@
     border-radius: 50px;
     font-weight: 600;
     font-size: 16px;
+    cursor: pointer;
     transition: all 0.3s ease;
     border: 2px solid var(--primary-color);
 }
@@ -579,17 +580,32 @@
 
 .btn-secondary:hover {
     background-color: #4c5257;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     transform: translateY(-1px);
 }
 
 .btn-danger {
-    background-color: #dc3545;
+    display: inline-block;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    background: #dc3545;
     color: white;
+    text-decoration: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    border: 2px solid;
+    cursor: pointer;
+    
 }
 
 .btn-danger:hover {
-    background-color: #c82333;
-    transform: translateY(-1px);
+    background: #992631;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .delete-form {
