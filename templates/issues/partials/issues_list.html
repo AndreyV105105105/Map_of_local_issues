@@ -1,21 +1,15 @@
+
 {% load static %}
 {% load i18n %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/issue_list.css' %}">
+    <link rel="stylesheet" href="{% static 'css/issues_list.css' %}">
 {% endblock %}
-
 
 {% block content %}
   <div class="issues-list-container">
       <div class="issues-header">
           <h3 class="issues-title">{% trans "Все обращения" %} <span class="issues-count">({{ issues.count }})</span></h3>
-          <div class="issues-filter">
-              <button class="filter-btn active">{% trans "Все" %}</button>
-              <button class="filter-btn">{% trans "Новые" %}</button>
-              <button class="filter-btn">{% trans "В работе" %}</button>
-              <button class="filter-btn">{% trans "Решено" %}</button>
-          </div>
       </div>
 
       {% if issues %}
@@ -62,13 +56,13 @@
                                   class="vote-btn upvote {% if issue.user_has_upvoted %}active{% endif %}"
                                   data-issue-id="{{ issue.id }}"
                                   data-vote-type="1">
-                              <img src="{% static 'icons/thumb-up.svg' %}" alt="👍">
+                              <img src="{% static 'icons/like.svg' %}" alt="👍">
                           </button>
                           <button type="button" 
                                   class="vote-btn downvote {% if issue.user_has_downvoted %}active{% endif %}"
                                   data-issue-id="{{ issue.id }}"
                                   data-vote-type="-1">
-                              <img src="{% static 'icons/thumb-down.svg' %}" alt="👎">
+                              <img src="{% static 'icons/dislike.svg' %}" alt="👎">
                           </button>
                       </div>
                       {% endif %}
@@ -121,8 +115,21 @@
           <p>{% trans "Попробуйте изменить критерии поиска или создать новое обращение" %}</p>
       </div>
       {% endif %}
+          <!-- Photo Modal -->
+      <div id="photoModal" class="photo-modal" style="display: none;">
+          <div class="modal-content">
+              <span class="modal-close" onclick="closePhotoModal()">&times;</span>
+              <img id="modalImage" src="" alt="Увеличенное фото">
+              <div class="modal-counter" id="modalCounter"></div>
+              <div class="modal-nav">
+                  <button class="modal-nav-btn prev" onclick="navigatePhoto('prev')"><</button>
+                  <button class="modal-nav-btn next" onclick="navigatePhoto('next')">></button>
+              </div>
+          </div>
+      </div>
   </div>
-
 {% endblock %}
 
-<script src="{% static 'js/issues_list.js' %}"></script>
+{% block extra_js %}
+    <script src="{% static 'js/issues_list.js' %}"></script>
+{% endblock %}
