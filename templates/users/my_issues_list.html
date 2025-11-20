@@ -1,0 +1,48 @@
+{% load i18n %}
+
+{% if issues %}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for issue in issues %}
+      <div class="col">
+        <div class="card h-100 shadow-sm border-0 position-relative" data-issue-id="{{ issue.id }}">
+          {% if issue.photos.first %}
+            <a href="{% url 'issues:issue_detail' issue.id %}">
+              <img src="{{ issue.photos.first.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+            </a>
+          {% endif %}
+
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title mb-2">
+              <a href="{% url 'issues:issue_detail' issue.id %}" class="text-decoration-none text-dark">
+                {{ issue.title }}
+              </a>
+            </h5>
+
+            <p class="card-text text-muted small flex-grow-1">
+              {{ issue.description|truncatewords:25 }}
+            </p>
+
+            <div class="mt-3 d-flex flex-wrap gap-2 align-items-center">
+              <span class="badge bg-secondary">{{ issue.get_category_display }}</span>
+              <span class="badge status-{{ issue.status }}">{{ issue.get_status_display }}</span>
+              <span class="badge bg-primary">{{ issue.vote_rating }} {% trans "рейтинг" %}</span>
+              {% if issue.photos.count > 1 %}
+                <span class="badge bg-info">+{{ issue.photos.count|add:"-1" }} {% trans "фото" %}</span>
+              {% endif %}
+            </div>
+
+            {% if issue.address %}
+              <small class="text-muted d-block mt-2">{{ issue.address }}</small>
+            {% endif %}
+
+            <small class="text-muted mt-1">{{ issue.created_at|date:"d.m.Y в H:i" }}</small>
+
+            <!-- Кнопки голосования УБРАНЫ полностью — это специально для "Мои проблемы" -->
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="text-muted">{% trans "Нет обращений для отображения" %}</p>
+{% endif %}
