@@ -1,11 +1,13 @@
 /* Issue Detail Page Styles */
 
 .issue-detail-container {
-    max-width: 1400px;
+    max-width: 100%;
+    width: 100%;
     margin: 0 auto;
     padding: 20px;
     background-color: var(--secondary-color);
     min-height: 100vh;
+    box-sizing: border-box;
 }
 
 .issue-header {
@@ -73,6 +75,14 @@
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+@media (min-width: 1400px) {
+    .issue-content-grid {
+        grid-template-columns: 1.5fr 1fr;
+    }
 }
 
 .issue-main-content {
@@ -107,9 +117,24 @@
 .map-container {
     width: 100%;
     height: 300px;
+    min-height: 300px;
     border-radius: 12px;
     overflow: hidden;
     background-color: #f8f9fa;
+}
+
+@media (min-width: 1200px) {
+    .map-container {
+        height: 400px;
+        min-height: 400px;
+    }
+}
+
+@media (min-width: 1600px) {
+    .map-container {
+        height: 500px;
+        min-height: 500px;
+    }
 }
 
 .main-photo-container {
@@ -119,9 +144,26 @@
 
 .main-photo-container img {
     max-width: 100%;
+    width: 100%;
+    height: auto;
+    min-height: 250px;
     max-height: 250px;
     border-radius: 12px;
     object-fit: cover;
+}
+
+@media (min-width: 1200px) {
+    .main-photo-container img {
+        max-height: 350px;
+        min-height: 350px;
+    }
+}
+
+@media (min-width: 1600px) {
+    .main-photo-container img {
+        max-height: 450px;
+        min-height: 450px;
+    }
 }
 
 .issue-description h3,
@@ -629,11 +671,22 @@
 @media (max-width: 992px) {
     .issue-content-grid {
         grid-template-columns: 1fr;
+        max-width: 100%;
     }
     
     .issue-sidebar {
         order: -1;
         margin-bottom: 24px;
+    }
+    
+    .map-container {
+        height: 300px;
+        min-height: 300px;
+    }
+    
+    .main-photo-container img {
+        max-height: 300px;
+        min-height: 300px;
     }
 }
 

@@ -27,7 +27,7 @@
             <div class="info-item">
                 <img src="{% static 'icons/in_work.svg' %}" alt="Иконка проблем в работе">
                 <div>
-                    <span>0</span>
+                    <span>{{ issues_in_progress }}</span>
                     <p>Проблем сейчас в работе</p>
                 </div>
             </div>
@@ -35,7 +35,7 @@
             <div class="info-item">
                 <img src="{% static 'icons/done.svg' %}" alt="Иконка решенных проблем">
                 <div>
-                    <span>0</span>
+                    <span>{{ issues_resolved }}</span>
                     <p>Проблем решено</p>
                 </div>
             </div>
