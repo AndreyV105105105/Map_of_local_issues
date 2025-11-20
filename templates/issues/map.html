@@ -3,125 +3,46 @@
 {% load i18n %}
 
 {% block extra_css %}
-<style>
-  .filter-container {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border: 1px solid #e9ecef;
-  }
-  .filter-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  .filter-item {
-    flex: 1;
-    min-width: 150px;
-  }
-  .filter-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-    align-items: flex-end;
-  }
-  .filter-badge {
-    cursor: pointer;
-  }
-  #map {
-    height: 600px;
-    width: 100%;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  /* Стили для поиска */
-  .map-search-container {
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 2;
-    width: 500px;
-    max-width: 90vw;
-  }
-  .map-search-input-group {
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    border-radius: 24px;
-    overflow: hidden;
-  }
-  .map-search-input {
-    border: none;
-    padding: 8px 16px;
-    font-size: 14px;
-    outline: none;
-  }
-  .map-search-btn {
-    background: #fff;
-    border: none;
-    padding: 0 16px;
-    cursor: pointer;
-  }
-  .map-search-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid #ddd;
-    border-top: none;
-    border-radius: 0 0 8px 8px;
-    max-height: 300px;
-    overflow-y: auto;
-    z-index: 1001;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-  .map-search-result-item {
-    padding: 10px 16px;
-    cursor: pointer;
-    border-bottom: 1px solid #eee;
-  }
-  .map-search-result-item:hover {
-    background-color: #f5f5f5;
-  }
-  .map-search-result-item.active {
-    background-color: #e3f2fd;
-  }
-</style>
+    <!-- Подключаем стили для карты -->
+    <link rel="stylesheet" href="{% static 'css/map.css' %}"> <!-- Путь к вашему файлу -->
+    <!-- Подключаем стили MapLibre GL -->
+    <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="map-header">
   <h2>{% trans "Карта локальных проблем (Ханты-Мансийск)" %}</h2>
 
   {% if user.is_authenticated and user.role == 'citizen' %}
-    <div class="alert alert-info">
-      {% trans "Кликните по карте или начните вводить адрес — подсказки появятся автоматически." %}
+    <div class="map-instruction">
+      <p>{% trans "Кликните по карте или начните вводить адрес — подсказки появятся автоматически." %}
     </div>
   {% endif %}
 </div>
 
-<!-- Поиск по адресу — поверх карты -->
+<!-- Поиск по адресу — поверх контейнера карты -->
 <div class="map-search-container">
   <div class="input-group map-search-input-group">
     <input type="text" id="map-address-search" class="form-control map-search-input"
-           placeholder="{% trans 'Начните вводить адрес: Ленина, Мира, Нефтяников...' %}">
+          placeholder="{% trans 'Начните вводить адрес: Ленина, Мира, Нефтяников...' %}">
     <button class="map-search-btn" type="button" id="map-search-btn">
-      <i class="bi bi-search"></i>
+      <i class="bi bi-search"></i> 
     </button>
   </div>
-  <div id="map-search-results" class="map-search-results" style="display:none;"></div>
+  <div id="map-search-results" class="map-search-results"></div>
 </div>
 
-<div id="map" style="height: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px;"></div>
+<!-- Контейнер карты -->
+<div id="map-container">
+    <div id="map"></div>
+</div>
 
 <div class="container mt-4">
   <!-- Форма фильтрации -->
-  <div class="filter-container mt-4">
-    <h5 class="mb-3">{% trans "Фильтрация обращений" %}</h5>
-    <form id="filter-form" class="filter-row">
-      <div class="filter-item">
+  <div class="map-filters-container">
+    <h5>{% trans "Фильтрация обращений" %}</h5>
+    <form id="filter-form" class="map-filter-row">
+      <div class="map-filter-item">
         <label for="category-filter" class="form-label small">{% trans "Категория" %}</label>
         <select id="category-filter" name="category" class="form-select form-select-sm">
           <option value="">{% trans "Все категории" %}</option>
@@ -131,7 +52,7 @@
         </select>
       </div>
 
-      <div class="filter-item">
+      <div class="map-filter-item">
         <label for="status-filter" class="form-label small">{% trans "Статус" %}</label>
         <select id="status-filter" name="status" class="form-select form-select-sm">
           <option value="">{% trans "Все статусы" %}</option>
@@ -141,13 +62,13 @@
         </select>
       </div>
 
-      <div class="filter-item">
+      <div class="map-filter-item">
         <label for="search-filter" class="form-label small">{% trans "Поиск" %}</label>
         <input type="text" id="search-filter" name="search" class="form-control form-control-sm"
-               placeholder="{% trans "Название, описание, автор..." %}" value="{{ search_query }}">
+              placeholder="{% trans "Название, описание, автор..." %}" value="{{ search_query }}">
       </div>
 
-      <div class="filter-item">
+      <div class="map-filter-item">
         <label for="sort-filter" class="form-label small">{% trans "Сортировка" %}</label>
         <select id="sort-filter" name="sort" class="form-select form-select-sm">
           <option value="-created_at" {% if selected_sort == "-created_at" %}selected{% endif %}>{% trans "Сначала новые" %}</option>
@@ -158,32 +79,32 @@
         </select>
       </div>
 
-      <div class="filter-actions">
+      <div class="map-filter-actions">
         <button type="submit" class="btn btn-primary btn-sm">{% trans "Применить" %}</button>
-        <button type="button" id="reset-filters" class="btn btn-outline-secondary btn-sm">{% trans "Сбросить" %}</button>
+        <button type="button" id="reset-filters" class="btn btn-secondary btn-sm">{% trans "Сбросить" %}</button>
       </div>
     </form>
 
     <!-- Активные фильтры -->
     {% if selected_category or selected_status or search_query %}
-    <div class="mt-3">
+    <div class="map-active-filters">
       <small class="text-muted">{% trans "Активные фильтры:" %}</small>
       {% if selected_category %}
-        <span class="badge bg-info filter-badge me-1" data-filter="category">
+        <span class="badge bg-info filter-badge" data-filter="category">
           {% for value, label in categories %}
             {% if value == selected_category %}{{ label }}{% endif %}
           {% endfor %}
         </span>
       {% endif %}
       {% if selected_status %}
-        <span class="badge bg-warning filter-badge me-1" data-filter="status">
+        <span class="badge bg-warning filter-badge" data-filter="status">
           {% for value, label in status_choices %}
             {% if value == selected_status %}{{ label }}{% endif %}
           {% endfor %}
         </span>
       {% endif %}
       {% if search_query %}
-        <span class="badge bg-success filter-badge me-1" data-filter="search">{{ search_query }}</span>
+        <span class="badge bg-success filter-badge" data-filter="search">{{ search_query }}</span>
       {% endif %}
     </div>
     {% endif %}
@@ -195,552 +116,150 @@
   </div>
 </div>
 
-<!-- MapLibre GL -->
-<script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
-<link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
-
-<script>
-  const bounds = [
-    [68.75, 60.75],
-    [69.30, 61.15]
-  ];
-
-  let markers = [];
-  let tempMarker = null;
-
-  const map = new maplibregl.Map({
-    container: 'map',
-    style: {
-      version: 8,
-      sources: {
-        'osm': {
-          type: 'raster',
-          tiles: ['https://tile.openstreetmap.de/{z}/{x}/{y}.png'],
-          tileSize: 256,
-          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }
-      },
-      layers: [{
-        id: 'osm-tiles',
-        type: 'raster',
-        source: 'osm',
-        minzoom: 0,
-        maxzoom: 19
-      }]
-    },
-    center: [69.0179, 61.0034],
-    zoom: 12,
-    maxBounds: bounds
-  });
-
-  map.addControl(new maplibregl.NavigationControl(), 'top-right');
-  map.addControl(new maplibregl.ScaleControl({ maxWidth: 100 }), 'bottom-left');
-
-  // === МАРКЕРЫ И ФИЛЬТРЫ (оставлены без изменений) ===
-  function updateMapMarkers(filters) {
-    markers.forEach(marker => marker.remove());
-    markers = [];
-
-    fetch(`/issues/map/geojson/?${new URLSearchParams(filters)}`)
-    .then(response => {
-        if (!response.ok) throw new Error('Ошибка сервера');
-        return response.json();
-    })
-    .then(geojson => {
-        geojson.features.forEach(feature => {
-            const lng = feature.geometry.coordinates[0];
-            const lat = feature.geometry.coordinates[1];
-            const props = feature.properties;
-
-            if (!isNaN(lng) && !isNaN(lat)) {
-                const popupContent = `
-                    <a href="${props.url}"
-                       style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
-                        ${props.title}
-                    </a>
-                    <small>
-                        Статус: <strong>${props.status_display}</strong><br>
-                        Категория: ${props.category_display}<br>
-                        Рейтинг: <strong>${props.vote_rating}</strong>
-                        ${props.photos_count > 0 ? `<br>📸 ${props.photos_count} {% trans "фото" %}` : ''}
-                    </small>
-                `;
-
-                const popup = new maplibregl.Popup({
-                    closeButton: false,
-                    closeOnClick: false,
-                    anchor: 'top',
-                    offset: [0, -8],
-                    maxWidth: '220px'
-                }).setHTML(popupContent);
-
-                const marker = new maplibregl.Marker({ color: '#e74c3c' })
-                    .setLngLat([lng, lat])
-                    .setPopup(popup)
-                    .addTo(map);
-
-                const markerEl = marker.getElement();
-                if (markerEl) {
-                    markerEl.addEventListener('mouseenter', (e) => {
-                        e.stopPropagation();
-                        popup.addTo(map);
-                    });
-                    markerEl.addEventListener('mouseleave', (e) => {
-                        e.stopPropagation();
-                        if (popup.isOpen()) popup.remove();
-                    });
-
-                    markerEl.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        window.location.href = props.url;
-                    });
-                }
-
-                markers.push(marker);
-            }
-        });
-    })
-    .catch(error => {
-        console.error('Error updating map markers:', error);
-        setTimeout(() => {
-            markers.forEach(marker => marker.remove());
-            markers = [];
-            {% for issue in issues %}
-              {% if issue.location and issue.location.x is not None and issue.location.y is not None %}
-                {% with lng=issue.location.x|floatformat:"6" lat=issue.location.y|floatformat:"6" %}
-                  {% if lng != "None" and lat != "None" %}
-                    {
-                      const lng = parseFloat("{{ lng }}");
-                      const lat = parseFloat("{{ lat }}");
-                      if (!isNaN(lng) && !isNaN(lat)) {
-                        const popup = new maplibregl.Popup({
-                          closeButton: false,
-                          closeOnClick: false,
-                          anchor: 'top',
-                          offset: [0, -8],
-                          maxWidth: '220px'
-                        }).setHTML(`
-                          <a href="{% url 'issues:issue_detail' issue.id %}"
-                             style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
-                            {{ issue.title|escapejs }}
-                          </a>
-                          <small>
-                            Статус: <strong>{{ issue.get_status_display }}</strong><br>
-                            Категория: {{ issue.get_category_display }}<br>
-                            Рейтинг: <strong>{{ issue.vote_rating }}</strong>
-                            {% if issue.photos.all %}
-                              <br>📸 {{ issue.photos.count }} {% trans "фото" %}
-                            {% endif %}
-                          </small>
-                        `);
-
-                        const marker = new maplibregl.Marker({ color: '#e74c3c' })
-                          .setLngLat([lng, lat])
-                          .addTo(map);
-
-                        const markerEl = marker.getElement();
-                        if (markerEl) {
-                          markerEl.addEventListener('mouseenter', (e) => {
-                            e.stopPropagation();
-                            popup.setLngLat(marker.getLngLat()).addTo(map);
-                          });
-                          markerEl.addEventListener('mouseleave', (e) => {
-                            e.stopPropagation();
-                            if (popup.isOpen()) popup.remove();
-                          });
-
-                          markerEl.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            window.location.href = "{% url 'issues:issue_detail' issue.id %}";
-                          });
-                        }
-
-                        markers.push(marker);
-                      }
-                    }
-                  {% endif %}
-                {% endwith %}
-              {% endif %}
-            {% endfor %}
-        }, 500);
-    });
-  }
-
-  function loadIssuesWithFilters(filters) {
-    const url = new URL(window.location.href);
-    Object.entries(filters).forEach(([key, value]) => {
-      value ? url.searchParams.set(key, value) : url.searchParams.delete(key);
-    });
-    history.pushState({}, '', url);
-
-    const btn = document.querySelector('#filter-form button[type="submit"]');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
-
-    fetch(`/issues/map/?${new URLSearchParams(filters)}`, {
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(response => {
-      if (!response.ok) throw new Error('Ошибка сервера');
-      return response.text();
-    })
-    .then(html => {
-      document.getElementById('issues-container').innerHTML = html;
-      updateMapMarkers(filters);
-    })
-    .catch(error => {
-      console.error('Error loading filtered issues:', error);
-      alert('{% trans "Ошибка при загрузке данных. Попробуйте позже." %}');
-    })
-    .finally(() => {
-      const btn = document.querySelector('#filter-form button[type="submit"]');
-      btn.disabled = false;
-      btn.innerHTML = '{% trans "Применить" %}';
-    });
-  }
-
-  document.getElementById('filter-form')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const filters = Object.fromEntries(formData.entries());
-    loadIssuesWithFilters(filters);
-  });
-
-  document.getElementById('reset-filters')?.addEventListener('click', function() {
-    ['category-filter', 'status-filter', 'search-filter', 'sort-filter'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = el.id === 'sort-filter' ? '-created_at' : '';
-    });
-    document.querySelectorAll('.filter-badge').forEach(el => el.remove());
-    
-    const formData = new FormData(document.getElementById('filter-form'));
-    loadIssuesWithFilters(Object.fromEntries(formData.entries()));
-  });
-
-  document.querySelectorAll('.filter-badge').forEach(badge => {
-    badge.addEventListener('click', function() {
-      const f = this.dataset.filter;
-      const el = document.getElementById(f + '-filter');
-      if (el) el.value = '';
-      this.remove();
-      const formData = new FormData(document.getElementById('filter-form'));
-      loadIssuesWithFilters(Object.fromEntries(formData.entries()));
-    });
-  });
-
-  let searchTimeout;
-  document.getElementById('search-filter')?.addEventListener('input', function(e) {
-    clearTimeout(searchTimeout);
-    if (e.target.value.length > 2 || e.target.value.length === 0) {
-      searchTimeout = setTimeout(() => {
-        const formData = new FormData(document.getElementById('filter-form'));
-        loadIssuesWithFilters(Object.fromEntries(formData.entries()));
-      }, 500);
-    }
-  });
-
-  // === АВТОДОПОЛНЕНИЕ ПО АДРЕСУ ===
-  function clearSearchResults() {
-    const div = document.getElementById('map-search-results');
-    if (div) { div.innerHTML = ''; div.style.display = 'none'; }
-  }
-
-  function showSearchResults(results) {
-    const div = document.getElementById('map-search-results');
-    if (!div) return;
-    div.innerHTML = '';
-    if (!results || results.length === 0) return clearSearchResults();
-
-    results.forEach(r => {
-      const item = document.createElement('div');
-      item.className = 'map-search-result-item';
-      const road = r.address?.road || '';
-      const city = r.address?.city || r.address?.town || '';
-      const sub = [road, city].filter(Boolean).join(', ') || '';
-      item.innerHTML = `<div><strong>${r.display_name}</strong></div><small class="text-muted">${sub}</small>`;
-      item.onclick = () => {
-        const lat = r.lat, lon = r.lon, addr = r.display_name;
-        map.flyTo({ center: [lon, lat], zoom: 16 });
-        clearSearchResults();
-        if (tempMarker) tempMarker.remove();
-        tempMarker = new maplibregl.Marker({ color: '#3498db' })
-          .setLngLat([lon, lat])
-          .setPopup(new maplibregl.Popup().setText(addr))
-          .addTo(map);
-        tempMarker.togglePopup();
-        if ({% if user.is_authenticated and user.role == 'citizen' %}true{% else %}false{% endif %}) {
-          showReportButton(lat, lon, addr);
-        }
-      };
-      div.appendChild(item);
-    });
-    div.style.display = 'block';
-  }
-
-  let searchDebounce;
-  const searchInput = document.getElementById('map-address-search');
-  if (searchInput) {
-    searchInput.addEventListener('input', function() {
-      clearTimeout(searchDebounce);
-      const q = this.value.trim();
-      if (q.length < 2) return clearSearchResults();
-      searchDebounce = setTimeout(async () => {
-        try {
-          const res = await fetch(`/issues/api/search-address/?q=${encodeURIComponent(q)}`);
-          const data = await res.json();
-          showSearchResults(data.results);
-        } catch (e) {
-          console.warn('Search failed:', e);
-          clearSearchResults();
-        }
-      }, 300);
-    });
-
-    searchInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const div = document.getElementById('map-search-results');
-        const first = div?.querySelector('.map-search-result-item');
-        if (first) first.click();
-        else if (searchInput.value.trim()) searchInput.dispatchEvent(new Event('input'));
-      }
-    });
-  }
-
-  document.getElementById('map-search-btn')?.addEventListener('click', () => {
-    if (searchInput) searchInput.dispatchEvent(new Event('input'));
-  });
-
-  document.addEventListener('click', e => {
-    const container = document.querySelector('.map-search-container');
-    if (container && !container.contains(e.target)) clearSearchResults();
-  });
-
-  // === КНОПКА «СООБЩИТЬ» ===
-  function showReportButton(lat, lon, address) {
-    const old = document.getElementById('map-report-btn');
-    if (old) old.remove();
-
-    const btn = Object.assign(document.createElement('button'), {
-      id: 'map-report-btn',
-      className: 'btn btn-success btn-sm',
-      innerHTML: '📍 {% trans "Сообщить о проблеме здесь" %}',
-      style: 'position:absolute;top:10px;right:10px;z-index:2'
-    });
-
-    btn.onclick = () => {
-      const url = new URL('{% url "issues:create_issue" %}', location.origin);
-      url.searchParams.set('lat', lat.toFixed(6));
-      url.searchParams.set('lon', lon.toFixed(6));
-      url.searchParams.set('address', address);
-      location.href = url.toString();
-    };
-
-    document.getElementById('map').appendChild(btn);
-  }
-
-  // === ИНИЦИАЛИЗАЦИЯ ===
-  const userIsCitizen = {% if user.is_authenticated and user.role == 'citizen' %}true{% else %}false{% endif %};
-
-  map.on('load', () => {
-    // Маркеры (уже есть выше — не дублируем)
-    {% for issue in issues %}
-      {% if issue.location and issue.location.x is not None and issue.location.y is not None %}
-        {% with lng=issue.location.x|floatformat:"6" lat=issue.location.y|floatformat:"6" %}
-          {% if lng != "None" and lat != "None" %}
-            {
-              const lng = parseFloat("{{ lng }}");
-              const lat = parseFloat("{{ lat }}");
-              if (!isNaN(lng) && !isNaN(lat)) {
-                const popup = new maplibregl.Popup({
-                  closeButton: false,
-                  closeOnClick: false,
-                  anchor: 'top',
-                  offset: [0, -8],
-                  maxWidth: '220px'
-                }).setHTML(`
-                  <a href="{% url 'issues:issue_detail' issue.id %}"
-                     style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
-                    {{ issue.title|escapejs }}
-                  </a>
-                  <small>
-                    Статус: <strong>{{ issue.get_status_display }}</strong><br>
-                    Категория: {{ issue.get_category_display }}<br>
-                    Рейтинг: <strong>{{ issue.vote_rating }}</strong>
-                    {% if issue.photos.all %}
-                      <br>📸 {{ issue.photos.count }} {% trans "фото" %}
-                    {% endif %}
-                  </small>
-                `);
-                const marker = new maplibregl.Marker({ color: '#e74c3c' }).setLngLat([lng, lat]).addTo(map);
-                const el = marker.getElement();
-                if (el) {
-                  el.addEventListener('mouseenter', () => popup.setLngLat(marker.getLngLat()).addTo(map));
-                  el.addEventListener('mouseleave', () => popup.isOpen() && popup.remove());
-                  el.addEventListener('click', () => location.href = "{% url 'issues:issue_detail' issue.id %}");
-                }
-                markers.push(marker);
-              }
-            }
-          {% endif %}
-        {% endwith %}
-      {% endif %}
-    {% endfor %}
-
-    // Клик по карте → обратное геокодирование + кнопка
-    if (userIsCitizen) {
-        map.on('click', async function(e) {
-          if (e.originalEvent.target.closest('.maplibregl-marker, .maplibregl-popup')) return;
-        
-          const lng = e.lngLat.lng;
-          const lat = e.lngLat.lat;
-        
-          // Обратное геокодирование → ОБЯЗАТЕЛЬНО!
-          let address = `Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-          try {
-            const resp = await fetch(`/issues/api/reverse-geocode/?lat=${lat}&lon=${lng}`);
-            const data = await resp.json();
-            if (data.address) {
-              address = data.address;
-            }
-          } catch (err) {
-            console.warn('Reverse geocode failed:', err);
-        }
-
-        if (tempMarker) tempMarker.remove();
-        tempMarker = new maplibregl.Marker({ color: '#3498db' })
-          .setLngLat([lng, lat])
-          .setPopup(new maplibregl.Popup().setText(address))
-          .addTo(map);
-        tempMarker.togglePopup();
-
-        showReportButton(lat, lng, address);
-      });
-    }
-  });
-
-  map.on('error', e => {
-    console.error('Map error:', e);
-    document.getElementById('map').innerHTML =
-      `<div class="alert alert-danger p-3">❌ Ошибка карты: ${e.error?.message || 'неизвестная ошибка'}</div>`;
-  });
-</script>
-
-<!-- Модальное окно (оставлено без изменений) -->
-{% if user.is_authenticated and user.role == 'citizen' %}
-<div id="modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:999;"></div>
-<div id="report-form-modal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:white; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:1000; width:90%; max-width:500px;">
-  <h5>{% trans "Сообщить о проблеме" %}</h5>
-  <form method="post" action="{% url 'issues:create_issue' %}" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input type="hidden" id="id_lat" name="lat">
-    <input type="hidden" id="id_lon" name="lon">
-    <div class="mb-3"><label class="form-label">{% trans "Название" %}</label><input type="text" name="title" class="form-control" required></div>
-    <div class="mb-3"><label class="form-label">{% trans "Описание" %}</label><textarea name="description" class="form-control" rows="3" required></textarea></div>
-    <div class="mb-3"><label class="form-label">{% trans "Категория" %}</label>
-      <select name="category" class="form-select" required>
-        {% for value, label in categories %}
-          <option value="{{ value }}">{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="mb-3">
-      <label for="modal-images" class="form-label">{% trans "Фотографии" %} (до 5, JPG/PNG, макс. 5MB)</label>
-      <input type="file" class="form-control" id="modal-images" name="images" multiple accept="image/jpeg, image/png">
-      <div id="modal-preview" class="mt-2 d-flex flex-wrap gap-1"></div>
-      <small class="form-text text-muted">{% trans "Можно выбрать несколько файлов" %}</small>
-    </div>
-    <div class="d-flex justify-content-end">
-      <button type="button" class="btn btn-secondary me-2"
-              onclick="document.getElementById('report-form-modal').style.display='none';document.getElementById('modal-backdrop').style.display='none';if (typeof tempMarker !== 'undefined' && tempMarker !== null) { tempMarker.remove(); tempMarker = null; }">
-        {% trans "Отмена" %}
-      </button>
-      <button type="submit" class="btn btn-success">{% trans "Отправить" %}</button>
-    </div>
-  </form>
-</div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const inp = document.getElementById('modal-images');
-    if (!inp) return;
-    inp.addEventListener('change', function() {
-      const preview = document.getElementById('modal-preview');
-      preview.innerHTML = '';
-      if (this.files.length > 5) alert('{% trans "Максимум 5 фотографий. Будут загружены только первые 5." %}');
-      Array.from(this.files).slice(0, 5).forEach(file => {
-        if (file.size > 5 * 1024 * 1024) return preview.appendChild(Object.assign(document.createElement('div'), { className: 'text-danger small mt-1', textContent: `⚠️ ${file.name} {% trans "слишком большой" %}` }));
-        if (!file.type.match('image.*')) return preview.appendChild(Object.assign(document.createElement('div'), { className: 'text-danger small mt-1', textContent: `⚠️ ${file.name} {% trans "не изображение" %}` }));
-        const reader = new FileReader();
-        reader.onload = e => {
-          const img = Object.assign(document.createElement('img'), {
-            src: e.target.result,
-            style: 'width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #ddd'
-          });
-          preview.appendChild(img);
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-  });
-</script>
-{% endif %}
 
 {% csrf_token %}
 
+
+<script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
+
+
 <script>
-function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
-    let voteValue = intendedValue.toString();
-    if ((intendedValue === 1 && isUpvoted) || (intendedValue === -1 && isDownvoted)) voteValue = '0';
+    window.USER_IS_CITIZEN = {% if user.is_authenticated and user.role == 'citizen' %}true{% else %}false{% endif %};
+    window.MARKER_COLOR = '#E75A7C'; // Цвет из старого шаблона
 
-    const formData = new FormData();
-    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-    formData.append('vote', voteValue);
+    // Функция для загрузки начальных маркеров из шаблона
+    window.loadInitialMarkersFromTemplate = function() {
+        // Очищаем старые маркеры
+        markers.forEach(marker => marker.remove());
+        markers = [];
 
-    const card = document.querySelector(`.card[data-issue-id="${issueId}"]`);
-    if (!card) return;
+        // Вставляем сгенерированный Django-код для добавления маркеров
+        {% for issue in issues %}
+          {% if issue.location and issue.location.x is not None and issue.location.y is not None %}
+            {% with lng=issue.location.x|floatformat:"6"|floatformat:"g" lat=issue.location.y|floatformat:"6"|floatformat:"g" %}
+              {% if lng != "None" and lat != "None" %}
+                {
+                  const lng = parseFloat("{{ lng|safe }}");
+                  const lat = parseFloat("{{ lat|safe }}");
+                  if (!isNaN(lng) && !isNaN(lat)) {
+                    const popup = new maplibregl.Popup({
+                      closeButton: false,
+                      closeOnClick: false,
+                      anchor: 'top',
+                      offset: [0, -8],
+                      maxWidth: '220px'
+                    }).setHTML(`
+                      <a href="{% url 'issues:issue_detail' issue.id %}"
+                         style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
+                        {{ issue.title|escapejs }}
+                      </a>
+                      <small>
+                        Статус: <strong>{{ issue.get_status_display }}</strong><br>
+                        Категория: {{ issue.get_category_display }}<br>
+                        Рейтинг: <strong>{{ issue.vote_rating }}</strong>
+                        {% if issue.photos.all %}
+                          <br>📸 {{ issue.photos.count }} {% trans "фото" %}
+                        {% endif %}
+                      </small>
+                    `);
 
-    const buttons = card.querySelectorAll(`button[onclick*="toggleVote(${issueId},"]`);
-    buttons.forEach(b => { b.disabled = true; b.innerHTML = '⋯'; });
+                    const marker = new maplibregl.Marker({ color: window.MARKER_COLOR })
+                      .setLngLat([lng, lat])
+                      .addTo(map);
 
-    fetch(`/issues/${issueId}/vote/`, {
-        method: 'POST',
-        body: formData,
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(r => r.json().then(d => r.ok ? d : Promise.reject(d)))
-    .then(data => {
-        const badge = card.querySelector('.badge.bg-primary');
-        if (badge) badge.innerHTML = `${data.rating} {% trans "рейтинг" %}`;
-        document.querySelectorAll('.maplibregl-popup-content').forEach(p => {
-            if (p.innerHTML.includes(`/issues/${issueId}/`)) {
-                const small = p.querySelector('small');
-                if (small) small.innerHTML = small.innerHTML.replace(
-                    /Рейтинг: <strong>\d+<\/strong>/,
-                    `Рейтинг: <strong>${data.rating}</strong>`
-                );
-            }
-        });
-        const up = card.querySelector(`button[onclick*="toggleVote(${issueId}, 1"]`);
-        const down = card.querySelector(`button[onclick*="toggleVote(${issueId}, -1"]`);
-        if (up && down) {
-            up.className = up.className.replace(/\b(btn-success|btn-outline-success)\b/g, data.user_vote === 1 ? 'btn-success' : 'btn-outline-success');
-            down.className = down.className.replace(/\b(btn-danger|btn-outline-danger)\b/g, data.user_vote === -1 ? 'btn-danger' : 'btn-outline-danger');
-        }
-    })
-    .catch(err => {
-        console.error('Vote error:', err);
-        alert(err.error || '{% trans "Ошибка голосования." %}');
-    })
-    .finally(() => {
-        const up = card.querySelector(`button[onclick*="toggleVote(${issueId}, 1"]`);
-        const down = card.querySelector(`button[onclick*="toggleVote(${issueId}, -1"]`);
-        if (up) up.innerHTML = '👍';
-        if (down) down.innerHTML = '👎';
-        if (up) up.disabled = false;
-        if (down) down.disabled = false;
-    });
-}
+                    const markerEl = marker.getElement();
+                    if (markerEl) {
+                      markerEl.addEventListener('mouseenter', (e) => {
+                        e.stopPropagation();
+                        popup.setLngLat(marker.getLngLat()).addTo(map);
+                      });
+                      markerEl.addEventListener('mouseleave', (e) => {
+                        e.stopPropagation();
+                        if (popup.isOpen()) popup.remove();
+                      });
+                      markerEl.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        window.location.href = "{% url 'issues:issue_detail' issue.id %}";
+                      });
+                    }
+
+                    markers.push(marker);
+                  }
+                }
+              {% endif %}
+            {% endwith %}
+          {% endif %}
+        {% endfor %}
+    };
+
+    // Функция для загрузки начальных маркеров при ошибке (для updateMapMarkers)
+    window.loadInitialMarkersOnError = function() {
+        // Очищаем старые маркеры
+        markers.forEach(marker => marker.remove());
+        markers = [];
+
+        // Вставляем сгенерированный Django-код для добавления маркеров (тот же код)
+        {% for issue in issues %}
+          {% if issue.location and issue.location.x is not None and issue.location.y is not None %}
+            {% with lng=issue.location.x|floatformat:"6"|floatformat:"g" lat=issue.location.y|floatformat:"6"|floatformat:"g" %}
+              {% if lng != "None" and lat != "None" %}
+                {
+                  const lng = parseFloat("{{ lng|safe }}");
+                  const lat = parseFloat("{{ lat|safe }}");
+                  if (!isNaN(lng) && !isNaN(lat)) {
+                    const popup = new maplibregl.Popup({
+                      closeButton: false,
+                      closeOnClick: false,
+                      anchor: 'top',
+                      offset: [0, -8],
+                      maxWidth: '220px'
+                    }).setHTML(`
+                      <a href="{% url 'issues:issue_detail' issue.id %}"
+                         style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
+                        {{ issue.title|escapejs }}
+                      </a>
+                      <small>
+                        Статус: <strong>{{ issue.get_status_display }}</strong><br>
+                        Категория: {{ issue.get_category_display }}<br>
+                        Рейтинг: <strong>{{ issue.vote_rating }}</strong>
+                        {% if issue.photos.all %}
+                          <br>📸 {{ issue.photos.count }} {% trans "фото" %}
+                        {% endif %}
+                      </small>
+                    `);
+
+                    const marker = new maplibregl.Marker({ color: window.MARKER_COLOR })
+                      .setLngLat([lng, lat])
+                      .addTo(map);
+
+                    const markerEl = marker.getElement();
+                    if (markerEl) {
+                      markerEl.addEventListener('mouseenter', (e) => {
+                        e.stopPropagation();
+                        popup.setLngLat(marker.getLngLat()).addTo(map);
+                      });
+                      markerEl.addEventListener('mouseleave', (e) => {
+                        e.stopPropagation();
+                        if (popup.isOpen()) popup.remove();
+                      });
+                      markerEl.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        window.location.href = "{% url 'issues:issue_detail' issue.id %}";
+                      });
+                    }
+
+                    markers.push(marker);
+                  }
+                }
+              {% endif %}
+            {% endwith %}
+          {% endif %}
+        {% endfor %}
+    };
+
 </script>
+
+
+<script src="{% static 'js/map.js' %}"></script> 
 
 {% endblock %}
