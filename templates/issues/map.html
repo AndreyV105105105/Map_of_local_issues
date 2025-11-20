@@ -3,106 +3,886 @@
 {% load i18n %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
 <style>
-  .filter-container {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border: 1px solid #e9ecef;
+  .map-page-header {
+    margin-bottom: 24px;
   }
+  
+  .map-page-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-color);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  
+  .map-alert {
+    background-color: var(--card-bg);
+    border: 1px solid var(--primary-color);
+    border-radius: 16px;
+    padding: 16px 20px;
+    color: var(--text-color);
+    margin-bottom: 24px;
+  }
+  
+  .map-wrapper-container {
+    position: relative;
+    margin-bottom: 32px;
+  }
+  
+  .filter-container {
+    background-color: var(--card-bg);
+    padding: 24px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  
+  .filter-container h5 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    color: var(--text-color);
+  }
+  
   .filter-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 16px;
+    margin-bottom: 16px;
   }
+  
   .filter-item {
     flex: 1;
-    min-width: 150px;
+    min-width: 180px;
   }
+  
+  .filter-item label {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 8px;
+    display: block;
+    font-size: 14px;
+  }
+  
+  .filter-item .form-select,
+  .filter-item .form-control {
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.1);
+    padding: 10px 14px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .filter-item .form-select:focus,
+  .filter-item .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(231, 90, 124, 0.1);
+    outline: none;
+  }
+  
   .filter-actions {
     display: flex;
-    gap: 10px;
-    margin-top: 10px;
+    gap: 12px;
+    margin-top: 16px;
     align-items: flex-end;
   }
+  
+  .filter-actions .btn {
+    border-radius: 50px;
+    padding: 10px 24px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 14px;
+    transition: all 0.3s;
+    border: none;
+  }
+  
+  .filter-actions .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .filter-actions .btn-primary:hover {
+    background-color: #d14a6c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(231, 90, 124, 0.3);
+  }
+  
+  .filter-actions .btn-outline-secondary {
+    background-color: white;
+    color: var(--text-color);
+    border: 2px solid var(--primary-color);
+  }
+  
+  .filter-actions .btn-outline-secondary:hover {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
   .filter-badge {
     cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
   }
+  
+  .filter-badge:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+  
+  .filter-badge.bg-info {
+    background-color: var(--primary-color) !important;
+    color: white;
+  }
+  
+  .filter-badge.bg-warning {
+    background-color: #ffa726 !important;
+    color: white;
+  }
+  
+  .filter-badge.bg-success {
+    background-color: #66bb6a !important;
+    color: white;
+  }
+  
   #map {
     height: 600px;
     width: 100%;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.05);
   }
+  
   /* Стили для поиска */
   .map-search-container {
     position: absolute;
-    top: 10px;
+    top: 20px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 2;
     width: 500px;
     max-width: 90vw;
   }
+  
   .map-search-input-group {
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    border-radius: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 50px;
     overflow: hidden;
+    background: white;
+    display: flex;
+    align-items: center;
+    border: 2px solid var(--primary-color);
   }
+  
   .map-search-input {
     border: none;
-    padding: 8px 16px;
+    padding: 12px 20px;
     font-size: 14px;
     outline: none;
+    flex: 1;
+    background: transparent;
   }
+  
+  .map-search-input::placeholder {
+    color: var(--light-text);
+  }
+  
   .map-search-btn {
-    background: #fff;
+    background: var(--primary-color);
     border: none;
-    padding: 0 16px;
+    padding: 12px 20px;
     cursor: pointer;
+    color: white;
+    transition: background-color 0.3s;
   }
+  
+  .map-search-btn:hover {
+    background-color: #d14a6c;
+  }
+  
   .map-search-results {
     position: absolute;
     top: 100%;
     left: 0;
     right: 0;
     background: white;
-    border: 1px solid #ddd;
+    border: 2px solid var(--primary-color);
     border-top: none;
-    border-radius: 0 0 8px 8px;
-    max-height: 300px;
+    border-radius: 0 0 16px 16px;
+    max-height: 400px;
     overflow-y: auto;
     z-index: 1001;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    margin-top: -2px;
   }
+  
+  .map-search-results-header {
+    padding: 12px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .map-search-results-count {
+    background-color: rgba(255, 255, 255, 0.25);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  
   .map-search-result-item {
-    padding: 10px 16px;
+    padding: 16px 20px;
     cursor: pointer;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.2s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
   }
+  
   .map-search-result-item:hover {
+    background-color: var(--card-bg);
+    padding-left: 24px;
+  }
+  
+  .map-search-result-item.active {
+    background-color: var(--card-bg);
+    border-left: 3px solid var(--primary-color);
+    padding-left: 17px;
+  }
+  
+  .map-search-result-item:last-child {
+    border-bottom: none;
+  }
+  
+  .map-search-result-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    margin-top: 2px;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .map-search-result-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .map-search-result-content {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .map-search-result-main {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 6px;
+    line-height: 1.4;
+    font-size: 15px;
+  }
+  
+  .map-search-result-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  
+  .map-search-result-detail {
+    font-size: 12px;
+    color: var(--light-text);
+    background-color: #f8f8f8;
+    padding: 4px 8px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .map-search-result-detail-icon {
+    width: 12px;
+    height: 12px;
+    color: var(--primary-color);
+  }
+  
+  .map-search-result-address {
+    font-size: 13px;
+    color: var(--light-text);
+    line-height: 1.5;
+    margin-top: 4px;
+    word-break: break-word;
+  }
+  
+  .map-search-no-results {
+    padding: 32px 20px;
+    text-align: center;
+    color: var(--light-text);
+  }
+  
+  .map-search-no-results-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+  
+  .map-search-no-results-text {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .map-search-results::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .map-search-results::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  .map-search-results::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+  }
+  
+  .map-search-results::-webkit-scrollbar-thumb:hover {
+    background: #d14a6c;
+  }
+  
+  #map-report-btn {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 50px !important;
+    padding: 12px 24px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    font-size: 14px !important;
+    box-shadow: 0 4px 12px rgba(231, 90, 124, 0.3) !important;
+    transition: all 0.3s !important;
+    max-width: 280px;
+    white-space: normal;
+    word-wrap: break-word;
+    text-align: center;
+    line-height: 1.3;
+  }
+  
+  #map-report-btn:hover {
+    background-color: #d14a6c !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(231, 90, 124, 0.4) !important;
+  }
+  
+  /* Стили для popup карты */
+  .maplibregl-popup-content {
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    padding: 16px !important;
+    max-width: 250px !important;
+  }
+  
+  .maplibregl-popup-content a {
+    color: var(--primary-color) !important;
+    font-weight: 600 !important;
+  }
+  
+  .maplibregl-popup-content a:hover {
+    color: #d14a6c !important;
+  }
+  
+  .maplibregl-popup-tip {
+    border-top-color: white !important;
+  }
+  
+  /* Стили для маркеров */
+  .maplibregl-marker {
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  
+  .maplibregl-marker:hover {
+    transform: scale(1.1);
+  }
+  
+  /* Стили для списка обращений */
+  #issues-container {
+    margin-top: 32px;
+  }
+  
+  #issues-container h4 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 24px;
+    text-transform: uppercase;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary-color);
+  }
+  
+  #issues-container .card {
+    background-color: var(--card-bg);
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 16px;
+    padding: 0;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s;
+    overflow: hidden;
+  }
+  
+  #issues-container .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  
+  #issues-container .card-body {
+    padding: 24px;
+  }
+  
+  /* Улучшенное отображение описания */
+  #issues-container .issue-description {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-color);
+    margin-bottom: 14px;
+    font-weight: 400;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: calc(1.6em * 3);
+  }
+  
+  /* Контейнер для фото внизу */
+  #issues-container .issue-photos-container {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+  
+  #issues-container .issue-photos-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    width: 100%;
+  }
+  
+  /* Убеждаемся, что все фото видны */
+  #issues-container .issue-photos-grid > * {
+    min-width: 0;
+  }
+  
+  #issues-container .issue-photo-link {
+    display: block;
+    text-decoration: none;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.3s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    background-color: white;
+  }
+  
+  #issues-container .issue-photo-link:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  
+  #issues-container .issue-photo-thumbnail {
+    width: 100%;
+    height: 100px;
+    min-height: 100px;
+    object-fit: cover;
+    display: block;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
     background-color: #f5f5f5;
   }
-  .map-search-result-item.active {
-    background-color: #e3f2fd;
+  
+  #issues-container .issue-photo-link:hover .issue-photo-thumbnail {
+    transform: scale(1.05);
+    border: 2px solid var(--primary-color);
+  }
+  
+  #issues-container .issue-photo-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    min-height: 100px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--card-bg) 0%, rgba(231, 90, 124, 0.1) 100%);
+    border: 2px dashed var(--primary-color);
+    transition: all 0.3s;
+  }
+  
+  #issues-container .issue-photo-more:hover {
+    background: linear-gradient(135deg, rgba(231, 90, 124, 0.1) 0%, rgba(231, 90, 124, 0.2) 100%);
+    border-color: #d14a6c;
+  }
+  
+  #issues-container .issue-photo-more .badge {
+    font-size: 13px;
+    padding: 8px 14px;
+    background-color: var(--primary-color) !important;
+    color: white;
+    font-weight: 600;
+  }
+  
+  /* Адаптивность для мобильных устройств */
+  @media (max-width: 992px) {
+    #issues-container .issue-photos-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    #issues-container .issue-photos-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    #issues-container .issue-photo-thumbnail {
+      height: 80px;
+      min-height: 80px;
+    }
+    
+    #issues-container .issue-photo-more {
+      height: 80px;
+      min-height: 80px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    #issues-container .issue-photos-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    
+    #issues-container .issue-photo-thumbnail {
+      height: 70px;
+      min-height: 70px;
+    }
+    
+    #issues-container .issue-photo-more {
+      height: 70px;
+      min-height: 70px;
+    }
+  }
+  
+  #issues-container .card h6 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    line-height: 1.4;
+  }
+  
+  #issues-container .card h6 a {
+    color: var(--text-color);
+    text-decoration: none;
+    transition: color 0.2s;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  #issues-container .card h6 a:hover {
+    color: var(--primary-color);
+  }
+  
+  #issues-container .badge.bg-primary {
+    background-color: var(--primary-color) !important;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 50px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  /* Рейтинг и кнопки голосования - исправление перекрытия */
+  #issues-container .d-flex.align-items-center {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap;
+    gap: 12px !important;
+  }
+  
+  #issues-container .d-flex.align-items-center > .badge {
+    margin-right: 0 !important;
+  }
+  
+  #issues-container .btn-group {
+    gap: 6px !important;
+    display: flex !important;
+    flex-shrink: 0;
+    margin-left: 0 !important;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  
+  #issues-container .btn-group > .btn {
+    margin-left: 0 !important;
+    border-radius: 8px !important;
+  }
+  
+  #issues-container .btn-group .btn {
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 18px;
+    line-height: 1;
+    transition: all 0.2s;
+    border: 2px solid;
+    min-width: 44px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI Emoji', 'Segoe UI Symbol', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  #issues-container .btn-group .btn::before {
+    content: '';
+    display: none;
+  }
+  
+  #issues-container .btn-group .btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(231, 90, 124, 0.2);
+  }
+  
+  #issues-container .btn-group .btn-success,
+  #issues-container .btn-group .btn-outline-success {
+    border-color: #66bb6a;
+  }
+  
+  #issues-container .btn-group .btn-success {
+    background-color: #66bb6a;
+    color: white;
+  }
+  
+  #issues-container .btn-group .btn-outline-success {
+    background-color: transparent;
+    color: #66bb6a;
+  }
+  
+  #issues-container .btn-group .btn-success:hover {
+    background-color: #4caf50;
+    transform: scale(1.05);
+  }
+  
+  #issues-container .btn-group .btn-outline-success:hover {
+    background-color: #66bb6a;
+    color: white;
+  }
+  
+  #issues-container .btn-group .btn-danger,
+  #issues-container .btn-group .btn-outline-danger {
+    border-color: #ef5350;
+  }
+  
+  #issues-container .btn-group .btn-danger {
+    background-color: #ef5350;
+    color: white;
+  }
+  
+  #issues-container .btn-group .btn-outline-danger {
+    background-color: transparent;
+    color: #ef5350;
+  }
+  
+  #issues-container .btn-group .btn-danger:hover {
+    background-color: #e53935;
+    transform: scale(1.05);
+  }
+  
+  #issues-container .btn-group .btn-outline-danger:hover {
+    background-color: #ef5350;
+    color: white;
+  }
+  
+  #issues-container .text-muted {
+    color: var(--light-text) !important;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  
+  #issues-container .text-muted.small {
+    font-size: 15px;
+  }
+  
+  #issues-container .card-body > p.text-muted.small:first-of-type {
+    font-size: 16px;
+    margin-bottom: 14px;
+    color: var(--text-color) !important;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  
+  #issues-container .card-body > p.text-muted.small:last-of-type {
+    font-size: 15px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  #issues-container .card-body > p.text-muted.small:last-of-type::before {
+    content: '';
+    display: none;
+  }
+  
+  #issues-container .img-thumbnail {
+    border-radius: 8px;
+    border: 2px solid rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+  }
+  
+  #issues-container .img-thumbnail:hover {
+    transform: scale(1.1);
+    border-color: var(--primary-color);
+  }
+  
+  #issues-container .badge.bg-secondary {
+    background-color: var(--primary-color) !important;
+    color: white;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 12px;
+  }
+  
+  #issues-container p:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* Улучшенная типографика для мета-информации */
+  #issues-container .issue-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  #issues-container .issue-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 15px;
+    color: var(--light-text);
+  }
+  
+  #issues-container .issue-meta-separator {
+    color: var(--light-text);
+    opacity: 0.5;
+    font-size: 15px;
+  }
+  
+  /* Стили для пустого состояния */
+  #issues-container > p {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--light-text);
+    font-size: 16px;
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    border: 2px dashed var(--primary-color);
+  }
+  
+  /* Стили для форм управления (для официальных лиц) */
+  #issues-container .form-select-sm {
+    border-radius: 8px;
+    border: 2px solid var(--primary-color);
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+  
+  #issues-container .form-select-sm:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(231, 90, 124, 0.1);
+    outline: none;
+  }
+  
+  #issues-container .btn-outline-primary,
+  #issues-container .btn-outline-danger {
+    border-radius: 8px;
+    font-size: 13px;
+    padding: 6px 16px;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  
+  #issues-container .btn-outline-primary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+  
+  #issues-container .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-1px);
+  }
+  
+  #issues-container .btn-outline-danger {
+    border-color: #ef5350;
+    color: #ef5350;
+  }
+  
+  #issues-container .btn-outline-danger:hover {
+    background-color: #ef5350;
+    color: white;
+    transform: translateY(-1px);
+  }
+  
+  /* Улучшенная типографика */
+  #issues-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  #issues-container strong {
+    font-weight: 600;
+    color: var(--text-color);
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container">
+  <div class="map-page-header">
   <h2>{% trans "Карта локальных проблем (Ханты-Мансийск)" %}</h2>
 
   {% if user.is_authenticated and user.role == 'citizen' %}
-    <div class="alert alert-info">
+      <div class="map-alert">
       {% trans "Кликните по карте или начните вводить адрес — подсказки появятся автоматически." %}
     </div>
   {% endif %}
+  </div>
 </div>
 
 <!-- Поиск по адресу — поверх карты -->
+<div class="map-wrapper-container">
 <div class="map-search-container">
   <div class="input-group map-search-input-group">
     <input type="text" id="map-address-search" class="form-control map-search-input"
@@ -114,11 +894,12 @@
   <div id="map-search-results" class="map-search-results" style="display:none;"></div>
 </div>
 
-<div id="map" style="height: 600px; width: 100%; border: 1px solid #ccc; border-radius: 4px;"></div>
+  <div id="map"></div>
+</div>
 
-<div class="container mt-4">
+<div class="container">
   <!-- Форма фильтрации -->
-  <div class="filter-container mt-4">
+  <div class="filter-container">
     <h5 class="mb-3">{% trans "Фильтрация обращений" %}</h5>
     <form id="filter-form" class="filter-row">
       <div class="filter-item">
@@ -274,7 +1055,7 @@
                     maxWidth: '220px'
                 }).setHTML(popupContent);
 
-                const marker = new maplibregl.Marker({ color: '#e74c3c' })
+                const marker = new maplibregl.Marker({ color: '#E75A7C' })
                     .setLngLat([lng, lat])
                     .setPopup(popup)
                     .addTo(map);
@@ -334,7 +1115,7 @@
                           </small>
                         `);
 
-                        const marker = new maplibregl.Marker({ color: '#e74c3c' })
+                        const marker = new maplibregl.Marker({ color: '#E75A7C' })
                           .setLngLat([lng, lat])
                           .addTo(map);
 
@@ -440,24 +1221,93 @@
   });
 
   // === АВТОДОПОЛНЕНИЕ ПО АДРЕСУ ===
+  let selectedIndex = -1;
+  
   function clearSearchResults() {
     const div = document.getElementById('map-search-results');
     if (div) { div.innerHTML = ''; div.style.display = 'none'; }
+    selectedIndex = -1;
   }
 
   function showSearchResults(results) {
+    selectedIndex = -1;
     const div = document.getElementById('map-search-results');
     if (!div) return;
     div.innerHTML = '';
-    if (!results || results.length === 0) return clearSearchResults();
+    
+    if (!results || results.length === 0) {
+      div.innerHTML = `
+        <div class="map-search-no-results">
+          <div class="map-search-no-results-icon">📍</div>
+          <div class="map-search-no-results-text">Адреса не найдены<br><small style="font-size: 12px; opacity: 0.7;">Попробуйте другой запрос</small></div>
+        </div>
+      `;
+      div.style.display = 'block';
+      return;
+    }
 
-    results.forEach(r => {
+    // Заголовок с количеством результатов
+    const header = document.createElement('div');
+    header.className = 'map-search-results-header';
+    header.innerHTML = `
+      <span>📍 Найдено адресов</span>
+      <span class="map-search-results-count">${results.length}</span>
+    `;
+    div.appendChild(header);
+
+    results.forEach((r, index) => {
       const item = document.createElement('div');
       item.className = 'map-search-result-item';
-      const road = r.address?.road || '';
-      const city = r.address?.city || r.address?.town || '';
-      const sub = [road, city].filter(Boolean).join(', ') || '';
-      item.innerHTML = `<div><strong>${r.display_name}</strong></div><small class="text-muted">${sub}</small>`;
+      if (index === 0) item.classList.add('active');
+      
+      // Извлекаем компоненты адреса
+      const addr = r.address || {};
+      const road = addr.road || '';
+      const houseNumber = addr.house_number || '';
+      const city = addr.city || addr.town || addr.municipality || '';
+      const district = addr.suburb || addr.quarter || addr.neighbourhood || '';
+      const postcode = addr.postcode || '';
+      
+      // Формируем основной адрес
+      let mainAddress = '';
+      if (road) {
+        mainAddress = road;
+        if (houseNumber) mainAddress += `, ${houseNumber}`;
+      } else {
+        // Если нет названия улицы, берем первую часть display_name
+        mainAddress = r.display_name.split(',')[0] || r.display_name;
+      }
+      
+      // Формируем детали
+      const details = [];
+      if (district) details.push({ icon: '🏘️', text: district });
+      if (city && city !== district) details.push({ icon: '🏙️', text: city });
+      if (postcode) details.push({ icon: '📮', text: postcode });
+      
+      // Создаем структурированный HTML
+      item.innerHTML = `
+        <div class="map-search-result-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+        </div>
+        <div class="map-search-result-content">
+          <div class="map-search-result-main">${mainAddress}</div>
+          ${details.length > 0 ? `
+            <div class="map-search-result-details">
+              ${details.map(d => `
+                <span class="map-search-result-detail">
+                  <span class="map-search-result-detail-icon">${d.icon}</span>
+                  <span>${d.text}</span>
+                </span>
+              `).join('')}
+            </div>
+          ` : ''}
+          <div class="map-search-result-address">${r.display_name}</div>
+        </div>
+      `;
+      
       item.onclick = () => {
         const lat = r.lat, lon = r.lon, addr = r.display_name;
         map.flyTo({ center: [lon, lat], zoom: 16 });
@@ -471,9 +1321,15 @@
         if ({% if user.is_authenticated and user.role == 'citizen' %}true{% else %}false{% endif %}) {
           showReportButton(lat, lon, addr);
         }
+        // Обновляем поле поиска с выбранным адресом
+        if (searchInput) {
+          searchInput.value = mainAddress;
+        }
       };
+      
       div.appendChild(item);
     });
+    
     div.style.display = 'block';
   }
 
@@ -497,12 +1353,40 @@
     });
 
     searchInput.addEventListener('keydown', (e) => {
+      const div = document.getElementById('map-search-results');
+      const items = div?.querySelectorAll('.map-search-result-item');
+      
       if (e.key === 'Enter') {
         e.preventDefault();
-        const div = document.getElementById('map-search-results');
-        const first = div?.querySelector('.map-search-result-item');
-        if (first) first.click();
-        else if (searchInput.value.trim()) searchInput.dispatchEvent(new Event('input'));
+        if (selectedIndex >= 0 && items && items[selectedIndex]) {
+          items[selectedIndex].click();
+        } else if (items && items.length > 0) {
+          items[0].click();
+        } else if (searchInput.value.trim()) {
+          searchInput.dispatchEvent(new Event('input'));
+        }
+        selectedIndex = -1;
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!items || items.length === 0) return;
+        if (selectedIndex >= 0) {
+          items[selectedIndex].classList.remove('active');
+        }
+        selectedIndex = (selectedIndex + 1) % items.length;
+        items[selectedIndex].classList.add('active');
+        items[selectedIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!items || items.length === 0) return;
+        if (selectedIndex >= 0) {
+          items[selectedIndex].classList.remove('active');
+        }
+        selectedIndex = selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1;
+        items[selectedIndex].classList.add('active');
+        items[selectedIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      } else if (e.key === 'Escape') {
+        clearSearchResults();
+        selectedIndex = -1;
       }
     });
   }
@@ -524,8 +1408,8 @@
     const btn = Object.assign(document.createElement('button'), {
       id: 'map-report-btn',
       className: 'btn btn-success btn-sm',
-      innerHTML: '📍 {% trans "Сообщить о проблеме здесь" %}',
-      style: 'position:absolute;top:10px;right:10px;z-index:2'
+      innerHTML: '{% trans "Сообщить о проблеме здесь" %}',
+      style: 'position:absolute;top:10px;left:10px;z-index:2'
     });
 
     btn.onclick = () => {
@@ -572,7 +1456,7 @@
                     {% endif %}
                   </small>
                 `);
-                const marker = new maplibregl.Marker({ color: '#e74c3c' }).setLngLat([lng, lat]).addTo(map);
+                const marker = new maplibregl.Marker({ color: '#E75A7C' }).setLngLat([lng, lat]).addTo(map);
                 const el = marker.getElement();
                 if (el) {
                   el.addEventListener('mouseenter', () => popup.setLngLat(marker.getLngLat()).addTo(map));

@@ -5,60 +5,78 @@
   {% for issue in issues %}
     <div class="card mb-3" data-issue-id="{{ issue.id }}" data-category="{{ issue.category }}" data-status="{{ issue.status }}">
       <div class="card-body">
-        <h6 class="mb-1">
-          <a href="{% url 'issues:issue_detail' issue.id %}" class="text-decoration-none text-dark">
+        <h6>
+          <a href="{% url 'issues:issue_detail' issue.id %}" class="text-decoration-none">
             {{ issue.title }}
           </a>
         </h6>
 
         <!-- Рейтинг и голосование -->
-        <div class="d-flex align-items-center mb-2">
-          <span class="badge bg-primary rounded-pill px-2 me-2">
+        <div class="d-flex align-items-center mb-3" style="gap: 12px; flex-wrap: wrap;">
+          <span class="badge bg-primary rounded-pill">
             {{ issue.vote_rating }} {% trans "рейтинг" %}
           </span>
 
           {% if user.is_authenticated and user.role == 'citizen' %}
-            <div class="btn-group" role="group">
+            <div class="btn-group" role="group" style="display: flex; gap: 6px; margin-left: 0;">
               <button type="button"
                       class="btn btn-sm {% if issue.user_has_upvoted %}btn-success{% else %}btn-outline-success{% endif %}"
-                      onclick="toggleVote({{ issue.id }}, 1, {{ issue.user_has_upvoted|yesno:'true,false' }}, {{ issue.user_has_downvoted|yesno:'true,false' }})">
+                      onclick="toggleVote({{ issue.id }}, 1, {{ issue.user_has_upvoted|yesno:'true,false' }}, {{ issue.user_has_downvoted|yesno:'true,false' }})"
+                      style="font-size: 18px; padding: 8px 14px; min-width: 44px; height: 36px; display: flex; align-items: center; justify-content: center;">
                 👍
               </button>
               <button type="button"
                       class="btn btn-sm {% if issue.user_has_downvoted %}btn-danger{% else %}btn-outline-danger{% endif %}"
-                      onclick="toggleVote({{ issue.id }}, -1, {{ issue.user_has_upvoted|yesno:'true,false' }}, {{ issue.user_has_downvoted|yesno:'true,false' }})">
+                      onclick="toggleVote({{ issue.id }}, -1, {{ issue.user_has_upvoted|yesno:'true,false' }}, {{ issue.user_has_downvoted|yesno:'true,false' }})"
+                      style="font-size: 18px; padding: 8px 14px; min-width: 44px; height: 36px; display: flex; align-items: center; justify-content: center;">
                 👎
               </button>
             </div>
           {% endif %}
         </div>
 
-        <p class="text-muted small mb-1">
-          {{ issue.description|truncatewords:15 }}
+        {% if issue.description %}
+        <p class="issue-description">
+          {{ issue.description|truncatewords:30 }}
         </p>
-        <p class="text-muted small mb-0">
-          {% trans "Категория" %}: {{ issue.get_category_display }} |
-          {% trans "Статус" %}: {{ issue.get_status_display }} |
-          {% trans "Автор" %}:
-          {% if user.is_authenticated and user.role == 'official' %}
-            {{ issue.reporter.get_full_name }}
-            {% if issue.reporter.email %}({{ issue.reporter.email }}){% endif %}
-          {% else %}
-            {{ issue.reporter.get_full_name }}
-          {% endif %} |
-          {{ issue.created_at|date:"d.m.Y H:i" }}
-        </p>
+        {% endif %}
+        
+        <div class="text-muted small mb-3" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08);">
+          <span class="issue-meta-item">
+            <strong>{% trans "Категория" %}:</strong> {{ issue.get_category_display }}
+          </span>
+          <span class="issue-meta-separator">|</span>
+          <span class="issue-meta-item">
+            <strong>{% trans "Статус" %}:</strong> {{ issue.get_status_display }}
+          </span>
+          <span class="issue-meta-separator">|</span>
+          <span class="issue-meta-item">
+            <strong>{% trans "Автор" %}:</strong>
+            {% if user.is_authenticated and user.role == 'official' %}
+              {{ issue.reporter.get_full_name }}
+              {% if issue.reporter.email %}({{ issue.reporter.email }}){% endif %}
+            {% else %}
+              {{ issue.reporter.get_full_name }}
+            {% endif %}
+          </span>
+          <span class="issue-meta-separator">|</span>
+          <span class="issue-meta-item">
+            {{ issue.created_at|date:"d.m.Y H:i" }}
+          </span>
+        </div>
 
         {% if issue.photos.all %}
-          <div class="mt-2">
-            <div class="d-flex flex-wrap gap-1">
-              {% for photo in issue.photos.all|slice:":3" %}
-                <a href="{{ photo.image.url }}" target="_blank" title="{% trans "Посмотреть фото" %}">
-                  <img src="{{ photo.image.url }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+          <div class="issue-photos-container">
+            <div class="issue-photos-grid">
+              {% for photo in issue.photos.all|slice:":5" %}
+                <a href="{{ photo.image.url }}" target="_blank" title="{% trans "Посмотреть фото" %}" class="issue-photo-link">
+                  <img src="{{ photo.image.url }}" class="issue-photo-thumbnail" alt="{% trans "Фото проблемы" %}">
                 </a>
               {% endfor %}
-              {% if issue.photos.count > 3 %}
-                <span class="badge bg-secondary align-self-center">+{{ issue.photos.count|add:"-3" }}</span>
+              {% if issue.photos.count > 5 %}
+                <div class="issue-photo-more">
+                  <span class="badge bg-secondary">+{{ issue.photos.count|add:"-5" }}</span>
+                </div>
               {% endif %}
             </div>
           </div>
