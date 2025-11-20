@@ -85,7 +85,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Map_of_local_issues.wsgi.application'
 
-# Database - PostGIS configuration for spatial data
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
@@ -94,12 +93,11 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST', 'db'),
         'PORT': os.getenv('DB_PORT', '5432'),
-        'CONN_MAX_AGE': 600,  # Persistent connections for performance
-        'CONN_HEALTH_CHECKS': True,  # Health check connections
+        'CONN_MAX_AGE': 600,
+        'CONN_HEALTH_CHECKS': True,
     }
 }
 
-# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -116,25 +114,19 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files configuration
-
-# Media files configuration (user-uploaded content)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Custom user model
 AUTH_USER_MODEL = 'users.CustomUser'
 
-# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Security settings for production
 if not DEBUG:
     # HTTPS settings
     SECURE_SSL_REDIRECT = True
@@ -146,21 +138,17 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
-    # Trusted origins for CSRF protection
     CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
 
-    # Proxy settings if behind reverse proxy (like Nginx)
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-    # Security middleware settings
     X_FRAME_OPTIONS = 'DENY'
     SECURE_REFERRER_POLICY = 'same-origin'
 
-    # Additional security headers
     SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 
-# Email configuration (for password resets)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Console output in dev
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 if not DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.example.com')

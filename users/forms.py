@@ -130,11 +130,9 @@ class CustomSetPasswordForm(SetPasswordForm):
         if not password:
             return password
 
-        # Создаём кастомный список валидаторов с min_length=12
         from django.contrib.auth.password_validation import MinimumLengthValidator
         validators = get_default_password_validators()
 
-        # Заменяем MinimumLengthValidator на версию с min_length=12
         for i, v in enumerate(validators):
             if v.__class__.__name__ == 'MinimumLengthValidator':
                 validators[i] = MinimumLengthValidator(min_length=12)

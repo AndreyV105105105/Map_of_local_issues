@@ -14,15 +14,13 @@ from .modules.geocoding import geocode_address, reverse_geocode, search_address
 from .constants import ISSUE_CATEGORIES, ISSUE_CATEGORY_CHOICES
 from .forms import CommentForm
 from .models import Comment, Issue, IssuePhoto, Vote
-
 import logging
 
 logger = logging.getLogger(__name__)
 
-
 @login_required
 def issue_detail(request, pk):
-    # Add prefetch for comments
+    """Детали обращения"""
     user_vote_subq = Vote.objects.filter(
         issue=OuterRef('pk'),
         user=request.user
@@ -49,7 +47,6 @@ def issue_detail(request, pk):
         pk=pk
     )
 
-    # Handle comment form - allow both citizens and officials
     if request.method == 'POST':
         comment_form = CommentForm(request.POST)
         if comment_form.is_valid():
@@ -70,16 +67,15 @@ def issue_detail(request, pk):
 @login_required
 def map_view(request):
     """
-    Отображает карту со всеми обращениями с возможностью фильтрации.
-    Доступно всем авторизованным пользователям.
+    Отображает карту со всеми обращениями с возможностью фильтрации
     """
     # Получаем параметры фильтрации из GET-запроса
     category = request.GET.get('category')
     status = request.GET.get('status')
     search = request.GET.get('search', '').strip()
-    sort = request.GET.get('sort', '-created_at')  # сортировка по умолчанию
+    sort = request.GET.get('sort', '-created_at')
 
-    # Подзапрос: голос текущего пользователя по каждому Issue
+    # Голос текущего пользователя по каждому Issue
     user_vote_subq = Vote.objects.filter(
         issue=OuterRef('pk'),
         user=request.user
@@ -149,7 +145,7 @@ def create_issue(request):
         messages.error(request, "Только граждане могут сообщать о проблемах.", extra_tags='issues')
         return redirect('issues:map')
 
-    # --- Инициализация: поддержка pre-fill из GET (карта → кнопка «Сообщить»)
+    # --- Инициализация: поддержка pre-fill из GET
     initial = {
         'title': '',
         'description': '',
@@ -170,7 +166,7 @@ def create_issue(request):
                 lat_f = float(lat)
                 lon_f = float(lon)
                 initial.update(lat=f"{lat_f:.6f}", lon=f"{lon_f:.6f}")
-                # Обратное геокодирование для заполнения адреса (но не для изменения координат!)
+                # Обратное геокодирование для заполнения адреса
                 if not address:
                     address = reverse_geocode(lat_f, lon_f) or f"Координаты: {lat_f:.6f}, {lon_f:.6f}"
                 initial['address'] = address
@@ -182,7 +178,7 @@ def create_issue(request):
             'initial': initial,
         })
 
-    # --- POST: обработка формы
+    # POST: обработка формы
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '').strip()
@@ -206,12 +202,12 @@ def create_issue(request):
                 'initial': request.POST.dict(),
             })
 
-        # --- Определение координат и адреса: ПРИОРИТЕТ — РУЧНЫЕ КООРДИНАТЫ!
+        # Определение координат и адреса
         lat_f = lon_f = None
         address_to_save = address
 
         try:
-            # 🔑 Приоритет 1: координаты из формы (точка клика)
+            # Приоритет 1: координаты из формы (точка клика)
             if lat and lon:
                 lat_f = float(lat)
                 lon_f = float(lon)
@@ -222,7 +218,7 @@ def create_issue(request):
                 if not address_to_save.strip():
                     address_to_save = reverse_geocode(lat_f, lon_f) or f"Координаты: {lat_f:.6f}, {lon_f:.6f}"
 
-            # 🔑 Приоритет 2: если координат нет — геокодируем адрес
+            # Приоритет 2: если координат нет — геокодируем адрес
             elif address:
                 result = geocode_address(address)
                 if result:
@@ -250,7 +246,7 @@ def create_issue(request):
                 'initial': request.POST.dict(),
             })
 
-        # --- Сохранение
+        #Сохранение
         try:
             issue = Issue.objects.create(
                 title=title,
@@ -292,8 +288,8 @@ def create_issue(request):
 @login_required
 def update_issue_status(request, issue_id):
     """
-    Обновляет статус обращения.
-    Доступно только официальным лицам (role == 'official').
+    Обновляет статус обращения
+    Доступно только официальным лицам (role == 'official')
     """
     if request.user.role != 'official':
         messages.error(request, "Только официальные лица могут обрабатывать обращения.", extra_tags='issues')
@@ -329,12 +325,12 @@ def delete_issue(request, issue_id):
     if request.method == 'POST':
         # Сохраняем информацию для сообщения перед удалением
         title = issue.title
-        # Удаляем связанные фотографии (они удалятся автоматически при каскадном удалении)
+        # Удаляем связанные фотографии
         issue.delete()
         messages.success(request, f"Обращение «{title}» успешно удалено.", extra_tags='issues')
         return redirect('issues:map')
 
-    # Если GET (кто-то вручную ввёл URL) — не удаляем, а редиректим
+    # Если GET не удаляем, а редиректим
     messages.warning(request, "Метод не поддерживается. Используйте кнопку «Удалить».", extra_tags='issues')
     return redirect('issues:map')
 
@@ -352,7 +348,6 @@ def vote_issue(request, issue_id):
     issue = get_object_or_404(Issue, id=issue_id)
     vote_value = request.POST.get('vote')
 
-    # Обработка: '1' → +1, '-1' → -1, '0' → отмена
     if vote_value == '0':
         # Удаляем голос, если есть
         deleted, _ = Vote.objects.filter(user=request.user, issue=issue).delete()
@@ -371,7 +366,7 @@ def vote_issue(request, issue_id):
             'error': _('Голос должен быть +1, -1 или 0 (отмена).')
         }, status=400)
 
-    # Вычисляем рейтинг напрямую через агрегацию — быстро и надёжно
+    # Вычисляем рейтинг напрямую через агрегацию
     rating = issue.votes.aggregate(rating_sum=Sum('value'))['rating_sum'] or 0
 
     return JsonResponse({
@@ -384,9 +379,7 @@ def vote_issue(request, issue_id):
 
 @login_required
 def get_issues_geojson(request):
-    """
-    Возвращает GeoJSON с данными об обращениях для карты с учетом фильтров.
-    """
+    """Возвращает GeoJSON с данными об обращениях для карты с учетом фильтров"""
     # Получаем параметры фильтрации
     category = request.GET.get('category')
     status = request.GET.get('status')
