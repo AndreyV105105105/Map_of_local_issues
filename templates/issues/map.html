@@ -3,9 +3,8 @@
 {% load i18n %}
 
 {% block extra_css %}
-    <!-- Подключаем стили для карты -->
-    <link rel="stylesheet" href="{% static 'css/map.css' %}"> <!-- Путь к вашему файлу -->
-    <!-- Подключаем стили MapLibre GL -->
+
+    <link rel="stylesheet" href="{% static 'css/map.css' %}"> 
     <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
 {% endblock %}
 
@@ -20,7 +19,7 @@
   {% endif %}
 </div>
 
-<!-- Поиск по адресу — поверх контейнера карты -->
+
 <div class="map-search-container">
   <div class="input-group map-search-input-group">
     <input type="text" id="map-address-search" class="form-control map-search-input"
@@ -32,7 +31,7 @@
   <div id="map-search-results" class="map-search-results"></div>
 </div>
 
-<!-- Контейнер карты -->
+
 <div id="map-container">
     <div id="map"></div>
 </div>
@@ -160,7 +159,7 @@
   map.addControl(new maplibregl.NavigationControl(), 'top-right');
   map.addControl(new maplibregl.ScaleControl({ maxWidth: 100 }), 'bottom-left');
 
-  // === МАРКЕРЫ И ФИЛЬТРЫ (оставлены без изменений) ===
+  //МАРКЕРЫ И ФИЛЬТРЫ
   function updateMapMarkers(filters) {
     markers.forEach(marker => marker.remove());
     markers = [];
@@ -179,7 +178,7 @@
             if (!isNaN(lng) && !isNaN(lat)) {
                 const popupContent = `
                     <a href="${props.url}"
-                       style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
+                      style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
                         ${props.title}
                     </a>
                     <small>
@@ -245,7 +244,7 @@
                           maxWidth: '220px'
                         }).setHTML(`
                           <a href="{% url 'issues:issue_detail' issue.id %}"
-                             style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
+                            style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
                             {{ issue.title|escapejs }}
                           </a>
                           <small>
@@ -363,7 +362,7 @@
     }
   });
 
-  // === АВТОДОПОЛНЕНИЕ ПО АДРЕСУ ===
+
   function clearSearchResults() {
     const div = document.getElementById('map-search-results');
     if (div) { div.innerHTML = ''; div.style.display = 'none'; }
@@ -440,7 +439,6 @@
     if (container && !container.contains(e.target)) clearSearchResults();
   });
 
-  // === КНОПКА «СООБЩИТЬ» ===
   function showReportButton(lat, lon, address) {
     const old = document.getElementById('map-report-btn');
     if (old) old.remove();
@@ -463,11 +461,11 @@
     document.getElementById('map').appendChild(btn);
   }
 
-  // === ИНИЦИАЛИЗАЦИЯ ===
+  //ИНИЦИАЛИЗАЦИЯ
   const userIsCitizen = {% if user.is_authenticated and user.role == 'citizen' %}true{% else %}false{% endif %};
 
   map.on('load', () => {
-    // Маркеры (уже есть выше — не дублируем)
+
     {% for issue in issues %}
       {% if issue.location and issue.location.x is not None and issue.location.y is not None %}
         {% with lng=issue.location.x|floatformat:"6" lat=issue.location.y|floatformat:"6" %}
@@ -484,7 +482,7 @@
                   maxWidth: '220px'
                 }).setHTML(`
                   <a href="{% url 'issues:issue_detail' issue.id %}"
-                     style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
+                    style="text-decoration: none; color: inherit; font-weight: bold; display: block; margin-bottom: 4px;">
                     {{ issue.title|escapejs }}
                   </a>
                   <small>
@@ -511,7 +509,6 @@
       {% endif %}
     {% endfor %}
 
-    // Клик по карте → обратное геокодирование + кнопка
     if (userIsCitizen) {
         map.on('click', async function(e) {
           if (e.originalEvent.target.closest('.maplibregl-marker, .maplibregl-popup')) return;
@@ -519,7 +516,6 @@
           const lng = e.lngLat.lng;
           const lat = e.lngLat.lat;
         
-          // Обратное геокодирование → ОБЯЗАТЕЛЬНО!
           let address = `Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
           try {
             const resp = await fetch(`/issues/api/reverse-geocode/?lat=${lat}&lon=${lng}`);
@@ -550,7 +546,7 @@
   });
 </script>
 
-<!-- Модальное окно (оставлено без изменений) -->
+
 {% if user.is_authenticated and user.role == 'citizen' %}
 <div id="modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:999;"></div>
 <div id="report-form-modal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:white; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:1000; width:90%; max-width:500px;">
