@@ -1,4 +1,4 @@
-// Password Reset Confirm Page JavaScript
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
     const password1Input = document.querySelector('input[name="new_password1"]');
@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.querySelector('button[type="submit"]');
     
     if (password1Input && password2Input) {
-        // Валидация совпадения паролей
+        
         password2Input.addEventListener('input', function() {
             if (password1Input.value && password2Input.value && password1Input.value !== password2Input.value) {
                 this.style.borderColor = '#e74c3c';
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Focus и blur события для подсветки
+        
         [password1Input, password2Input].forEach(input => {
             input.addEventListener('focus', function() {
                 this.style.borderColor = 'var(--primary-color)';

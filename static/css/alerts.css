@@ -1,6 +1,4 @@
-/* alerts.css - кастомные стили для сообщений  */
 
-/* Контейнер для сообщений */
 .custom-container {
     width: 100%;
     max-width: 1300px;
@@ -8,12 +6,11 @@
     padding: 0 20px;
 }
 
-/* Отступы */
+
 .custom-mt-3 {
     margin-top: 1rem;
 }
 
-/* Основной стиль для сообщений */
 .custom-alert {
     position: relative;
     padding: 1rem 1rem;
@@ -25,35 +22,34 @@
     line-height: 1.5;
 }
 
-/* Успешное сообщение */
+
 .custom-alert-success {
     color: #0f5132;
     background-color: #d1e7dd;
     border-color: #badbcc;
 }
 
-/* Информационное сообщение */
 .custom-alert-info {
     color: #055160;
     background-color: #cff4fc;
     border-color: #b6effb;
 }
 
-/* Предупреждение */
+
 .custom-alert-warning {
     color: #664d03;
     background-color: #fff3cd;
     border-color: #ffe69c;
 }
 
-/* Ошибка */
+
 .custom-alert-danger {
     color: #842029;
     background-color: #f8d7da;
     border-color: #f5c2c7;
 }
 
-/* Кнопка закрытия сообщения */
+
 .custom-btn-close {
     position: absolute;
     top: 0.5rem;
@@ -70,7 +66,7 @@
     color: #000;
 }
 
-/* Кнопка закрытия - символ × */
+
 .custom-btn-close::before {
     content: '×';
     font-weight: bold;
@@ -86,13 +82,12 @@
     opacity: 1;
 }
 
-/* Анимация появления сообщения */
+
 .custom-alert.fade.show {
     opacity: 1;
     transition: opacity 0.15s linear;
 }
 
-/* Стили для адаптивности */
 @media (max-width: 768px) {
     .custom-container {
         padding: 0 15px;

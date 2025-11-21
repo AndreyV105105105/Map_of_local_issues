@@ -1,4 +1,4 @@
-/* Create Issue Page Styles */
+
 .create-issue-container {
     max-width: 800px;
     margin: 0 auto;
@@ -168,7 +168,7 @@
     border: 1px solid #ddd;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
     .create-issue-container {
         padding: 20px 10px;

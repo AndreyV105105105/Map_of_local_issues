@@ -22,9 +22,9 @@ html, body {
     margin: 24px 0;
     color: white;
     box-shadow: 0 10px 12px rgba(0,0,0,0.4); 
-    width: 80vw; /* На всю ширину viewport */
+    width: 80vw; 
     position: relative;
-    left: calc(-50vw + 50%); /* Сдвигаем влево до края */
+    left: calc(-50vw + 50%); 
     margin-left: 0;
     margin-right: 20%;
     box-sizing: border-box;
@@ -33,7 +33,7 @@ html, body {
 }
 .map-wrapper {
     position: relative;
-    margin-top: -100px; /* Карта заходит на баннер */
+    margin-top: -100px;
 }
 
 .help-banner-content h2 {
@@ -51,7 +51,7 @@ html, body {
     text-transform: uppercase;
     text-align: left;
     margin-top: 15px;
-    align-self: flex-start; /* Прижимаем к левому краю */
+    align-self: flex-start; 
 }
 
 .banner-right {
@@ -61,11 +61,11 @@ html, body {
     text-transform: uppercase;
     text-align: right;
     margin-bottom:15px ;
-    align-self: flex-end; /* Прижимаем к правому краю */
-    margin-top: auto; /* Опускаем вниз контейнера */
+    align-self: flex-end;
+    margin-top: auto;
 }
 
-/* Content grid - как в макете */
+
 .content-grid {
     display: grid;
     grid-template-columns: 1fr 2fr;
@@ -75,7 +75,7 @@ html, body {
 .info-section a{
     text-decoration: none;
 }
-/* Info section - как в макете */
+
 .info-section h3 {
     font-size: 20px;
     font-weight: 700;
@@ -105,7 +105,7 @@ html, body {
     display: block;
 }
 
-/* Map section - как в макете */
+
 .map-container {
     position: relative;
     border-radius: 16px;
@@ -115,9 +115,9 @@ html, body {
 .map-image {
     width: 100%;
     display: block;
-    height: 400px; /* Фиксированная высота */
-    object-fit: contain; /* Показывает все изображение без обрезки */
-    object-position: center; /* Центрирует изображение */
+    height: 400px;
+    object-fit: contain;
+    object-position: center;
 }
 
 .map-cta {
@@ -125,8 +125,8 @@ html, body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: white; /* Белая кнопка, как в макете */
-    border: 2px solid var(--primary-color); /* Розовая граница */
+    background-color: white;
+    border: 2px solid var(--primary-color);
     border-radius: 50px;
     padding: 12px 24px;
     font-weight: 700;
@@ -135,7 +135,7 @@ html, body {
     cursor: pointer;
     text-transform: uppercase;
     text-decoration: none;
-    color: var(--primary-color); /* Розовый текст */
+    color: var(--primary-color);
     border: none;
     font-size: 16px;
     font-weight: 700;
@@ -144,11 +144,11 @@ html, body {
 }
 
 .map-cta:hover {
-    background-color: var(--primary-color); /* При наведении фон становится розовым */
-    color: white; /* Текст белым */
+    background-color: var(--primary-color);
+    color: white;
 }
 
-/* Problem cards - как в макете */
+
 .problem-cards h3 {
     font-size: 18px;
     font-weight: 600;
@@ -163,13 +163,13 @@ html, body {
 }
 
 .card {
-    background-color: var(--card-bg); /* Розовый фон карточки, как в макете */
+    background-color: var(--card-bg);
     border-radius: 16px;
     padding: 20px;
     display: flex;
     align-items: flex-start;
     gap: 16px;
-    border: 1px solid rgba(0,0,0,0.05); /* Тонкая граница */
+    border: 1px solid rgba(0,0,0,0.05);
     transition: transform 0.2s;
 }
 
@@ -213,48 +213,37 @@ html, body {
     display: block;
 }
 
-/* Результаты нашей работы - полная ширина экрана */
+
 .results-section {
-    background-color: var(--card-bg); /* Розовый фон */
+    background-color: var(--card-bg);
     padding: 32px 0;
     margin-top: 32px;
 }
 
 .results-section.full-width {
-    width: 100vw; /* На всю ширину окна */
+    width: 100vw;
     position: relative;
     left: 50%;
     right: 50%;
     margin-left: -50vw;
     margin-right: -50vw;
-    padding: 32px 0; /* Убираем горизонтальные отступы */
-    max-width: none; /* Игнорируем max-width */
-    box-sizing: border-box; /* Важно для правильного расчета ширины */
+    padding: 32px 0;
+    max-width: none;
+    box-sizing: border-box;
 }
 
-/* .results-header {
-    background-color: white;
-    border-radius: 50px;
-    padding: 12px 24px;
-    max-width: 600px;
-    margin: 0 auto 24px;
-} */
 
-/* .results-header h2 {
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--primary-color);
-    text-align: center;
-} */
 
-/* Контейнер для галереи */
+
+
+
 .results-gallery-container {
     position: relative;
     max-width: 100%;
     overflow: hidden;
 }
 
-/* Сама галерея */
+
 .results-gallery {
     display: flex;
     gap: 20px;
@@ -265,17 +254,14 @@ html, body {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Скрываем scrollbar */
+
 .results-gallery {
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
-/* 
-.results-gallery::-webkit-scrollbar {
-    display: none;
-} */
 
-/* Элементы галереи */
+
+
 .gallery-item {
     scroll-snap-align: start;
     min-width: 250px;
@@ -306,32 +292,32 @@ html, body {
 }
 
 
-/* Обновляем стили для белой полоски */
+
 .results-header {
     background-color: white;
     border-radius: 50px;
-    padding: 0; /* Убираем padding, так как ссылка будет занимать всё пространство */
+    padding: 0;
     max-width: 600px;
     margin: 0 auto 24px;
     transition: background-color 0.3s;
-    overflow: hidden; /* Чтобы скругленные углы работали с ссылкой */
+    overflow: hidden;
 }
 
-/* Стили для ссылки, которая занимает всю белую полоску */
+
 .result-link {
     display: block;
     text-decoration: none;
-    padding: 12px 24px; /* Добавляем padding самой ссылке */
+    padding: 12px 24px;
     text-align: center;
     transition: all 0.3s;
 }
 
-/* Эффект при наведении на белую полоску */
+
 .results-header:hover {
     background-color: var(--primary-color);
 }
 
-/* Эффект при наведении на текст */
+
 .results-header:hover .result-text {
     color: white;
 }
@@ -377,7 +363,7 @@ html, body {
 }
 
 
-/* Скрываем кнопки на мобильных */
+
 @media (max-width: 768px) {
     .gallery-prev, .gallery-next {
         display: none;
@@ -446,7 +432,7 @@ html, body {
     }
 }
 
-/* Адаптивность */
+
 @media (max-width: 768px) {
     .banner-text-container {
         flex-direction: column;
