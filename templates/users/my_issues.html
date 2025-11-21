@@ -9,7 +9,6 @@
 {% block content %}
 <div class="container mt-4">
 
-    <!-- Блок для заголовка "Мои проблемы" -->
     <div class="my-issues-main-header-container">
         <h3 class="my-issues-main-title">{% trans "Проблемы" %} <span class="issues-count">{{ issues.count }}</span></h3>
     </div>
@@ -17,25 +16,25 @@
     <div style="display:none">{% csrf_token %}</div>
 
     {% if is_citizen %}
-        <!-- Для гражданина — только созданные им обращения -->
+
         {% include "users/my_issues_list.html" with issues=issues %}
 
     {% else %}
-        <!-- Для должностного лица — две секции -->
+
 
         <div class="my-issues-sub-headers">
             <h4 class="issues-title">{% trans "В работе" %}</h4>
             <h4 class="issues-title">{% trans "Завершённые" %}</h4>
         </div>
 
-        <!-- Основной контейнер для размещения секций по разным сторонам -->
+      
         <div class="issues-layout-container">
-            <!-- Секция "В работе" -->
+    
             <div class="issues-section in-progress">
                 {% include "users/my_issues_list.html" with issues=issues_in_progress %}
             </div>
 
-            <!-- Секция "Завершённые" -->
+
             <div class="issues-section resolved">
                 {% include "users/my_issues_list.html" with issues=issues_resolved %}
             </div>

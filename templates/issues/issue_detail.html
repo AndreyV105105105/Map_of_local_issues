@@ -5,25 +5,6 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/issue_detail.css' %}">
     <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
-    <style>
-        .status-edit-form {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .status-select {
-            min-width: 140px;
-        }
-        .status-save-btn {
-            font-size: 0.875rem;
-            padding: 4px 10px;
-        }
-        .current-status {
-            font-weight: 500;
-            color: #495057;
-        }
-    </style>
 {% endblock %}
 
 {% block content %}
@@ -41,7 +22,7 @@
 
         <div class="issue-content-grid">
             <main class="issue-main-content">
-                <!-- Остальные секции без изменений -->
+
                 <section class="issue-description">
                     <h3>{% trans "Описание проблемы" %}</h3>
                     <div class="description-content">
@@ -161,7 +142,6 @@
                     </div>
                 </section>
 
-                <!-- Комментарии и остальное без изменений -->
                 <section class="issue-comments">
                     <h3>{% trans "Комментарии" %} ({{ issue.comments.count }})</h3>
                     <div class="comments-list">
@@ -256,7 +236,7 @@
         </div>
     </div>
 
-    <!-- Photo Modal -->
+
     <div id="photoModal" class="photo-modal" style="display: none;">
         <div class="modal-content">
             <span class="modal-close" onclick="closePhotoModal()">×</span>

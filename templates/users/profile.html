@@ -36,9 +36,7 @@
 
                 <div class="info-item">
 
-                    <!-- <div class="info-icon">
-                        <img src="{% static 'icons/email.svg' %}" alt="{% trans 'Электронная почта' %}">
-                    </div> -->
+
                     <div class="info-content">
                         <label>{% trans "Электронная почта" %}</label>
                         <p>{{ user.email }}</p>
@@ -48,9 +46,7 @@
 
                 {% if user.phone_number %}
                 <div class="info-item">
-                    <!-- <div class="info-icon">
-                        <img src="{% static 'icons/phone.svg' %}" alt="{% trans 'Телефон' %}">
-                    </div> -->
+
                     <div class="info-content">
                         <label>{% trans "Номер телефона" %}</label>
                         <p>{{ user.phone_number }}</p>
