@@ -311,7 +311,7 @@ def update_issue_status(request, issue_id):
     issue.save(update_fields=['status', 'updated_at'])
     messages.success(request, f"Статус изменён на «{issue.get_status_display()}».", extra_tags='issues')
 
-    return redirect('issues:map')
+    return redirect('issues:issue_detail', pk=issue_id)
 
 
 @login_required

@@ -68,11 +68,10 @@
                         </select>
                         <button type="submit" class="status-update-btn">{% trans "Обновить" %}</button>
                     </form>
-
+                    
                     <form method="post" action="{% url 'issues:delete_issue' issue.id %}" class="delete-form">
                         {% csrf_token %}
                         <button type="submit" class="delete-btn" data-issue-title="{{ issue.title }}">
-                            <img src="{% static 'icons/delete.svg' %}" alt="{% trans 'Удалить' %}">
                             {% trans "Удалить" %}
                         </button>
                     </form>
