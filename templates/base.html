@@ -16,7 +16,7 @@
 </head>
 
 <body>
-    <!-- Header -->
+
     <header class="header">
         <div class="container">
             <div class="header__logo">
@@ -62,27 +62,27 @@
         </div>
     </header>
 
-    <!-- Alerts -->
-    {% if messages %}
-      {% for message in messages %}
-        {% if 'users' in message.tags %}
-          <div class="container mt-3">
-          {% if 'success' in message.tags %}
-            <div class="custom-alert custom-alert-success custom-alert-dismissible fade show" role="alert">
-          {% else %}
-            <div class="custom-alert custom-alert-info custom-alert-dismissible fade show" role="alert">
-          {% endif %}
-            {{ message }}
-            <button type="button" class="custom-btn-close" data-dismiss="alert" aria-label="{% trans 'Закрыть' %}"></button>
-          </div>
-        </div>
-      {% endif %}
-    {% endfor %}
-  {% endif %}
 
-  <div class="container mt-4">
-    {% block content %}{% endblock %}
-  </div>
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'users' in message.tags %}
+            <div class="container mt-3">
+            {% if 'success' in message.tags %}
+                <div class="custom-alert custom-alert-success custom-alert-dismissible fade show" role="alert">
+            {% else %}
+                <div class="custom-alert custom-alert-info custom-alert-dismissible fade show" role="alert">
+            {% endif %}
+                {{ message }}
+                <button type="button" class="custom-btn-close" data-dismiss="alert" aria-label="{% trans 'Закрыть' %}"></button>
+            </div>
+            </div>
+        {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
 
     <footer class="site-footer">
         <div class="container">
@@ -113,7 +113,7 @@
     </footer>
 
 
-  <script src="{% static 'js/alerts.js' %}"></script>
+    <script src="{% static 'js/alerts.js' %}"></script>
 
 </body>
 </html>

@@ -9,28 +9,37 @@
 {% block content %}
 <div class="container mt-4">
 
-    <div class="issues-header">
-        <h3 class="issues-title">{% trans "Мои проблемы" %} <span class="issues-count">({{ issues.count }})</span></h3>
+    <div class="my-issues-main-header-container">
+        <h3 class="my-issues-main-title">{% trans "Проблемы" %} <span class="issues-count">{{ issues.count }}</span></h3>
     </div>
 
-  <div style="display:none">{% csrf_token %}</div>
+    <div style="display:none">{% csrf_token %}</div>
 
-  {% if is_citizen %}
-    <!-- Для гражданина — только созданные им обращения -->
-    {% include "users/my_issues_list.html" with issues=issues %}
+    {% if is_citizen %}
 
-  {% else %}
-    <!-- Для должностного лица — две секции -->0
+        {% include "users/my_issues_list.html" with issues=issues %}
 
-    <div class="issues-header">
-        <!-- <h3 class="issues-title">{% trans "Мои проблемы" %} <span class="issues-count">({{ issues.count }})</span></h3> -->
+    {% else %}
 
-      <h4 class="issues-title">{% trans "В работе" %}</h4>
-      {% include "users/my_issues_list.html" with issues=issues_in_progress %}
 
-      <h4 class="issues-title">{% trans "Завершённые" %}</h4>
-      {% include "users/my_issues_list.html" with issues=issues_resolved %}
-    </div>
-  {% endif %}
+        <div class="my-issues-sub-headers">
+            <h4 class="issues-title">{% trans "В работе" %}</h4>
+            <h4 class="issues-title">{% trans "Завершённые" %}</h4>
+        </div>
+
+      
+        <div class="issues-layout-container">
+    
+            <div class="issues-section in-progress">
+                {% include "users/my_issues_list.html" with issues=issues_in_progress %}
+            </div>
+
+
+            <div class="issues-section resolved">
+                {% include "users/my_issues_list.html" with issues=issues_resolved %}
+            </div>
+        </div>
+
+    {% endif %}
 </div>
 {% endblock %}
