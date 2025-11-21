@@ -108,10 +108,7 @@
 
 /* Стили для поиска по адресу (поверх карты) */
 .map-search-container {
-    position: absolute;
-    top: 180px; /* Отступ от верха */
-    left: 50%;
-    transform: translateX(-50%);
+    margin: 10px 500px;
     z-index: 2; /* Выше элементов карты */
     width: 500px;
     max-width: 90vw;
