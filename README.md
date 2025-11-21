@@ -67,7 +67,11 @@
    ```bash
    cp .env.example .env
    ```
-   Заполните `SECRET_KEY`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`.
+   Заполните .env.
+   SECRET_KEY сгенерируйте через python и вставьте в .env:
+   ```bash
+   python -c "import secrets; print(secrets.token_urlsafe(50))"
+   ```
 
 2. **Запустите контейнеры**  
    ```bash
@@ -90,6 +94,39 @@
    - `http://localhost:8000` — главная  
    - `http://localhost:8000/issues/map/` — карта  
    - `http://localhost:8000/admin/` — админка (если создан суперпользователь)
+
+---
+
+## Запуск тестов
+
+Проект включает полное покрытие unit- и интеграционных тестов (38+ тестов), включая:
+- Регистрацию и верификацию email через UUID-токен  
+- RBAC: `citizen` vs `official`  
+- Работу с `PointField`, `IssuePhoto`, `Vote`  
+- Геокодирование (моки вместо внешних API)  
+- API-эндпоинты (`/vote/`, `/geojson/`, `/api/geocode/`)
+
+Все тесты изолированы, не совершают внешних HTTP-запросов и предназначены для запуска внутри Docker-контейнера.
+
+#### 1. Подготовка тестовой базы данных
+
+Тесты используют отдельную БД, чтобы не затирать dev-данные.
+
+- Создайте тестовую БД (контейнер `db` должен быть запущен), вместо DB_USER вставьте свой DB_USER, указанный в .env
+```bash
+docker compose exec db createdb -U DB_USER map_of_local_issues_test
+```
+- Примените миграции к тестовой БД
+```bash
+docker compose run --rm -e DB_NAME=map_of_local_issues_test web python manage.py migrate
+```
+
+#### 2. Запуск тестов
+Запуск всех тестов с сохранением БД между прогонами
+
+```bash
+docker compose run --rm -e DEBUG=True -e DB_NAME=map_of_local_issues_test web python manage.py test tests --keepdb --verbosity=2
+```
 
 ---
 

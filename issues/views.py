@@ -1,6 +1,7 @@
 import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.utils.translation import gettext as _
 from django.contrib.gis.geos import Point
 from django.db.models import Q, Prefetch, Case, When, IntegerField, Sum, BooleanField, Value as V, OuterRef, Subquery
 from django.http import JsonResponse
@@ -8,11 +9,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-
 from .constants import ISSUE_CATEGORIES, ISSUE_CATEGORY_CHOICES
 from .forms import CommentForm
 from .models import Comment, Issue, IssuePhoto, Vote
@@ -23,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def issue_detail(request, pk):
-    # Add prefetch for comments
     user_vote_subq = Vote.objects.filter(
         issue=OuterRef('pk'),
         user=request.user
@@ -210,7 +208,7 @@ def create_issue(request):
         address_to_save = address
 
         try:
-            # 🔑 Приоритет 1: координаты из формы (точка клика)
+            # Приоритет 1: координаты из формы (точка клика)
             if lat and lon:
                 lat_f = float(lat)
                 lon_f = float(lon)
@@ -221,7 +219,7 @@ def create_issue(request):
                 if not address_to_save.strip():
                     address_to_save = reverse_geocode(lat_f, lon_f) or f"Координаты: {lat_f:.6f}, {lon_f:.6f}"
 
-            # 🔑 Приоритет 2: если координат нет — геокодируем адрес
+            # Приоритет 2: если координат нет — геокодируем адрес
             elif address:
                 result = geocode_address(address)
                 if result:
@@ -293,7 +291,7 @@ def update_issue_status(request, issue_id):
     issue = get_object_or_404(Issue, id=issue_id)
 
     if request.user.role != 'official':
-        messages.error(request, _("Только официальные официальные лица могут менять статус."))
+        messages.error(request, _("Только должностные лица могут менять статус."))
         return redirect('issues:issue_detail', pk=issue_id)
 
     if request.method == 'POST':
@@ -352,10 +350,9 @@ def vote_issue(request, issue_id):
     issue = get_object_or_404(Issue, id=issue_id)
     vote_value = request.POST.get('vote')
 
-    # Обработка: '1' → +1, '-1' → -1, '0' → отмена
     if vote_value == '0':
         # Удаляем голос, если есть
-        deleted, _ = Vote.objects.filter(user=request.user, issue=issue).delete()
+        deleted,  _ignored = Vote.objects.filter(user=request.user, issue=issue).delete()
         user_vote = None
     elif vote_value in ['1', '-1']:
         value = int(vote_value)

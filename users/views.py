@@ -193,11 +193,6 @@ def verify_email_view(request, uidb64, token):
 
 
 def login_view(request):
-    storage = messages.get_messages(request)
-    for message in storage:
-        pass
-    request.session.pop('messages', None)
-
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -205,6 +200,14 @@ def login_view(request):
             password = form.cleaned_data.get('password')
             user = authenticate(request, username=email, password=password)
             if user is not None:
+                if not user.email_verified:
+                    messages.error(
+                        request,
+                        _("Пожалуйста, подтвердите email перед входом."),
+                        extra_tags='users'
+                    )
+                    return render(request, 'users/login.html', {'form': form})
+                # Только если email подтверждён — логиним
                 login(request, user)
                 messages.success(request, _("Вы успешно вошли в систему."), extra_tags='users')
                 next_url = request.GET.get('next', 'home')
