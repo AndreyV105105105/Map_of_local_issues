@@ -326,7 +326,7 @@ function showSearchResults(results) {
     const header = document.createElement('div');
     header.className = 'map-search-results-header';
     header.innerHTML = `
-        <span>📍 Найдено адресов</span>
+        <span> Найдено адресов</span>
         <span class="map-search-results-count">${results.length}</span>
     `;
     div.appendChild(header);
@@ -356,18 +356,13 @@ function showSearchResults(results) {
 
         // Формируем детали
         const details = [];
-        if (district) details.push({ icon: '🏘️', text: district });
-        if (city && city !== district) details.push({ icon: '🏙️', text: city });
-        if (postcode) details.push({ icon: '📮', text: postcode });
+        if (district) details.push({ icon: '', text: district });
+        if (city && city !== district) details.push({ icon: '', text: city });
+        if (postcode) details.push({ icon: '', text: postcode });
 
         // Создаем структурированный HTML (как в старом шаблоне)
         item.innerHTML = `
-            <div class="map-search-result-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-            </div>
+
             <div class="map-search-result-content">
                 <div class="map-search-result-main">${mainAddress}</div>
                 ${details.length > 0 ? `
@@ -398,7 +393,7 @@ function showSearchResults(results) {
                 tempMarker.remove();
                 tempMarker = null;
             }
-            tempMarker = new maplibregl.Marker({ color: '#3498db' })
+            tempMarker = new maplibregl.Marker({ color: '#77aacfff' })
                 .setLngLat([lon, lat])
                 .setPopup(new maplibregl.Popup().setText(addr))
                 .addTo(map);
