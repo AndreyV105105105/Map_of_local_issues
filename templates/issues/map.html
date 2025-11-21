@@ -200,14 +200,13 @@
 
                 const marker = new maplibregl.Marker({ color: '#e74c3c' })
                     .setLngLat([lng, lat])
-                    .setPopup(popup)
                     .addTo(map);
 
                 const markerEl = marker.getElement();
                 if (markerEl) {
                     markerEl.addEventListener('mouseenter', (e) => {
                         e.stopPropagation();
-                        popup.addTo(map);
+                        popup.setLngLat([lng, lat]).addTo(map); 
                     });
                     markerEl.addEventListener('mouseleave', (e) => {
                         e.stopPropagation();
