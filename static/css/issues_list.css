@@ -1,0 +1,555 @@
+/* Issue List Page Styles */
+
+.issues-list-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--secondary-color);
+    min-height: 100vh;
+}
+
+.issues-header {
+    background-color: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.issues-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.issues-count {
+    color: var(--light-text);
+    font-size: 16px;
+    font-weight: normal;
+}
+
+
+.issues-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 24px;
+}
+
+.issue-card {
+    background-color: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.issue-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.issue-header {
+    margin-bottom: 15px;
+}
+
+.issue-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: var(--text-color);
+}
+
+.issue-title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.issue-title a:hover {
+    color: var(--primary-color);
+}
+
+.issue-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    color: var(--light-text);
+    font-size: 14px;
+}
+
+.issue-category {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.issue-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.issue-status.status-new {
+    background-color: #FFEAA7;
+    color: #D6A20A;
+}
+
+.issue-status.status-in_progress {
+    background-color: #74B9FF;
+    color: white;
+}
+
+.issue-status.status-resolved {
+    background-color: #00B894;
+    color: white;
+}
+
+.issue-status.status-measures_taken {
+    background-color: #A29BFE;
+    color: white;
+}
+
+.issue-status.status-not_found {
+    background-color: #636E72;
+    color: white;
+}
+
+.issue-content {
+    margin-bottom: 15px;
+}
+
+.issue-description {
+    margin: 0 0 12px 0;
+    color: var(--light-text);
+    line-height: 1.5;
+}
+
+.issue-photos {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.photo-thumbnail {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.photo-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-more {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--light-text);
+    font-weight: 600;
+}
+
+.issue-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.issue-voting {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.vote-stats {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.vote-rating {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.vote-label {
+    color: var(--light-text);
+    font-size: 12px;
+}
+
+.vote-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.vote-btn {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.vote-btn:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.vote-btn.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.vote-btn img {
+    width: 20px;
+    height: 20px;
+}
+
+.vote-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.issue-info {
+    text-align: right;
+}
+
+.author-info {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.author-label {
+    font-weight: 600;
+    color: var(--light-text);
+    font-size: 12px;
+}
+
+.author-name {
+    color: var(--text-color);
+    font-size: 12px;
+}
+
+.issue-date {
+    color: var(--light-text);
+    font-size: 12px;
+}
+
+.official-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.status-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.status-select {
+    padding: 6px 10px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 12px;
+    background: white;
+}
+
+.status-update-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+    transition: all 0.2s ease;
+}
+
+.status-update-btn:hover {
+    background: white;
+    color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.delete-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid #dc3545;
+    background: #dc3545;
+    color: white;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.delete-btn:hover {
+    background: white;
+    color: #dc3545;
+    transform: translateY(-1px);
+}
+
+.delete-btn img {
+    width: 16px;
+    height: 16px;
+}
+
+.no-issues {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--light-text);
+}
+
+.no-issues img {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 20px;
+    opacity: 0.6;
+}
+
+.no-issues h4 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: var(--text-color);
+}
+
+.no-issues p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Стили для модального окна */
+.photo-modal {
+    display: none; /* Скрыт по умолчанию */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8); /* Затемненный фон */
+    backdrop-filter: blur(5px); /* (Опционально) размытие фона */
+    justify-content: center; /* Центрирование по горизонтали */
+    align-items: center; /* Центрирование по вертикали */
+}
+
+.photo-modal .modal-content {
+    position: relative;
+    display: flex; /* Для центрирования изображения */
+    justify-content: center;
+    align-items: center;
+    max-width: 90%;
+    max-height: 90%;
+    background-color: transparent; /* Прозрачный фон для изображения */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    padding: 10px;
+}
+
+.photo-modal img {
+    max-width: 100%;
+    max-height: 80vh; /* Ограничиваем высоту */
+    object-fit: contain; /* Сохраняем пропорции */
+    border-radius: 4px;
+    display: block; /* Убираем лишнее пространство */
+}
+
+.modal-close {
+    position: absolute;
+    top: -30px; /* Сlightly above the image */
+    right: -30px; /* Slightly to the right of the image */
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.5); /* Фон для крестика */
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001; /* Поверх изображения */
+}
+
+.modal-close:hover {
+    color: #999;
+}
+
+.modal-counter {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    z-index: 1001; /* Поверх изображения */
+}
+
+.modal-nav {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    box-sizing: border-box;
+    z-index: 1001; /* Поверх изображения */
+}
+
+.modal-nav-btn {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: white;
+    border: none;
+    font-size: 24px;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+
+.modal-nav-btn:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Скрываем кнопки навигации при маленькой ширине экрана, если нужно */
+@media (max-width: 768px) {
+    .modal-nav-btn {
+    /* Можно скрыть или изменить стиль */
+}
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .issues-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+    
+    .issues-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .issues-filter {
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .issues-list-container {
+        padding: 10px;
+    }
+    
+    .issues-header {
+        padding: 16px;
+    }
+    
+    .issues-title {
+        font-size: 24px;
+    }
+    
+    .issues-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .issue-card {
+        padding: 16px;
+    }
+    
+    .issue-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .issue-voting {
+        align-self: flex-end;
+    }
+    
+    .issue-info {
+        align-self: flex-start;
+        text-align: left;
+    }
+    
+    .official-actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .issues-header {
+        padding: 12px;
+    }
+    
+    .issues-title {
+        font-size: 20px;
+    }
+    
+    .issue-card {
+        padding: 12px;
+    }
+    
+    .issue-title {
+        font-size: 16px;
+    }
+    
+    .vote-buttons {
+        gap: 16px;
+    }
+    
+    .vote-btn {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .vote-btn img {
+        width: 24px;
+        height: 24px;
+    }
+}

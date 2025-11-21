@@ -5,25 +5,6 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/issue_detail.css' %}">
     <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
-    <style>
-        .status-edit-form {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .status-select {
-            min-width: 140px;
-        }
-        .status-save-btn {
-            font-size: 0.875rem;
-            padding: 4px 10px;
-        }
-        .current-status {
-            font-weight: 500;
-            color: #495057;
-        }
-    </style>
 {% endblock %}
 
 {% block content %}
@@ -41,7 +22,7 @@
 
         <div class="issue-content-grid">
             <main class="issue-main-content">
-                <!-- Остальные секции без изменений -->
+
                 <section class="issue-description">
                     <h3>{% trans "Описание проблемы" %}</h3>
                     <div class="description-content">
@@ -112,12 +93,12 @@
                                 {% if user.is_authenticated and user.role == 'official' %}
                                     <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="status-edit-form">
                                         {% csrf_token %}
-                                        <select name="status" class="form-select form-select-sm status-select" id="id_status_select">
-                                            {% for value, label in status_choices %}
-                                                <option value="{{ value }}" {% if issue.status == value %}selected{% endif %}>{{ label }}</option>
+                                        <select name="status" class="status-select">
+                                            {% for key, label in issue.STATUS_CHOICES %}
+                                            <option value="{{ key }}" {% if issue.status == key %}selected{% endif %}>{{ label }}</option>
                                             {% endfor %}
                                         </select>
-                                        <button type="submit" class="btn btn-success btn-sm status-save-btn">
+                                        <button type="submit" class="btn-secondary">
                                             {% trans "Сохранить" %}
                                         </button>
                                         <input type="hidden" name="next" value="{{ request.path }}">
@@ -161,7 +142,6 @@
                     </div>
                 </section>
 
-                <!-- Комментарии и остальное без изменений -->
                 <section class="issue-comments">
                     <h3>{% trans "Комментарии" %} ({{ issue.comments.count }})</h3>
                     <div class="comments-list">
@@ -226,8 +206,8 @@
                     </a>
                     {% if user.is_authenticated and user.role == 'official' %}
                         <form method="post" action="{% url 'issues:delete_issue' issue.id %}"
-                              onsubmit="return confirm('{% trans "Удалить обращение? Действие нельзя отменить." %}');"
-                              class="delete-form">
+                                onsubmit="return confirm('{% trans "Удалить обращение? Действие нельзя отменить." %}');"
+                                class="delete-form">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-danger">
                                 {% trans "Удалить проблему" %}
@@ -256,7 +236,7 @@
         </div>
     </div>
 
-    <!-- Photo Modal -->
+
     <div id="photoModal" class="photo-modal" style="display: none;">
         <div class="modal-content">
             <span class="modal-close" onclick="closePhotoModal()">×</span>
