@@ -35,7 +35,15 @@
                     {% else %}
                         <li><a href="{% url 'users:login' %}" class="{% if request.resolver_match.url_name == 'map' %}active{% endif %}">карта</a></li>
                     {% endif %}
-                    <li><a href="#" class="{% if request.resolver_match.url_name == 'results' %}active{% endif %}">результаты</a></li>
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'users:my_issues' %}" class="{% if request.resolver_match.url_name == 'my_issues' %}active{% endif %}">
+                            {% if user.role == 'citizen' %}
+                                мои запросы
+                            {% else %}
+                                запросы
+                            {% endif %}
+                        </a></li>
+                    {% endif %}
                 </ul>
             </nav>
 
@@ -43,14 +51,14 @@
                 <ul>
                     {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'users:profile' %}"><img src="{% static 'icons/user.svg' %}" alt=""></a>
+                        <a class="nav-link" href="{% url 'users:profile' %}">{% trans "Профиль" %}</a>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'users:login' %}">{% trans "Вход" %}</a>
+                        <a class="nav-link" href="{% url 'users:login' %}">{% trans "Войти" %}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'users:register' %}">{% trans "Регистрация" %}</a>
+                        <a class="nav-link" href="{% url 'users:register' %}">{% trans "Зарегистрироваться" %}</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -58,16 +66,12 @@
         </div>
     </header>
 
-  {% if messages %}
-    {% for message in messages %}
-      {% comment %} Показываем, если: нет тегов, есть 'global', или текущее приложение в тегах {% endcomment %}
-      {% if message.tags == '' or 'global' in message.tags or current_namespace in message.tags %}
-        <div class="custom-container custom-mt-3">
-          {% if message.level == 40 or 'error' in message.tags %}
-            <div class="custom-alert custom-alert-danger custom-alert-dismissible fade show" role="alert">
-          {% elif message.level == 30 or 'warning' in message.tags %}
-            <div class="custom-alert custom-alert-warning custom-alert-dismissible fade show" role="alert">
-          {% elif message.level == 25 or 'success' in message.tags %}
+    <!-- Alerts -->
+    {% if messages %}
+      {% for message in messages %}
+        {% if 'users' in message.tags %}
+          <div class="container mt-3">
+          {% if 'success' in message.tags %}
             <div class="custom-alert custom-alert-success custom-alert-dismissible fade show" role="alert">
           {% else %}
             <div class="custom-alert custom-alert-info custom-alert-dismissible fade show" role="alert">

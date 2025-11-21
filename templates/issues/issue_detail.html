@@ -1,12 +1,29 @@
 {% extends "base.html" %}
 {% load static %}
 {% load i18n %}
-
 {% block title %}{{ issue.title }} - {% trans "Детали проблемы" %}{% endblock %}
-
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/issue_detail.css' %}">
     <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
+    <style>
+        .status-edit-form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .status-select {
+            min-width: 140px;
+        }
+        .status-save-btn {
+            font-size: 0.875rem;
+            padding: 4px 10px;
+        }
+        .current-status {
+            font-weight: 500;
+            color: #495057;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -24,6 +41,7 @@
 
         <div class="issue-content-grid">
             <main class="issue-main-content">
+                <!-- Остальные секции без изменений -->
                 <section class="issue-description">
                     <h3>{% trans "Описание проблемы" %}</h3>
                     <div class="description-content">
@@ -52,17 +70,16 @@
                         <span class="rating-value" data-issue-id="{{ issue.id }}">{{ issue.vote_rating }}</span>
                         <span class="rating-label">{% trans "рейтинг" %}</span>
                     </div>
-
                     {% if user.is_authenticated and user.role == 'citizen' %}
                         <div class="vote-buttons">
-                            <button type="button" 
+                            <button type="button"
                                     class="vote-btn upvote-btn {% if issue.user_has_upvoted %}active{% endif %}"
                                     data-issue-id="{{ issue.id }}"
                                     data-direction="1"
                                     onclick="toggleVote({{ issue.id }}, 1, {{ issue.user_has_upvoted|yesno:'true,false' }}, {{ issue.user_has_downvoted|yesno:'true,false' }})">
                                 <img src="{% static 'icons/like.svg' %}" alt="Нравится">
                             </button>
-                            <button type="button" 
+                            <button type="button"
                                     class="vote-btn downvote-btn {% if issue.user_has_downvoted %}active{% endif %}"
                                     data-issue-id="{{ issue.id }}"
                                     data-direction="-1"
@@ -76,21 +93,42 @@
                 <section class="issue-details">
                     <h3>{% trans "Детали проблемы" %}</h3>
                     <div class="details-grid">
+
                         <div class="detail-item">
                             <span class="detail-label">{% trans "Автор" %}</span>
                             <span class="detail-value">
                                 {% if user.is_authenticated and user.role == 'official' %}
-                                    {{ issue.reporter.get_full_name }} 
+                                    {{ issue.reporter.get_full_name }}
                                     {% if issue.reporter.email %}({{ issue.reporter.email }}){% endif %}
                                 {% else %}
                                     {{ issue.reporter.get_full_name }}
                                 {% endif %}
                             </span>
                         </div>
+
                         <div class="detail-item">
                             <span class="detail-label">{% trans "Статус" %}</span>
-                            <span class="detail-value">{{ issue.get_status_display }}</span>
+                            <div class="detail-value">
+                                {% if user.is_authenticated and user.role == 'official' %}
+                                    <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="status-edit-form">
+                                        {% csrf_token %}
+                                        <select name="status" class="form-select form-select-sm status-select" id="id_status_select">
+                                            {% for value, label in status_choices %}
+                                                <option value="{{ value }}" {% if issue.status == value %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="btn btn-success btn-sm status-save-btn">
+                                            {% trans "Сохранить" %}
+                                        </button>
+                                        <input type="hidden" name="next" value="{{ request.path }}">
+                                    </form>
+                                    <small class="text-muted d-block mt-1">Текущий: <strong class="current-status">{{ issue.get_status_display }}</strong></small>
+                                {% else %}
+                                    <span class="current-status">{{ issue.get_status_display }}</span>
+                                {% endif %}
+                            </div>
                         </div>
+
                         <div class="detail-item">
                             <span class="detail-label">{% trans "Категория" %}</span>
                             <span class="detail-value">{{ issue.get_category_display }}</span>
@@ -111,13 +149,7 @@
                                 <span class="rating-badge">{{ issue.vote_rating }}</span>
                                 {% if user.is_authenticated and user.role == 'citizen' %}
                                     <small class="user-vote-status">
-                                        {% if issue.user_has_upvoted %}
-                                            ({% trans "Вы проголосовали за" %})
-                                        {% elif issue.user_has_downvoted %}
-                                            ({% trans "Вы проголосовали против" %})
-                                        {% else %}
-                                            ({% trans "Вы не голосовали" %})
-                                        {% endif %}
+                                        {% if issue.user_has_upvoted %}({% trans "Вы проголосовали за" %}){% elif issue.user_has_downvoted %}({% trans "Вы проголосовали против" %}){% else %}({% trans "Вы не голосовали" %}){% endif %}
                                     </small>
                                 {% endif %}
                             </span>
@@ -129,10 +161,9 @@
                     </div>
                 </section>
 
-                <!-- Comment Section -->
+                <!-- Комментарии и остальное без изменений -->
                 <section class="issue-comments">
                     <h3>{% trans "Комментарии" %} ({{ issue.comments.count }})</h3>
-                    
                     <div class="comments-list">
                         {% if issue.comments.exists %}
                             {% for comment in issue.comments.all %}
@@ -193,7 +224,6 @@
                     <a href="{% url 'issues:map' %}" class="btn btn-secondary">
                         ← {% trans "Вернуться к карте" %}
                     </a>
-
                     {% if user.is_authenticated and user.role == 'official' %}
                         <form method="post" action="{% url 'issues:delete_issue' issue.id %}"
                               onsubmit="return confirm('{% trans "Удалить обращение? Действие нельзя отменить." %}');"
@@ -212,7 +242,6 @@
                     <h4>{% trans "Местоположение" %}</h4>
                     <div id="mini-map" class="map-container"></div>
                 </div>
-
                 {% if issue.photos.all %}
                 <div class="main-photo-card">
                     <h4>{% trans "Основное фото" %}</h4>
@@ -230,7 +259,7 @@
     <!-- Photo Modal -->
     <div id="photoModal" class="photo-modal" style="display: none;">
         <div class="modal-content">
-            <span class="modal-close" onclick="closePhotoModal()">&times;</span>
+            <span class="modal-close" onclick="closePhotoModal()">×</span>
             <img id="modalImage" src="" alt="Увеличенное фото">
             <div class="modal-counter" id="modalCounter"></div>
             <div class="modal-nav">
@@ -239,7 +268,6 @@
             </div>
         </div>
     </div>
-
     {% csrf_token %}
 {% endblock %}
 

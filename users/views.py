@@ -1,24 +1,75 @@
+import re
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes
-from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
-from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.db.models import Sum, Subquery, OuterRef, Case, When, Value, \
+    BooleanField  # ← добавил Case, When, Value, BooleanField
+from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
-import re
-from .forms import CustomSetPasswordForm
+
+from issues.models import Issue, Vote
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, CustomSetPasswordForm
+
 User = get_user_model()
 
 
 @login_required
 def profile_view(request):
-    return render(request, 'users/profile.html')
+    issues_count = Issue.objects.filter(reporter=request.user).count()
+    if request.user.role == 'official':
+        issues_count = Issue.objects.filter(assigned_to=request.user).count()
+
+    return render(request, 'users/profile.html', {
+        'issues_count': issues_count
+    })
+
+
+@login_required
+def user_issues_view(request):
+    user = request.user
+
+    # Подзапрос для текущего голоса пользователя по обращению
+    user_vote_subq = Vote.objects.filter(
+        issue=OuterRef('pk'),
+        user=user
+    ).values('value')[:1]
+
+    # Базовый queryset со всеми нужными аннотациями
+    base_qs = Issue.objects.annotate(
+        vote_rating=Sum('votes__value', default=0),
+        user_vote=Subquery(user_vote_subq),
+        user_has_upvoted=Case(
+            When(user_vote=1, then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField()
+        ),
+        user_has_downvoted=Case(
+            When(user_vote=-1, then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField()
+        )
+    )
+
+    if user.role == 'citizen':
+        issues = base_qs.filter(reporter=user).order_by('-created_at')
+        context = {'issues': issues, 'is_citizen': True}
+    else:  # official
+        issues_in_progress = base_qs.filter(assigned_to=user, status='IN_PROGRESS').order_by('-updated_at')
+        issues_resolved = base_qs.filter(assigned_to=user, status='RESOLVED').order_by('-resolved_at')
+        context = {
+            'issues_in_progress': issues_in_progress,
+            'issues_resolved': issues_resolved,
+            'is_official': True
+        }
+
+    return render(request, 'users/my_issues.html', context)
 
 
 def register_view(request):
@@ -79,7 +130,6 @@ def register_view(request):
             user.email_verified = False
             user.save()
 
-
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
 
@@ -101,7 +151,6 @@ def register_view(request):
                 recipient_list=[user.email],
                 fail_silently=False,
             )
-
 
             messages.success(
                 request,
@@ -169,10 +218,8 @@ def login_view(request):
 
     return render(request, 'users/login.html', {'form': form})
 
+
 def logout_view(request):
     logout(request)
     messages.success(request, _("Вы вышли из системы."), extra_tags='users')
     return redirect('home')
-
-
-

@@ -15,7 +15,7 @@
 
     <div class="profile-content">
         <div class="profile-card">
-            
+
             <div class="profile-info">
 
                 <div class="info-item">
@@ -71,6 +71,9 @@
             </div>
 
             <div class="profile-actions">
+                <a href="{% url 'users:my_issues' %}" class="btn btn-primary mb-2">
+                    <span>{% trans "Мои проблемы" %}</span>
+                </a>
                 <a href="{% url 'users:logout' %}" class="logout-btn">
                 <span>{% trans "Выйти из аккаунта" %}</span>
                 </a>
