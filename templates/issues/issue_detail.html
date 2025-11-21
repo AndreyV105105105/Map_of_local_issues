@@ -20,6 +20,16 @@
             </div>
         </div>
 
+        <!-- СООБЩЕНИЕ "ВЗЯТО В РАБОТУ" — СРАЗУ ПОСЛЕ ЗАГОЛОВКА, КРАСИВО И НА ВИДУ -->
+        {% if user.is_authenticated and user.role == 'official' and issue.assigned_to and issue.assigned_to != user %}
+            <div class="container mt-3">
+                <div class="alert alert-info text-center p-3 mb-4">
+                    <strong>Взято в работу:</strong> {{ issue.assigned_to.get_full_name }}<br>
+                    <small class="text-muted">Только ответственное лицо может изменить статус.</small>
+                </div>
+            </div>
+        {% endif %}
+
         <div class="issue-content-grid">
             <main class="issue-main-content">
 
@@ -87,23 +97,29 @@
                             </span>
                         </div>
 
+                        <!-- СТАТУС С ЗАЩИТОЙ ОТ ЧУЖОГО ВМЕШАТЕЛЬСТВА -->
                         <div class="detail-item">
                             <span class="detail-label">{% trans "Статус" %}</span>
                             <div class="detail-value">
                                 {% if user.is_authenticated and user.role == 'official' %}
-                                    <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="status-edit-form">
-                                        {% csrf_token %}
-                                        <select name="status" class="status-select">
-                                            {% for key, label in issue.STATUS_CHOICES %}
-                                            <option value="{{ key }}" {% if issue.status == key %}selected{% endif %}>{{ label }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <button type="submit" class="btn-secondary">
-                                            {% trans "Сохранить" %}
-                                        </button>
-                                        <input type="hidden" name="next" value="{{ request.path }}">
-                                    </form>
-                                    <small class="text-muted d-block mt-1">Текущий: <strong class="current-status">{{ issue.get_status_display }}</strong></small>
+                                    {% if not issue.assigned_to or issue.assigned_to == user %}
+                                        <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="status-edit-form d-inline">
+                                            {% csrf_token %}
+                                            <select name="status" class="status-select form-select form-select-sm d-inline-block w-auto">
+                                                {% for key, label in issue.STATUS_CHOICES %}
+                                                    <option value="{{ key }}" {% if issue.status == key %}selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-primary ms-2">
+                                                {% trans "Сохранить" %}
+                                            </button>
+                                            <input type="hidden" name="next" value="{{ request.path }}">
+                                        </form>
+                                        <small class="text-muted d-block mt-1">Текущий: <strong>{{ issue.get_status_display }}</strong></small>
+                                    {% else %}
+                                        <strong class="text-primary">{{ issue.get_status_display }}</strong>
+                                        <small class="text-muted d-block mt-1">Заблокировано (взято в работу)</small>
+                                    {% endif %}
                                 {% else %}
                                     <span class="current-status">{{ issue.get_status_display }}</span>
                                 {% endif %}
@@ -146,7 +162,7 @@
                     <h3>{% trans "Комментарии" %} ({{ issue.comments.count }})</h3>
                     <div class="comments-list">
                         {% if issue.comments.exists %}
-                            {% for comment in issue.comments.all %}
+                            {% for comment in issue.comments.all reversed %}
                                 <div class="comment-item">
                                     <div class="comment-avatar">
                                         {% if comment.author.profile_picture %}
@@ -206,8 +222,8 @@
                     </a>
                     {% if user.is_authenticated and user.role == 'official' %}
                         <form method="post" action="{% url 'issues:delete_issue' issue.id %}"
-                                onsubmit="return confirm('{% trans "Удалить обращение? Действие нельзя отменить." %}');"
-                                class="delete-form">
+                              onsubmit="return confirm('{% trans "Удалить обращение? Действие нельзя отменить." %}');"
+                              class="delete-form d-inline ms-3">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-danger">
                                 {% trans "Удалить проблему" %}
@@ -220,8 +236,10 @@
             <aside class="issue-sidebar">
                 <div class="location-card">
                     <h4>{% trans "Местоположение" %}</h4>
-                    <div id="mini-map" class="map-container"></div>
+                    <!-- ВАЖНО: высота обязательна для MapLibre -->
+                    <div id="mini-map" class="map-container" style="height: 320px; border-radius: 8px;"></div>
                 </div>
+
                 {% if issue.photos.all %}
                 <div class="main-photo-card">
                     <h4>{% trans "Основное фото" %}</h4>
@@ -236,7 +254,6 @@
         </div>
     </div>
 
-
     <div id="photoModal" class="photo-modal" style="display: none;">
         <div class="modal-content">
             <span class="modal-close" onclick="closePhotoModal()">×</span>
@@ -248,6 +265,7 @@
             </div>
         </div>
     </div>
+
     {% csrf_token %}
 {% endblock %}
 

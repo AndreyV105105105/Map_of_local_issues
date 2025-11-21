@@ -289,31 +289,36 @@ def create_issue(request):
 
 
 @login_required
+@require_POST
 def update_issue_status(request, issue_id):
     issue = get_object_or_404(Issue, id=issue_id)
 
+    # Только должностные лица могут менять статус
     if request.user.role != 'official':
-        messages.error(request, _("Только официальные официальные лица могут менять статус."))
+        messages.error(request, "У вас нет прав для изменения статуса.")
         return redirect('issues:issue_detail', pk=issue_id)
 
-    if request.method == 'POST':
-        new_status = request.POST.get('status')
+    # Если проблема уже назначена на кого-то другого — нельзя менять статус
+    if issue.assigned_to and issue.assigned_to != request.user:
+        messages.error(request,
+                       f"Эта проблема уже взята в работу пользователем {issue.assigned_to.get_full_name()}. Только он может изменить статус.")
+        return redirect('issues:issue_detail', pk=issue_id)
 
-        if new_status not in dict(Issue.STATUS_CHOICES):
-            messages.error(request, _("Неверный статус."))
-            return redirect('issues:issue_detail', pk=issue_id)
-
-        old_status = issue.status
-        issue.status = new_status
-
-        if new_status == Issue.STATUS_IN_PROGRESS:
+    new_status = request.POST.get('status')
+    if new_status in dict(Issue.STATUS_CHOICES):
+        # Если статус меняется на "В работе" — автоматически назначить текущего пользователя
+        if new_status == Issue.STATUS_IN_PROGRESS and not issue.assigned_to:
             issue.assigned_to = request.user
 
-        if new_status == Issue.STATUS_RESOLVED and old_status != Issue.STATUS_RESOLVED:
-            issue.resolved_at = timezone.now()
+        # Если статус "Решено" — можно снять назначение (по желанию)
+        # Оставляем как есть — можно позже доработать
 
+        issue.status = new_status
         issue.save()
-        messages.success(request, _("Статус успешно обновлён."))
+
+        messages.success(request, "Статус обращения успешно обновлён.")
+    else:
+        messages.error(request, "Неверный статус.")
 
     return redirect('issues:issue_detail', pk=issue_id)
 
