@@ -1,4 +1,4 @@
-/* Register page styles */
+
 
 .register-container {
     display: flex;
@@ -228,7 +228,7 @@
 
 
 
-/* Responsive */
+
 @media (max-width: 1200px) {
     .register-container {
         flex-direction: column;
@@ -296,6 +296,6 @@
     .register-form input[type="email"],
     .register-form input[type="tel"],
     .register-form input[type="password"] {
-        font-size: 15px; /* Prevents zoom on iOS */
+        font-size: 15px;
     }
 }

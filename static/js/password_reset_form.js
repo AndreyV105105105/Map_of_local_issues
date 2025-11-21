@@ -1,11 +1,11 @@
-// Password Reset Page JavaScript
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
     const emailInput = document.querySelector('input[type="email"]');
     const submitBtn = document.querySelector('button[type="submit"]');
     
     if (emailInput) {
-        // Добавить валидацию email
+        
         emailInput.addEventListener('input', function() {
             const email = this.value;
             const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Focus и blur события для подсветки
+        
         emailInput.addEventListener('focus', function() {
             this.style.borderColor = 'var(--primary-color)';
             this.style.boxShadow = '0 0 0 3px rgba(231, 90, 124, 0.1)';
@@ -53,13 +53,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Показать индикатор загрузки
+            
             submitBtn.disabled = true;
             submitBtn.textContent = 'Отправка...';
         });
     }
     
-    // Сброс состояния кнопки при ошибке формы
+    
     if (document.querySelector('.global-error')) {
         if (submitBtn) {
             submitBtn.disabled = false;

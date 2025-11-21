@@ -1,4 +1,4 @@
-// Карта
+
 document.addEventListener('DOMContentLoaded', () => {
     const mapDiv = document.getElementById('mini-map');
     if (!mapDiv) return;
@@ -33,18 +33,15 @@ document.addEventListener('DOMContentLoaded', () => {
             attributionControl: true
         });
 
-        // Маркер
         new maplibregl.Marker({ color: '#e74c3c' })
             .setLngLat([lng, lat])
             .addTo(miniMap);
 
-        // Убираем логотип MapLibre
         miniMap.on('load', () => {
             const logo = miniMap.getContainer().querySelector('.maplibregl-ctrl-logo');
             if (logo) logo.style.display = 'none';
         });
 
-        // При ошибке — fallback
         miniMap.on('error', (e) => {
             console.warn('Mini-map warning (non-fatal):', e);
         });
@@ -57,8 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="text-center p-3">
                         <div class="text-muted mb-2">📍</div>
                         <a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}"
-                          target="_blank"
-                          class="btn btn-sm btn-outline-secondary">
+                        target="_blank"
+                        class="btn btn-sm btn-outline-secondary">
                             Открыть в OpenStreetMap
                         </a>
                     </div>
@@ -71,13 +68,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Голосование
+
 function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
     let voteValue = null;
     if (intendedValue === 1 && isUpvoted) {
-        voteValue = '0';  // отмена
+        voteValue = '0';  
     } else if (intendedValue === -1 && isDownvoted) {
-        voteValue = '0';  // отмена
+        voteValue = '0';  
     } else {
         voteValue = intendedValue.toString();
     }
@@ -102,13 +99,12 @@ function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
     })
     .then(r => r.json().then(data => r.ok ? data : Promise.reject(data)))
     .then(data => {
-        // Обновляем рейтинг
+
         const ratingElement = document.querySelector('.rating-value');
         if (ratingElement) {
             ratingElement.textContent = data.rating;
         }
 
-        // Обновляем стиль кнопок
         if (upBtn) {
             upBtn.classList.toggle('active', data.user_vote === 1);
         }
@@ -126,7 +122,6 @@ function toggleVote(issueId, intendedValue, isUpvoted, isDownvoted) {
     });
 }
 
-// Photo Modal - Упрощенная реализация
 let currentPhotoIndex = 0;
 let totalPhotos = 0;
 let photoUrls = [];
@@ -135,8 +130,7 @@ function openPhotoModal(photoUrl, index, total) {
     const modal = document.getElementById('photoModal');
     const modalImage = document.getElementById('modalImage');
     const modalCounter = document.getElementById('modalCounter');
-    
-    // Собираем все URL фотографий
+
     photoUrls = [];
     const photoItems = document.querySelectorAll('.photo-item');
     photoItems.forEach(item => {
@@ -149,8 +143,7 @@ function openPhotoModal(photoUrl, index, total) {
     
     modalImage.src = photoUrl;
     modalCounter.textContent = `${index} / ${total}`;
-    
-    // Прямое изменение стиля для отображения
+
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
@@ -179,13 +172,13 @@ function navigatePhoto(direction) {
     }
 }
 
-// Инициализация фото-модального окна
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Добавляем обработчики кликов на фото
+
     const photoItems = document.querySelectorAll('.photo-item');
     photoItems.forEach((item, index) => {
         item.addEventListener('click', function(e) {
-            // Проверяем, что клик был на изображении
+
             if (e.target.tagName === 'IMG') {
                 const img = e.target;
                 const photoCounter = this.querySelector('.photo-caption span').textContent;
@@ -196,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Обработчик для основного фото
+
     const mainPhotoLink = document.querySelector('.main-photo-container a');
     if (mainPhotoLink) {
         mainPhotoLink.addEventListener('click', function(e) {
@@ -208,25 +201,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Закрытие модального окна по клику вне изображения
+
     const photoModal = document.getElementById('photoModal');
     if (photoModal) {
         photoModal.addEventListener('click', function(e) {
-            // Закрываем только если клик был на фоне, а не на контенте
+
             if (e.target === photoModal) {
                 closePhotoModal();
             }
         });
     }
 
-    // Закрытие по клавише Escape
+
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closePhotoModal();
         }
     });
 
-    // Навигация по стрелкам
     document.addEventListener('keydown', function(e) {
         const modal = document.getElementById('photoModal');
         if (modal && modal.style.display === 'flex') {
