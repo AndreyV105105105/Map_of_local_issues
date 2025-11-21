@@ -1,6 +1,6 @@
-// Create Issue Page JavaScript
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Preview фото
+    
     const imagesInput = document.getElementById('images');
     const preview = document.getElementById('preview');
     
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // === АВТОДОПОЛНЕНИЕ ===
+    
     let searchDebounce;
     const addressSearch = document.getElementById('address-search');
     const addressInput = document.getElementById('address');
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         latInput.value = r.lat.toFixed(6);
                         lonInput.value = r.lon.toFixed(6);
                         addressInput.value = r.display_name;
-                        addressSearch.value = r.display_name; // подставляем полный адрес
+                        addressSearch.value = r.display_name; 
                     }
                 } catch (e) {
                     console.warn('Autocomplete failed:', e);
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         });
 
-        // Enter → взять первый результат
+        
         addressSearch.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // === ОБРАТНОЕ ГЕОКОДИРОВАНИЕ ПРИ РУЧНОМ ВВОДЕ ===
+    
     let reverseDebounce;
     [latInput, lonInput].forEach(el => {
         el?.addEventListener('input', () => {
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // === ИНИЦИАЛИЗАЦИЯ: ЕСЛИ ПЕРЕДАНЫ ПАРАМЕТРЫ — ПОДСТАВИТЬ ===
+    
     const urlParams = new URLSearchParams(window.location.search);
     const lat = urlParams.get('lat');
     const lon = urlParams.get('lon');
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
             addressInput.value = address;
             addressSearch.value = address;
         } else {
-            // Обратное геокодирование при загрузке
+            
             setTimeout(async () => {
                 try {
                     const res = await fetch(`/issues/api/reverse-geocode/?lat=${lat}&lon=${lon}`);

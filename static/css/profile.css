@@ -1,4 +1,4 @@
-/* Profile page styles */
+
 .profile-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -154,7 +154,7 @@
     transform: translateY(-1px);
 }
 
-/* Адаптивность */
+
 @media (max-width: 768px) {
     .profile-container {
         padding: 20px 16px;

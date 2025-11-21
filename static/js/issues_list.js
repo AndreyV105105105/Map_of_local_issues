@@ -1,6 +1,6 @@
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Обработчики голосования (ваш код остается без изменений)
+    
     const voteButtons = document.querySelectorAll('.vote-btn');
     voteButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let voteValue = null;
             if ((isUpvote && isCurrentlyUpvoted) || (isDownvote && isCurrentlyDownvoted)) {
-                voteValue = '0'; // отмена голоса
+                voteValue = '0'; 
             } else {
                 voteValue = voteType.toString();
             }
@@ -60,25 +60,25 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Photo Modal - Исправленная реализация
+    
     let currentPhotoIndex = 0;
-    let photoUrls = []; // Глобальный массив для URL фотографий текущего модального окна
+    let photoUrls = []; 
 
-    // Функция для открытия модального окна
+    
     function openPhotoModal(startingIndex, urlsArray) {
         const modal = document.getElementById('photoModal');
         const modalImage = document.getElementById('modalImage');
         const modalCounter = document.getElementById('modalCounter');
 
-        // Проверяем, есть ли что отображать
+        
         if (!urlsArray || urlsArray.length === 0) {
             console.error("No photo URLs provided to openPhotoModal.");
             return;
         }
 
-        photoUrls = urlsArray; // Сохраняем массив URL в глобальной переменной
+        photoUrls = urlsArray; 
 
-        // Проверяем, что индекс в пределах
+        
         if (startingIndex < 0 || startingIndex >= photoUrls.length) {
             console.error("Invalid starting index for photo modal. Defaulting to 0.");
             currentPhotoIndex = 0;
@@ -86,28 +86,28 @@ document.addEventListener('DOMContentLoaded', function() {
             currentPhotoIndex = startingIndex;
         }
 
-        // Устанавливаем начальное изображение и счетчик
+        
         modalImage.src = photoUrls[currentPhotoIndex];
         modalCounter.textContent = `${currentPhotoIndex + 1} / ${photoUrls.length}`;
 
-        // Показываем модальное окно
+        
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
 
-    // Функция для закрытия модального окна
+    
     function closePhotoModal() {
         const modal = document.getElementById('photoModal');
         if (modal) {
             modal.style.display = 'none';
             document.body.style.overflow = 'auto';
-            photoUrls = []; // Очищаем массив при закрытии
+            photoUrls = []; 
         }
     }
 
-    // Функция для переключения фото
+    
     function navigatePhoto(direction) {
-        if (photoUrls.length === 0) return; // Нечего листать
+        if (photoUrls.length === 0) return; 
 
         if (direction === 'next') {
             currentPhotoIndex = (currentPhotoIndex + 1) % photoUrls.length;
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Инициализация фото-модального окна
+    
     const photoThumbnails = document.querySelectorAll('.photo-thumbnail');
     photoThumbnails.forEach(thumbnail => {
         thumbnail.addEventListener('click', function(e) {
@@ -132,40 +132,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 const img = e.target;
                 const photoCard = this.closest('.issue-card');
                 if (photoCard) {
-                    // Собираем URL всех фото в этой карточке *здесь*, перед открытием
+                    
                     const allPhotosInCard = photoCard.querySelectorAll('.photo-thumbnail img');
                     const urlsArray = Array.from(allPhotosInCard).map(photoImg => photoImg.src);
                     const clickedPhotoIndex = Array.from(allPhotosInCard).indexOf(img);
 
-                    // Вызываем openPhotoModal с индексом и массивом URL
+                    
                     openPhotoModal(clickedPhotoIndex, urlsArray);
                 }
             }
         });
     });
 
-    // Закрытие по клику на оверлей (фон)
+    
     const photoModal = document.getElementById('photoModal');
     if (photoModal) {
         photoModal.addEventListener('click', function(e) {
-            if (e.target === photoModal) { // Проверяем, что клик был на фоне
+            if (e.target === photoModal) { 
                 closePhotoModal();
             }
         });
     }
 
-    // Закрытие по клику на крестик (специально для onclick)
-    window.closePhotoModal = closePhotoModal; // Делаем функцию глобальной для onclick
-    window.navigatePhoto = navigatePhoto; // Делаем функцию глобальной для onclick
+    
+    window.closePhotoModal = closePhotoModal; 
+    window.navigatePhoto = navigatePhoto; 
 
-    // Закрытие по клавише Escape
+    
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closePhotoModal();
         }
     });
 
-    // Навигация по стрелкам (влево/вправо)
+    
     document.addEventListener('keydown', function(e) {
         const modal = document.getElementById('photoModal');
         if (modal && modal.style.display === 'flex') {
