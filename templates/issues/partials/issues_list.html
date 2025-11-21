@@ -7,127 +7,126 @@
 {% endblock %}
 
 {% block content %}
-  <div class="issues-list-container">
-      <div class="issues-header">
-          <h3 class="issues-title">{% trans "Все обращения" %} <span class="issues-count">({{ issues.count }})</span></h3>
-      </div>
+    <div class="issues-list-container">
+        <div class="issues-header">
+            <h3 class="issues-title">{% trans "Все обращения" %} <span class="issues-count">({{ issues.count }})</span></h3>
+        </div>
 
-      {% if issues %}
-      <div class="issues-grid">
-          {% for issue in issues %}
-          <div class="issue-card" data-issue-id="{{ issue.id }}" data-category="{{ issue.category }}" data-status="{{ issue.status }}">
-              <div class="issue-header">
-                  <h4 class="issue-title">
-                      <a href="{% url 'issues:issue_detail' issue.id %}">{{ issue.title }}</a>
-                  </h4>
-                  <div class="issue-meta">
-                      <span class="issue-category">{{ issue.get_category_display }}</span>
-                      <span class="issue-status status-{{ issue.status }}">{{ issue.get_status_display }}</span>
-                  </div>
-              </div>
+        {% if issues %}
+        <div class="issues-grid">
+            {% for issue in issues %}
+            <div class="issue-card" data-issue-id="{{ issue.id }}" data-category="{{ issue.category }}" data-status="{{ issue.status }}">
+                <div class="issue-header">
+                    <h4 class="issue-title">
+                        <a href="{% url 'issues:issue_detail' issue.id %}">{{ issue.title }}</a>
+                    </h4>
+                    <div class="issue-meta">
+                        <span class="issue-category">{{ issue.get_category_display }}</span>
+                        <span class="issue-status status-{{ issue.status }}">{{ issue.get_status_display }}</span>
+                    </div>
+                </div>
 
-              <div class="issue-content">
-                  <p class="issue-description">{{ issue.description|truncatewords:20 }}</p>
-                  
-                  {% if issue.photos.all %}
-                  <div class="issue-photos">
-                      {% for photo in issue.photos.all|slice:":4" %}
-                      <div class="photo-thumbnail">
-                          <img src="{{ photo.image.url }}" alt="{% trans 'Фото проблемы' %}" loading="lazy">
-                      </div>
-                      {% endfor %}
-                      {% if issue.photos.count > 4 %}
-                      <div class="photo-more">+{{ issue.photos.count|add:"-4" }}</div>
-                      {% endif %}
-                  </div>
-                  {% endif %}
-              </div>
+                <div class="issue-content">
+                    <p class="issue-description">{{ issue.description|truncatewords:20 }}</p>
+                    
+                    {% if issue.photos.all %}
+                    <div class="issue-photos">
+                        {% for photo in issue.photos.all|slice:":4" %}
+                        <div class="photo-thumbnail">
+                            <img src="{{ photo.image.url }}" alt="{% trans 'Фото проблемы' %}" loading="lazy">
+                        </div>
+                        {% endfor %}
+                        {% if issue.photos.count > 4 %}
+                        <div class="photo-more">+{{ issue.photos.count|add:"-4" }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
 
-              <div class="issue-footer">
-                  <div class="issue-voting">
-                      <div class="vote-stats">
-                          <span class="vote-rating">{{ issue.vote_rating }}</span>
-                          <span class="vote-label">{% trans "рейтинг" %}</span>
-                      </div>
-                      
-                      {% if user.is_authenticated and user.role == 'citizen' %}
-                      <div class="vote-buttons">
-                          <button type="button" 
-                                  class="vote-btn upvote {% if issue.user_has_upvoted %}active{% endif %}"
-                                  data-issue-id="{{ issue.id }}"
-                                  data-vote-type="1">
-                              <img src="{% static 'icons/like.svg' %}" alt="👍">
-                          </button>
-                          <button type="button" 
-                                  class="vote-btn downvote {% if issue.user_has_downvoted %}active{% endif %}"
-                                  data-issue-id="{{ issue.id }}"
-                                  data-vote-type="-1">
-                              <img src="{% static 'icons/dislike.svg' %}" alt="👎">
-                          </button>
-                      </div>
-                      {% endif %}
-                  </div>
+                <div class="issue-footer">
+                    <div class="issue-voting">
+                        <div class="vote-stats">
+                            <span class="vote-rating">{{ issue.vote_rating }}</span>
+                            <span class="vote-label">{% trans "рейтинг" %}</span>
+                        </div>
+                        
+                        {% if user.is_authenticated and user.role == 'citizen' %}
+                        <div class="vote-buttons">
+                            <button type="button" 
+                                    class="vote-btn upvote {% if issue.user_has_upvoted %}active{% endif %}"
+                                    data-issue-id="{{ issue.id }}"
+                                    data-vote-type="1">
+                                <img src="{% static 'icons/like.svg' %}" alt="👍">
+                            </button>
+                            <button type="button" 
+                                    class="vote-btn downvote {% if issue.user_has_downvoted %}active{% endif %}"
+                                    data-issue-id="{{ issue.id }}"
+                                    data-vote-type="-1">
+                                <img src="{% static 'icons/dislike.svg' %}" alt="👎">
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
 
-                  <div class="issue-info">
-                      <div class="author-info">
-                          <span class="author-label">{% trans "Автор" %}:</span>
-                          <span class="author-name">
-                              {% if user.is_authenticated and user.role == 'official' %}
-                                  {{ issue.reporter.get_full_name }}
-                                  {% if issue.reporter.email %}({{ issue.reporter.email }}){% endif %}
-                              {% else %}
-                                  {{ issue.reporter.get_full_name }}
-                              {% endif %}
-                          </span>
-                      </div>
-                      <div class="issue-date">{{ issue.created_at|date:"d.m.Y H:i" }}</div>
-                  </div>
-              </div>
+                    <div class="issue-info">
+                        <div class="author-info">
+                            <span class="author-label">{% trans "Автор" %}:</span>
+                            <span class="author-name">
+                                {% if user.is_authenticated and user.role == 'official' %}
+                                    {{ issue.reporter.get_full_name }}
+                                    {% if issue.reporter.email %}({{ issue.reporter.email }}){% endif %}
+                                {% else %}
+                                    {{ issue.reporter.get_full_name }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="issue-date">{{ issue.created_at|date:"d.m.Y H:i" }}</div>
+                    </div>
+                </div>
 
-              {% if user.is_authenticated and user.role == 'official' %}
-              <div class="official-actions">
-                  <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="status-form">
-                      {% csrf_token %}
-                      <select name="status" class="status-select">
-                          {% for key, label in issue.STATUS_CHOICES %}
-                          <option value="{{ key }}" {% if issue.status == key %}selected{% endif %}>{{ label }}</option>
-                          {% endfor %}
-                      </select>
-                      <button type="submit" class="status-update-btn">{% trans "Обновить" %}</button>
-                  </form>
+                {% if user.is_authenticated and user.role == 'official' %}
+                <div class="official-actions">
+                    <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="status-form">
+                        {% csrf_token %}
+                        <select name="status" class="status-select">
+                            {% for key, label in issue.STATUS_CHOICES %}
+                            <option value="{{ key }}" {% if issue.status == key %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="status-update-btn">{% trans "Обновить" %}</button>
+                    </form>
 
-                  <form method="post" action="{% url 'issues:delete_issue' issue.id %}" class="delete-form">
-                      {% csrf_token %}
-                      <button type="submit" class="delete-btn" data-issue-title="{{ issue.title }}">
-                          <img src="{% static 'icons/delete.svg' %}" alt="{% trans 'Удалить' %}">
-                          {% trans "Удалить" %}
-                      </button>
-                  </form>
-              </div>
-              {% endif %}
-          </div>
-          {% endfor %}
-      </div>
-      {% else %}
-      <div class="no-issues">
-          <img src="{% static 'icons/no-issues.svg' %}" alt="{% trans 'Нет обращений' %}">
-          <h4>{% trans "Не найдено обращений" %}</h4>
-          <p>{% trans "Попробуйте изменить критерии поиска или создать новое обращение" %}</p>
-      </div>
-      {% endif %}
-          <!-- Photo Modal -->
-      <div id="photoModal" class="photo-modal" style="display: none;">
-          <div class="modal-content">
-              <span class="modal-close" onclick="closePhotoModal()">&times;</span>
-              <img id="modalImage" src="" alt="Увеличенное фото">
-              <div class="modal-counter" id="modalCounter"></div>
-              <div class="modal-nav">
-                  <button class="modal-nav-btn prev" onclick="navigatePhoto('prev')"><</button>
-                  <button class="modal-nav-btn next" onclick="navigatePhoto('next')">></button>
-              </div>
-          </div>
-      </div>
-  </div>
+                    <form method="post" action="{% url 'issues:delete_issue' issue.id %}" class="delete-form">
+                        {% csrf_token %}
+                        <button type="submit" class="delete-btn" data-issue-title="{{ issue.title }}">
+                            {% trans "Удалить" %}
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-issues">
+            <img src="{% static 'icons/no-issues.svg' %}" alt="{% trans 'Нет обращений' %}">
+            <h4>{% trans "Не найдено обращений" %}</h4>
+            <p>{% trans "Попробуйте изменить критерии поиска или создать новое обращение" %}</p>
+        </div>
+        {% endif %}
+            <!-- Photo Modal -->
+        <div id="photoModal" class="photo-modal" style="display: none;">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closePhotoModal()">&times;</span>
+                <img id="modalImage" src="" alt="Увеличенное фото">
+                <div class="modal-counter" id="modalCounter"></div>
+                <div class="modal-nav">
+                    <button class="modal-nav-btn prev" onclick="navigatePhoto('prev')"><</button>
+                    <button class="modal-nav-btn next" onclick="navigatePhoto('next')">></button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}

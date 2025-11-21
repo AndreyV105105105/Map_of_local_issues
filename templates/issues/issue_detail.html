@@ -112,12 +112,12 @@
                                 {% if user.is_authenticated and user.role == 'official' %}
                                     <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="status-edit-form">
                                         {% csrf_token %}
-                                        <select name="status" class="form-select form-select-sm status-select" id="id_status_select">
-                                            {% for value, label in status_choices %}
-                                                <option value="{{ value }}" {% if issue.status == value %}selected{% endif %}>{{ label }}</option>
+                                        <select name="status" class="status-select">
+                                            {% for key, label in issue.STATUS_CHOICES %}
+                                            <option value="{{ key }}" {% if issue.status == key %}selected{% endif %}>{{ label }}</option>
                                             {% endfor %}
                                         </select>
-                                        <button type="submit" class="btn btn-success btn-sm status-save-btn">
+                                        <button type="submit" class="btn-secondary">
                                             {% trans "Сохранить" %}
                                         </button>
                                         <input type="hidden" name="next" value="{{ request.path }}">
@@ -226,8 +226,8 @@
                     </a>
                     {% if user.is_authenticated and user.role == 'official' %}
                         <form method="post" action="{% url 'issues:delete_issue' issue.id %}"
-                              onsubmit="return confirm('{% trans "Удалить обращение? Действие нельзя отменить." %}');"
-                              class="delete-form">
+                                onsubmit="return confirm('{% trans "Удалить обращение? Действие нельзя отменить." %}');"
+                                class="delete-form">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-danger">
                                 {% trans "Удалить проблему" %}

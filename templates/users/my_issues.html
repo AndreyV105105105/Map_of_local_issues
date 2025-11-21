@@ -1,9 +1,17 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/my_issues.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-  <h2>{% trans "Мои проблемы" %}</h2>
+
+    <div class="issues-header">
+        <h3 class="issues-title">{% trans "Мои проблемы" %} <span class="issues-count">({{ issues.count }})</span></h3>
+    </div>
 
   <div style="display:none">{% csrf_token %}</div>
 
@@ -12,12 +20,17 @@
     {% include "users/my_issues_list.html" with issues=issues %}
 
   {% else %}
-    <!-- Для должностного лица — две секции -->
-    <h4 class="mt-5">{% trans "В работе" %}</h4>
-    {% include "users/my_issues_list.html" with issues=issues_in_progress %}
+    <!-- Для должностного лица — две секции -->0
 
-    <h4 class="mt-5">{% trans "Завершённые" %}</h4>
-    {% include "users/my_issues_list.html" with issues=issues_resolved %}
+    <div class="issues-header">
+        <!-- <h3 class="issues-title">{% trans "Мои проблемы" %} <span class="issues-count">({{ issues.count }})</span></h3> -->
+
+      <h4 class="issues-title">{% trans "В работе" %}</h4>
+      {% include "users/my_issues_list.html" with issues=issues_in_progress %}
+
+      <h4 class="issues-title">{% trans "Завершённые" %}</h4>
+      {% include "users/my_issues_list.html" with issues=issues_resolved %}
+    </div>
   {% endif %}
 </div>
 {% endblock %}
