@@ -16,7 +16,6 @@ class IssueAdmin(GISModelAdmin):
     readonly_fields = ('created_at', 'updated_at', 'resolved_at')
     raw_id_fields = ('reporter', 'assigned_to')
 
-    # Spatial admin settings
     map_template = 'gis/admin/openlayers.html'
     default_lat = 61.0066  # широта Ханты-Мансийска
     default_lon = 69.0223  # долгота Ханты-Мансийска

@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 
 # === КОНСТАНТЫ ===
 NOMINATIM_BASE_URL = "https://nominatim.openstreetmap.org"
-REQUEST_TIMEOUT = 8.0  # Nominatim.org медленнее, но стабилен
+REQUEST_TIMEOUT = 8.0  
 FAST_TIMEOUT = 5.0
-CACHE_TIMEOUT = 7200  # 2 часа — баланс между свежестью и нагрузкой
+CACHE_TIMEOUT = 7200
 
 HEADERS = {
     # Обязательный User-Agent согласно политике Nominatim:
@@ -21,17 +21,16 @@ HEADERS = {
     "Accept": "application/json",
 }
 
-# Viewbox для ХМАО (весь регион)
+# Viewbox для ХМАО
 HMAO_VIEWBOX = "60.5,58.5,80.0,67.0"
-# Viewbox для Ханты-Мансийска (точнее)
+# Viewbox для Ханты-Мансийска
 KHANTY_VIEWBOX = "68.75,60.75,69.30,61.15"
 
 
 def _assemble_address_from_parts(address: dict) -> str:
-    """Собирает человекочитаемый адрес из частей (специфика РФ/ХМАО)"""
+    """Собирает читаемый адрес из частей"""
     parts = []
 
-    # Порядок: дом → улица → район → город → регион
     ordering = [
         ("house_number", lambda v: f"д. {v}"),
         ("road", lambda v: f"ул. {v}" if not v.startswith("ул.") else v),
@@ -61,7 +60,7 @@ def _assemble_address_from_parts(address: dict) -> str:
         if p not in unique_parts:
             unique_parts.append(p)
 
-    result = ", ".join(unique_parts[:5])  # Не более 5 компонентов
+    result = ", ".join(unique_parts[:5])
     return result if result else ""
 
 
@@ -72,7 +71,7 @@ def _parse_nominatim_result(item: dict) -> Dict:
         lon = float(item.get("lon", 0))
         address = item.get("address", {})
 
-        # 1. Пробуем display_name (но убираем "Россия" в конце)
+        # 1. Пробуем display_name
         display_name = item.get("display_name", "").strip()
         if display_name.endswith(", Россия"):
             display_name = display_name[:-9].strip()
@@ -111,7 +110,6 @@ def _parse_nominatim_result(item: dict) -> Dict:
 
 def _request_nominatim(endpoint: str, params: dict, timeout: float = REQUEST_TIMEOUT) -> Optional[list]:
     """Единая точка доступа к Nominatim"""
-    # Добавляем обязательные параметры
     params.update({
         "format": "json",
         "addressdetails": 1,
@@ -154,10 +152,7 @@ def _request_nominatim(endpoint: str, params: dict, timeout: float = REQUEST_TIM
 # === ОСНОВНЫЕ ФУНКЦИИ ===
 
 def search_address(query: str, limit: int = 5) -> List[Dict]:
-    """
-    Поиск адресов по строке.
-    Приоритет: с bounded+viewbox → без bounded (если первый пуст).
-    """
+    """Поиск адресов по строке"""
     if len(query.strip()) < 3:
         return []
 
@@ -175,7 +170,7 @@ def search_address(query: str, limit: int = 5) -> List[Dict]:
 
     results = []
 
-    # 1️⃣ С bounded для ХМАО (приоритет)
+    # С bounded для ХМАО (приоритет)
     bounded_params = {**params, "viewbox": HMAO_VIEWBOX, "bounded": 1}
     data = _request_nominatim("/search", bounded_params, timeout=FAST_TIMEOUT)
     if data and isinstance(data, list):
@@ -184,7 +179,7 @@ def search_address(query: str, limit: int = 5) -> List[Dict]:
             if parsed["display_name"] and len(parsed["display_name"]) > 5:
                 results.append(parsed)
 
-    # 2️⃣ Если мало результатов → пробуем без bounded
+    # Если мало результатов, пробуем без bounded
     if len(results) < 2:
         data = _request_nominatim("/search", params, timeout=REQUEST_TIMEOUT)
         if data and isinstance(data, list):
@@ -195,7 +190,7 @@ def search_address(query: str, limit: int = 5) -> List[Dict]:
                     if not any(r["display_name"] == parsed["display_name"] for r in results):
                         results.append(parsed)
 
-    # 3️⃣ Фолбэк: хотя бы 1 результат
+    # Фолбэк: хотя бы 1 результат
     if not results:
         logger.warning(f"⚠️ Не найдено адресов для '{query}', используем фолбэк")
         results = [{
@@ -216,9 +211,7 @@ def search_address(query: str, limit: int = 5) -> List[Dict]:
 
 
 def geocode_address(address: str) -> Optional[Tuple[str, Point]]:
-    """
-    Однозначное геокодирование адреса → (display_name, Point)
-    """
+    """Однозначное геокодирование адреса """
     cache_key = f"geocode_simple_{hash(address)}"
     cached = cache.get(cache_key)
     if cached:
@@ -250,9 +243,9 @@ def reverse_geocode(lat: float, lon: float) -> str:
         return cached
 
     headers = {
-        "User-Agent": "MapOfLocalIssues-for-HMMAO/1.0 (ss@yandex.ru)",  # ← СВОЙ email!
+        "User-Agent": "MapOfLocalIssues-for-HMMAO/1.0 (ss@yandex.ru)",  # СВОЙ email
         "Accept-Language": "ru-RU,ru",
-        "Referer": "ss@yandex.ru",  # ← важно: пустой или свой домен
+        "Referer": "ss@yandex.ru",  # важно: пустой или свой домен
     }
 
     params = {
@@ -261,12 +254,12 @@ def reverse_geocode(lat: float, lon: float) -> str:
         "format": "json",
         "addressdetails": 1,
         "zoom": 18,
-        "email": "ss@yandex.ru",  # ← рекомендуется
+        "email": "ss@yandex.ru",
     }
 
     try:
         #  Добавляем задержку, чтобы избежать 403
-        time.sleep(0.5)  # ~2 запроса/сек максимум
+        time.sleep(0.5)
 
         resp = requests.get(
             "https://nominatim.openstreetmap.org/reverse",
@@ -296,7 +289,7 @@ def reverse_geocode(lat: float, lon: float) -> str:
     except Exception as e:
         logger.error(f"Ошибка Nominatim: {e}")
 
-    # 🔚 Фолбэк (как у вас — он рабочий!)
+
     if 68.5 <= lon <= 69.5 and 60.5 <= lat <= 61.5:
         return "Ханты-Мансийск, ХМАО"
     elif 73.0 <= lon <= 74.0 and 61.0 <= lat <= 62.0:

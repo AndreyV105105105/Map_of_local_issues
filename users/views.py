@@ -75,7 +75,7 @@ def user_issues_view(request):
 def register_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
-        # 1. Проверяем, есть ли уже пользователь с таким email
+        # Проверяем, есть ли уже пользователь с таким email
         try:
             existing_user = User.objects.get(email=email)
         except User.DoesNotExist:
