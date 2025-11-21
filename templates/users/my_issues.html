@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>{% trans "Мои проблемы" %}</h2>
+
+  <div style="display:none">{% csrf_token %}</div>
+
+  {% if is_citizen %}
+    <!-- Для гражданина — только созданные им обращения -->
+    {% include "users/my_issues_list.html" with issues=issues %}
+
+  {% else %}
+    <!-- Для должностного лица — две секции -->
+    <h4 class="mt-5">{% trans "В работе" %}</h4>
+    {% include "users/my_issues_list.html" with issues=issues_in_progress %}
+
+    <h4 class="mt-5">{% trans "Завершённые" %}</h4>
+    {% include "users/my_issues_list.html" with issues=issues_resolved %}
+  {% endif %}
+</div>
+{% endblock %}

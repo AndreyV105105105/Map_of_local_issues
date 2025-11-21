@@ -1,3 +1,4 @@
+import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
@@ -5,17 +6,17 @@ from django.db.models import Q, Prefetch, Case, When, IntegerField, Sum, Boolean
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from django.utils.translation import gettext as _
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext as _
 from django.views import View
-from .modules.geocoding import geocode_address, reverse_geocode, search_address
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
 from .constants import ISSUE_CATEGORIES, ISSUE_CATEGORY_CHOICES
 from .forms import CommentForm
 from .models import Comment, Issue, IssuePhoto, Vote
-
-import logging
+from .modules.geocoding import geocode_address, reverse_geocode, search_address
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,6 @@ def issue_detail(request, pk):
         issue=OuterRef('pk'),
         user=request.user
     ).values('value')[:1]
-
     issue = get_object_or_404(
         Issue.objects.prefetch_related(
             Prefetch('photos', queryset=IssuePhoto.objects.order_by('id')),
@@ -48,7 +48,6 @@ def issue_detail(request, pk):
         ),
         pk=pk
     )
-
     # Handle comment form - allow both citizens and officials
     if request.method == 'POST':
         comment_form = CommentForm(request.POST)
@@ -60,10 +59,10 @@ def issue_detail(request, pk):
             return redirect('issues:issue_detail', pk=issue.pk)
     else:
         comment_form = CommentForm()
-
     return render(request, 'issues/issue_detail.html', {
         'issue': issue,
-        'comment_form': comment_form
+        'comment_form': comment_form,
+        'status_choices': Issue.STATUS_CHOICES,
     })
 
 
@@ -291,31 +290,32 @@ def create_issue(request):
 
 @login_required
 def update_issue_status(request, issue_id):
-    """
-    Обновляет статус обращения.
-    Доступно только официальным лицам (role == 'official').
-    """
-    if request.user.role != 'official':
-        messages.error(request, "Только официальные лица могут обрабатывать обращения.", extra_tags='issues')
-        return redirect('issues:map')
-
     issue = get_object_or_404(Issue, id=issue_id)
 
-    if request.method != 'POST':
-        return redirect('issues:map')
+    if request.user.role != 'official':
+        messages.error(request, _("Только официальные официальные лица могут менять статус."))
+        return redirect('issues:issue_detail', pk=issue_id)
 
-    new_status = request.POST.get('status')
-    valid_statuses = dict(Issue.STATUS_CHOICES).keys()
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
 
-    if new_status not in valid_statuses:
-        messages.error(request, "Недопустимый статус.", extra_tags='issues')
-        return redirect('issues:map')
+        if new_status not in dict(Issue.STATUS_CHOICES):
+            messages.error(request, _("Неверный статус."))
+            return redirect('issues:issue_detail', pk=issue_id)
 
-    issue.status = new_status
-    issue.save(update_fields=['status', 'updated_at'])
-    messages.success(request, f"Статус изменён на «{issue.get_status_display()}».", extra_tags='issues')
+        old_status = issue.status
+        issue.status = new_status
 
-    return redirect('issues:map')
+        if new_status == Issue.STATUS_IN_PROGRESS:
+            issue.assigned_to = request.user
+
+        if new_status == Issue.STATUS_RESOLVED and old_status != Issue.STATUS_RESOLVED:
+            issue.resolved_at = timezone.now()
+
+        issue.save()
+        messages.success(request, _("Статус успешно обновлён."))
+
+    return redirect('issues:issue_detail', pk=issue_id)
 
 
 @login_required
