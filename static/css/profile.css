@@ -107,37 +107,51 @@
     padding-top: 30px;
 }
 
-.logout-btn {
-    display: inline-flex;
+.my-problem-btn {
+    display: inline-block;
     align-items: center;
     gap: 12px;
-    padding: 16px 32px;
+    padding: 12px 24px;
+    margin: 5px;
     background: var(--primary-color);
     color: white;
     text-decoration: none;
     border-radius: 50px;
     font-weight: 600;
-    font-size: 16px;
-    text-transform: uppercase;
     transition: all 0.3s ease;
     border: 2px solid var(--primary-color);
 }
 
-.logout-btn:hover {
+.my-problem-btn:hover {
     background: white;
     color: var(--primary-color);
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-.logout-btn img {
-    width: 20px;
-    height: 20px;
-    transition: transform 0.3s ease;
+.my-problem-btn:hover img {
+    transform: translateX(4px);
 }
 
-.logout-btn:hover img {
-    transform: translateX(4px);
+
+.logout-btn {
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background-color: #6c757d;
+    color: white;
+    border: 2px solid #6c757d;
+}
+
+.logout-btn:hover {
+    background-color: #4c5257;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
 }
 
 /* Адаптивность */
