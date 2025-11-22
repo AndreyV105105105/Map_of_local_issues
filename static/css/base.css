@@ -1,4 +1,4 @@
-/* Base styles - точное соответствие макету Figma */
+
 * {
     margin: 0;
     padding: 0;
@@ -27,10 +27,10 @@ body {
     padding: 0 20px;
 }
 
-/* Header styles */
+
 .header {
     background-color: white;
-    border-bottom: 3px solid var(--primary-color); /* Тонкая розовая линия под шапкой */
+    border-bottom: 3px solid var(--primary-color); 
     padding: 10px 0;
 }
 
@@ -104,7 +104,6 @@ body {
     gap: 16px;
 }
 
-/* Banner styles */
 .banner {
     background-color: var(--primary-color);
     border-radius: 0 40px 40px 0;
@@ -122,16 +121,15 @@ body {
     text-transform: uppercase;
 }
 
-/* Divider */
 .divider {
     height: 3px;
     background-color: var(--primary-color);
     margin: 32px 0;
 }
 
-/* Results Section */
+
 .results-section {
-    background-color: var(--secondary-color); /* Как в макете */
+    background-color: var(--secondary-color);
     padding: 32px 0;
 }
 
@@ -202,7 +200,7 @@ body {
 }
 
 
-/* Footer styles */
+
 .site-footer {
     background-color: var(--secondary-color);
     padding: 24px 0;
@@ -265,7 +263,7 @@ body {
     height: 20px;
 }
 
-/* Responsive */
+
 @media (max-width: 992px) {
     .footer-content {
         flex-direction: column;
