@@ -7,7 +7,8 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -71,19 +72,18 @@ def map_view(request):
     """
     Отображает карту со всеми обращениями с возможностью фильтрации
     """
-    # Получаем параметры фильтрации из GET-запроса
+    # Get filter params from GET
     category = request.GET.get('category')
     status = request.GET.get('status')
     search = request.GET.get('search', '').strip()
     sort = request.GET.get('sort', '-created_at')
 
-    # Голос текущего пользователя по каждому Issue
+    # Current user's vote per issue
     user_vote_subq = Vote.objects.filter(
         issue=OuterRef('pk'),
         user=request.user
     ).values('value')[:1]
 
-    # Базовый QuerySet
     issues = Issue.objects.select_related('reporter').prefetch_related(
         Prefetch('photos', queryset=IssuePhoto.objects.order_by('id'))
     ).annotate(
@@ -101,7 +101,7 @@ def map_view(request):
         vote_rating=Sum('votes__value', default=0)
     )
 
-    # Применяем фильтры
+    # Apply filters
     if category and category in dict(ISSUE_CATEGORY_CHOICES).keys():
         issues = issues.filter(category=category)
 
@@ -117,7 +117,7 @@ def map_view(request):
             Q(reporter__last_name__icontains=search)
         )
 
-    # Применяем сортировку
+    # Apply sorting
     valid_sort_fields = ['-created_at', 'created_at', '-vote_rating', 'vote_rating', 'title']
     if sort not in valid_sort_fields:
         sort = '-created_at'
@@ -134,7 +134,7 @@ def map_view(request):
         'status_choices': Issue.STATUS_CHOICES,
     }
 
-    # Если запрос AJAX, возвращаем только список проблем
+    # AJAX: return partial list only
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return render(request, 'issues/partials/issues_list.html', context)
 
@@ -144,10 +144,10 @@ def map_view(request):
 @login_required
 def create_issue(request):
     if request.user.role != 'citizen':
-        messages.error(request, "Только граждане могут сообщать о проблемах.", extra_tags='issues')
+        messages.error(request, _("Только граждане могут сообщать о проблемах."), extra_tags='issues')
         return redirect('issues:map')
 
-    # --- Инициализация: поддержка pre-fill из GET
+    # --- Initialization: support pre-fill from GET
     initial = {
         'title': '',
         'description': '',
@@ -158,7 +158,6 @@ def create_issue(request):
     }
 
     if request.method == 'GET':
-        # Получаем данные из URL (lat, lon, address)
         lat = request.GET.get('lat')
         lon = request.GET.get('lon')
         address = request.GET.get('address', '').strip()
@@ -168,19 +167,17 @@ def create_issue(request):
                 lat_f = float(lat)
                 lon_f = float(lon)
                 initial.update(lat=f"{lat_f:.6f}", lon=f"{lon_f:.6f}")
-                # Обратное геокодирование для заполнения адреса
                 if not address:
                     address = reverse_geocode(lat_f, lon_f) or f"Координаты: {lat_f:.6f}, {lon_f:.6f}"
                 initial['address'] = address
             except (ValueError, TypeError):
                 pass
-        # Передаём в шаблон
         return render(request, 'issues/create_issue.html', {
             'categories': ISSUE_CATEGORY_CHOICES,
             'initial': initial,
         })
 
-    # POST: обработка формы
+    # POST: form handling
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '').strip()
@@ -189,38 +186,31 @@ def create_issue(request):
         lat = request.POST.get('lat', '').strip()
         lon = request.POST.get('lon', '').strip()
 
-        # Валидация обязательных полей
         if not all([title, description, category]):
-            messages.error(request, "Все поля (название, описание, категория) обязательны.", extra_tags='issues')
+            messages.error(request, _("Все поля (название, описание, категория) обязательны."), extra_tags='issues')
             return render(request, 'issues/create_issue.html', {
                 'categories': ISSUE_CATEGORY_CHOICES,
                 'initial': request.POST.dict(),
             })
 
         if category not in dict(ISSUE_CATEGORY_CHOICES):
-            messages.error(request, "Выбрана недопустимая категория.", extra_tags='issues')
+            messages.error(request, _("Выбрана недопустимая категория."), extra_tags='issues')
             return render(request, 'issues/create_issue.html', {
                 'categories': ISSUE_CATEGORY_CHOICES,
                 'initial': request.POST.dict(),
             })
 
-        # Определение координат и адреса
         lat_f = lon_f = None
         address_to_save = address
 
         try:
-            # Приоритет 1: координаты из формы (точка клика)
             if lat and lon:
                 lat_f = float(lat)
                 lon_f = float(lon)
                 if not (-90 <= lat_f <= 90) or not (-180 <= lon_f <= 180):
                     raise ValueError("Координаты вне допустимого диапазона")
-
-                # Только для отображения — получаем адрес по координатам (но не перезаписываем lat/lon!)
                 if not address_to_save.strip():
                     address_to_save = reverse_geocode(lat_f, lon_f) or f"Координаты: {lat_f:.6f}, {lon_f:.6f}"
-
-            # Приоритет 2: если координат нет — геокодируем адрес
             elif address:
                 result = geocode_address(address)
                 if result:
@@ -228,13 +218,13 @@ def create_issue(request):
                     lat_f, lon_f = point.y, point.x
                     address_to_save = display_name
                 else:
-                    messages.error(request, "Не удалось найти адрес. Проверьте написание.", extra_tags='issues')
+                    messages.error(request, _("Не удалось найти адрес. Проверьте написание."), extra_tags='issues')
                     return render(request, 'issues/create_issue.html', {
                         'categories': ISSUE_CATEGORY_CHOICES,
                         'initial': request.POST.dict(),
                     })
             else:
-                messages.error(request, "Укажите либо адрес, либо координаты.", extra_tags='issues')
+                messages.error(request, _("Укажите либо адрес, либо координаты."), extra_tags='issues')
                 return render(request, 'issues/create_issue.html', {
                     'categories': ISSUE_CATEGORY_CHOICES,
                     'initial': request.POST.dict(),
@@ -242,45 +232,43 @@ def create_issue(request):
 
         except (ValueError, TypeError) as e:
             logger.info(f"Coordinate parsing error: {e}")
-            messages.error(request, "Некорректные координаты.", extra_tags='issues')
+            messages.error(request, _("Некорректные координаты."), extra_tags='issues')
             return render(request, 'issues/create_issue.html', {
                 'categories': ISSUE_CATEGORY_CHOICES,
                 'initial': request.POST.dict(),
             })
 
-        # Сохранение
         try:
             issue = Issue.objects.create(
                 title=title,
                 description=description,
                 category=category,
-                location=Point(lon_f, lat_f, srid=4326),  # ← ТОЧНЫЕ КООРДИНАТЫ КЛИКА!
-                address=address_to_save,  # ← Адрес для отображения
+                location=Point(lon_f, lat_f, srid=4326),
+                address=address_to_save,
                 reporter=request.user,
             )
 
-            # Фото
             photos = request.FILES.getlist('images')
             max_photos = 5
             if len(photos) > max_photos:
-                messages.warning(request, f"Максимум {max_photos} фото. Лишние игнорируются.", extra_tags='issues')
+                messages.warning(request, _(f"Максимум {max_photos} фото. Лишние игнорируются."), extra_tags='issues')
                 photos = photos[:max_photos]
 
             for photo in photos:
                 if photo.size > 5 * 1024 * 1024:
-                    messages.warning(request, f"Файл {photo.name} слишком большой. Игнорируется.", extra_tags='issues')
+                    messages.warning(request, _(f"Файл {photo.name} слишком большой. Игнорируется."), extra_tags='issues')
                     continue
                 if not photo.content_type.startswith('image/'):
-                    messages.warning(request, f"Файл {photo.name} не изображение. Игнорируется.", extra_tags='issues')
+                    messages.warning(request, _(f"Файл {photo.name} не изображение. Игнорируется."), extra_tags='issues')
                     continue
                 IssuePhoto.objects.create(issue=issue, image=photo)
 
-            messages.success(request, "Ваше обращение успешно зарегистрировано!", extra_tags='issues')
+            messages.success(request, _("Ваше обращение успешно зарегистрировано!"), extra_tags='issues')
             return redirect('issues:map')
 
         except Exception as e:
             logger.info(f"Error creating issue: {e}")
-            messages.error(request, "Ошибка при сохранении обращения. Попробуйте позже.", extra_tags='issues')
+            messages.error(request, _("Ошибка при сохранении обращения. Попробуйте позже."), extra_tags='issues')
             return render(request, 'issues/create_issue.html', {
                 'categories': ISSUE_CATEGORY_CHOICES,
                 'initial': request.POST.dict(),
@@ -292,32 +280,26 @@ def create_issue(request):
 def update_issue_status(request, issue_id):
     issue = get_object_or_404(Issue, id=issue_id)
 
-    # Только должностные лица могут менять статус
     if request.user.role != 'official':
-        messages.error(request, "У вас нет прав для изменения статуса.")
+        messages.error(request, _("У вас нет прав для изменения статуса."))
         return redirect('issues:issue_detail', pk=issue_id)
 
-    # Если проблема уже назначена на кого-то другого — нельзя менять статус
     if issue.assigned_to and issue.assigned_to != request.user:
-        messages.error(request,
-                       f"Эта проблема уже взята в работу пользователем {issue.assigned_to.get_full_name()}. Только он может изменить статус.")
+        messages.error(
+            request,
+            _(f"Эта проблема уже взята в работу пользователем {issue.assigned_to.get_full_name()}. Только он может изменить статус.")
+        )
         return redirect('issues:issue_detail', pk=issue_id)
 
     new_status = request.POST.get('status')
     if new_status in dict(Issue.STATUS_CHOICES):
-        # Если статус меняется на "В работе" — автоматически назначить текущего пользователя
         if new_status == Issue.STATUS_IN_PROGRESS and not issue.assigned_to:
             issue.assigned_to = request.user
-
-        # Если статус "Решено" — можно снять назначение (по желанию)
-        # Оставляем как есть — можно позже доработать
-
         issue.status = new_status
         issue.save()
-
-        messages.success(request, "Статус обращения успешно обновлён.")
+        messages.success(request, _("Статус обращения успешно обновлён."))
     else:
-        messages.error(request, "Неверный статус.")
+        messages.error(request, _("Неверный статус."))
 
     return redirect('issues:issue_detail', pk=issue_id)
 
@@ -325,62 +307,57 @@ def update_issue_status(request, issue_id):
 @login_required
 def delete_issue(request, issue_id):
     if request.user.role != 'official':
-        messages.error(request, "Только должностные лица могут удалять обращения.", extra_tags='issues')
+        messages.error(request, _("Только должностные лица могут удалять обращения."), extra_tags='issues')
         return redirect('issues:map')
 
     issue = get_object_or_404(Issue, id=issue_id)
 
     if request.method == 'POST':
-        # Сохраняем информацию для сообщения перед удалением
         title = issue.title
-        # Удаляем связанные фотографии
         issue.delete()
-        messages.success(request, f"Обращение «{title}» успешно удалено.", extra_tags='issues')
+        messages.success(request, _(f"Обращение «{title}» успешно удалено."), extra_tags='issues')
         return redirect('issues:map')
 
-    # Если GET не удаляем, а редиректим
-    messages.warning(request, "Метод не поддерживается. Используйте кнопку «Удалить».", extra_tags='issues')
+    messages.warning(request, _("Метод не поддерживается. Используйте кнопку «Удалить»."), extra_tags='issues')
     return redirect('issues:map')
 
 
 @login_required
 @require_POST
 def vote_issue(request, issue_id):
-    # Проверка роли
+    # ✅ Fix: use gettext() for runtime translation in JSON responses
     if request.user.role != 'citizen':
         return JsonResponse({
             'success': False,
-            'error': _('Только граждане могут голосовать.')
+            'error': gettext('Только граждане могут голосовать.')
         }, status=403)
 
     issue = get_object_or_404(Issue, id=issue_id)
     vote_value = request.POST.get('vote')
 
     if vote_value == '0':
-        # Удаляем голос, если есть
-        deleted, _ = Vote.objects.filter(user=request.user, issue=issue).delete()
+        Vote.objects.filter(user=request.user, issue=issue).delete()
         user_vote = None
     elif vote_value in ['1', '-1']:
         value = int(vote_value)
-        vote, created = Vote.objects.update_or_create(
+        Vote.objects.update_or_create(
             user=request.user,
             issue=issue,
             defaults={'value': value}
         )
-        user_vote = vote.value
+        user_vote = value
     else:
         return JsonResponse({
             'success': False,
-            'error': _('Голос должен быть +1, -1 или 0 (отмена).')
+            'error': gettext('Голос должен быть +1, -1 или 0 (отмена).')
         }, status=400)
 
-    # Вычисляем рейтинг напрямую через агрегацию
     rating = issue.votes.aggregate(rating_sum=Sum('value'))['rating_sum'] or 0
 
     return JsonResponse({
         'success': True,
         'rating': rating,
-        'user_vote': user_vote,  # null, 1 или -1
+        'user_vote': user_vote,
         'issue_id': issue_id
     })
 
@@ -388,17 +365,14 @@ def vote_issue(request, issue_id):
 @login_required
 def get_issues_geojson(request):
     """Возвращает GeoJSON с данными об обращениях для карты с учетом фильтров"""
-    # Получаем параметры фильтрации
     category = request.GET.get('category')
     status = request.GET.get('status')
     search = request.GET.get('search', '').strip()
 
-    # Базовый QuerySet
     issues = Issue.objects.select_related('reporter').annotate(
         vote_rating=Sum('votes__value', default=0)
     )
 
-    # Применяем фильтры
     if category and category in dict(ISSUE_CATEGORY_CHOICES).keys():
         issues = issues.filter(category=category)
 
@@ -414,7 +388,6 @@ def get_issues_geojson(request):
             Q(reporter__last_name__icontains=search)
         )
 
-    # Формируем GeoJSON
     features = []
     for issue in issues:
         if issue.location:
@@ -451,7 +424,7 @@ class GeocodeAPIView(View):
     def get(self, request):
         q = request.GET.get("q", "").strip()
         if not q:
-            return JsonResponse({"error": "q required"}, status=400)
+            return JsonResponse({"error": gettext("Параметр 'q' обязателен.")}, status=400)
 
         result = geocode_address(q)
         if result:
@@ -461,7 +434,7 @@ class GeocodeAPIView(View):
                 "lat": point.y,
                 "lon": point.x,
             })
-        return JsonResponse({"error": "Адрес не найден"}, status=404)
+        return JsonResponse({"error": gettext("Адрес не найден.")}, status=404)
 
 
 @method_decorator(login_required, name='dispatch')
@@ -471,19 +444,21 @@ class ReverseGeocodeAPIView(View):
             lat = float(request.GET.get("lat"))
             lon = float(request.GET.get("lon"))
         except (TypeError, ValueError):
-            return JsonResponse({"error": "lat/lon required and must be numeric"}, status=400)
+            return JsonResponse({
+                "error": gettext("Параметры 'lat' и 'lon' обязательны и должны быть числами.")
+            }, status=400)
 
         address = reverse_geocode(lat, lon)
         if address:
             return JsonResponse({"address": address})
-        return JsonResponse({"error": "Не удалось определить адрес"}, status=404)
+        return JsonResponse({"error": gettext("Не удалось определить адрес.")}, status=404)
 
 
 @method_decorator(login_required, name='dispatch')
 class SearchAddressAPIView(View):
     def get(self, request):
         q = request.GET.get("q", "").strip()
-        if len(q) < 2:  # минимум 2 символа
+        if len(q) < 2:
             return JsonResponse({"results": []})
 
         results = search_address(q, limit=5)
