@@ -45,10 +45,10 @@
 
 ### Инфраструктура
 - База: PostgreSQL 15 + PostGIS 3.4 (`django.contrib.gis.db.backends.postgis`)
-- Кэширование: `LocMemCache` (готово к замене на Redis)
+- Кэширование: `LocMemCache` 
 - Логирование:  
   - `geocoding` → `INFO`  
-  - `django.request` → `INFO` (4xx/5xx в консоль)  
+  - `django.request` → `INFO`  
   - `django` → `ERROR` → `error.log`
 - Безопасность: пароли ≥ 12 символов, `SECURE_*` флаги в prod, `CSRF_COOKIE_SECURE`.
 
