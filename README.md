@@ -101,7 +101,7 @@
 
 Проект включает полное покрытие unit- и интеграционных тестов (38+ тестов), включая:
 - Регистрацию и верификацию email через UUID-токен  
-- RBAC: `citizen` vs `official`  
+- RBAC: `citizen` и `official`  
 - Работу с `PointField`, `IssuePhoto`, `Vote`  
 - Геокодирование (моки вместо внешних API)  
 - API-эндпоинты (`/vote/`, `/geojson/`, `/api/geocode/`)
