@@ -21,7 +21,7 @@
   Валидация: расширения `jpg/jpeg/png`, размер ≤ 5 МБ на файл, максимум 5 файлов.
 
 ### Логический слой
-- Все view-функции защищены `@login_required`. Роль проверяется явно в коде — без middleware.
+- Роль проверяется явно в коде — без middleware.
 - `create_issue`: приоритет — ручные координаты (из клика по карте), затем геокодирование адреса.
 - `vote_issue`: идемпотентно. Возвращает `rating` и `user_vote` в JSON.
 - `map_view` и `get_issues_geojson` используют единую логику фильтрации.
@@ -45,7 +45,7 @@
 
 ### Инфраструктура
 - База: PostgreSQL 15 + PostGIS 3.4 (`django.contrib.gis.db.backends.postgis`)
-- Кэширование: `LocMemCache` (готово к замене на Redis)
+- Кэширование: `LocMemCache` 
 - Логирование:  
   - `geocoding` → `INFO`  
   - `django.request` → `INFO` (4xx/5xx в консоль)  
