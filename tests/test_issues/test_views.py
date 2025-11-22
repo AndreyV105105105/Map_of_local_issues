@@ -234,7 +234,7 @@ class IssueStatusUpdateTest(TestCase):
         self.assertRedirects(response, reverse('issues:issue_detail', args=[self.issue.id]))
 
         messages = list(response.wsgi_request._messages)
-        self.assertTrue(any("Только должностные лица" in str(m) for m in messages))
+        self.assertTrue(any("У вас нет прав" in str(m) for m in messages))
 
         # Статус не изменился
         self.issue.refresh_from_db()

@@ -72,13 +72,11 @@ def map_view(request):
     """
     Отображает карту со всеми обращениями с возможностью фильтрации
     """
-    # Get filter params from GET
     category = request.GET.get('category')
     status = request.GET.get('status')
     search = request.GET.get('search', '').strip()
     sort = request.GET.get('sort', '-created_at')
 
-    # Current user's vote per issue
     user_vote_subq = Vote.objects.filter(
         issue=OuterRef('pk'),
         user=request.user
@@ -101,7 +99,6 @@ def map_view(request):
         vote_rating=Sum('votes__value', default=0)
     )
 
-    # Apply filters
     if category and category in dict(ISSUE_CATEGORY_CHOICES).keys():
         issues = issues.filter(category=category)
 
@@ -117,7 +114,6 @@ def map_view(request):
             Q(reporter__last_name__icontains=search)
         )
 
-    # Apply sorting
     valid_sort_fields = ['-created_at', 'created_at', '-vote_rating', 'vote_rating', 'title']
     if sort not in valid_sort_fields:
         sort = '-created_at'
@@ -134,7 +130,6 @@ def map_view(request):
         'status_choices': Issue.STATUS_CHOICES,
     }
 
-    # AJAX: return partial list only
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return render(request, 'issues/partials/issues_list.html', context)
 
@@ -177,7 +172,6 @@ def create_issue(request):
             'initial': initial,
         })
 
-    # POST: form handling
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '').strip()
@@ -325,7 +319,6 @@ def delete_issue(request, issue_id):
 @login_required
 @require_POST
 def vote_issue(request, issue_id):
-    # ✅ Fix: use gettext() for runtime translation in JSON responses
     if request.user.role != 'citizen':
         return JsonResponse({
             'success': False,

@@ -10,7 +10,6 @@ class GeocodingAPITest(TestCase):
         self.user = CustomUser.objects.create_user(email="apiuser@test.com", password="pass", email_verified=True)
         self.client.login(email="apiuser@test.com", password="pass")
 
-    # ✅ ИСПРАВЛЕНО: патчим issues.views.geocode_address, а не modules!
     @patch('issues.views.geocode_address')
     def test_geocode_api_success(self, mock_geocode):
         mock_geocode.return_value = (
@@ -56,5 +55,4 @@ class GeocodingAPITest(TestCase):
         self.client.logout()
         url = reverse('issues:geocode_api') + '?q=test'
         response = self.client.get(url)
-        # ✅ ИСПРАВЛЕНО: редирект на /users/login/, а не /accounts/login/
         self.assertRedirects(response, f"{reverse('users:login')}?next={url}")
