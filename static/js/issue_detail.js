@@ -3,8 +3,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const mapDiv = document.getElementById('mini-map');
     if (!mapDiv) return;
 
-    const lng = parseFloat(document.querySelector('.coordinates').textContent.split(',')[0].trim());
-    const lat = parseFloat(document.querySelector('.coordinates').textContent.split(',')[1].trim());
+    const coordinatesEl = document.querySelector('.coordinates');
+    if (!coordinatesEl) return;
+
+    const coordsText = coordinatesEl.textContent.trim();
+    const lng = parseFloat(coordsText.split(',')[0].trim());
+    const lat = parseFloat(coordsText.split(',')[1].trim());
+
+    if (isNaN(lng) || isNaN(lat)) {
+        console.error('Invalid coordinates:', coordsText);
+        return;
+    }
 
     try {
         const miniMap = new maplibregl.Map({
@@ -33,11 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
             attributionControl: true
         });
 
+        miniMap.on('load', () => {
         new maplibregl.Marker({ color: '#e74c3c' })
             .setLngLat([lng, lat])
             .addTo(miniMap);
 
-        miniMap.on('load', () => {
             const logo = miniMap.getContainer().querySelector('.maplibregl-ctrl-logo');
             if (logo) logo.style.display = 'none';
         });
