@@ -1,0 +1,551 @@
+/* ============================================
+   ГЛОБАЛЬНЫЕ АНИМАЦИИ
+   ============================================ */
+
+/* Анимация появления элементов при загрузке */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes heartbeat {
+    0%, 100% {
+        transform: scale(1);
+    }
+    25% {
+        transform: scale(1.1);
+    }
+    50% {
+        transform: scale(1);
+    }
+    75% {
+        transform: scale(1.05);
+    }
+}
+
+/* ============================================
+   УТИЛИТЫ АНИМАЦИЙ
+   ============================================ */
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-slide-in-right {
+    animation: slideInRight 0.5s ease-out forwards;
+}
+
+.animate-slide-in-left {
+    animation: slideInLeft 0.5s ease-out forwards;
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.4s ease-out forwards;
+}
+
+.animate-pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+
+.animate-bounce {
+    animation: bounce 1s ease-in-out infinite;
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+.animate-heartbeat {
+    animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+/* Задержки для каскадных анимаций */
+.delay-1 { animation-delay: 0.1s; opacity: 0; }
+.delay-2 { animation-delay: 0.2s; opacity: 0; }
+.delay-3 { animation-delay: 0.3s; opacity: 0; }
+.delay-4 { animation-delay: 0.4s; opacity: 0; }
+.delay-5 { animation-delay: 0.5s; opacity: 0; }
+
+/* ============================================
+   АНИМАЦИИ ДЛЯ КАРТОЧЕК
+   ============================================ */
+
+.issue-card,
+.profile-card,
+.stat-item {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+.issue-card:nth-child(1) { animation-delay: 0.1s; }
+.issue-card:nth-child(2) { animation-delay: 0.2s; }
+.issue-card:nth-child(3) { animation-delay: 0.3s; }
+.issue-card:nth-child(4) { animation-delay: 0.4s; }
+.issue-card:nth-child(5) { animation-delay: 0.5s; }
+.issue-card:nth-child(6) { animation-delay: 0.6s; }
+.issue-card:nth-child(n+7) { animation-delay: 0.7s; }
+
+/* Плавное наведение на карточки */
+.issue-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.issue-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    transition: left 0.5s;
+}
+
+.issue-card:hover::before {
+    left: 100%;
+}
+
+.issue-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   АНИМАЦИИ ДЛЯ КНОПОК
+   ============================================ */
+
+.btn,
+button,
+.primary-button,
+.secondary-button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn::before,
+button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::before,
+button:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Общие стили кнопок - будут переопределены конкретными стилями */
+.btn:not(.btn-primary):not(.btn-success):hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(231, 90, 124, 0.3);
+}
+
+.btn:not(.btn-primary):not(.btn-success):active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* ============================================
+   АНИМАЦИИ ДЛЯ МОДАЛЬНЫХ ОКОН
+   ============================================ */
+
+.photo-modal {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.photo-modal .modal-content {
+    animation: scaleIn 0.3s ease-out;
+}
+
+.modal-close {
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    transform: rotate(90deg) scale(1.1);
+    color: var(--primary-color);
+}
+
+/* ============================================
+   АНИМАЦИИ ДЛЯ ФОРМ
+   ============================================ */
+
+.form-group {
+    animation: fadeInUp 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+.form-group:nth-child(1) { animation-delay: 0.1s; }
+.form-group:nth-child(2) { animation-delay: 0.2s; }
+.form-group:nth-child(3) { animation-delay: 0.3s; }
+.form-group:nth-child(4) { animation-delay: 0.4s; }
+.form-group:nth-child(5) { animation-delay: 0.5s; }
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+    transition: all 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+    box-shadow: 0 0 0 4px rgba(231, 90, 124, 0.1);
+}
+
+/* Анимация для ошибок в формах */
+.error-message {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* ============================================
+   АНИМАЦИИ ДЛЯ СТАТИСТИКИ
+   ============================================ */
+
+.stat-item {
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover .stat-value {
+    transform: scale(1.1);
+    color: var(--primary-color);
+}
+
+/* Счетчик для статистики */
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.count-up {
+    animation: countUp 0.6s ease-out forwards;
+}
+
+/* ============================================
+   АНИМАЦИИ ДЛЯ ЗАГРУЗКИ
+   ============================================ */
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(231, 90, 124, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 0.8s linear infinite;
+}
+
+.loading-skeleton {
+    background: linear-gradient(
+        90deg,
+        #f0f0f0 25%,
+        #e0e0e0 50%,
+        #f0f0f0 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* ============================================
+   АНИМАЦИИ ДЛЯ УВЕДОМЛЕНИЙ
+   ============================================ */
+
+.custom-alert {
+    animation: slideInRight 0.5s ease-out, fadeIn 0.3s ease-out;
+}
+
+.custom-alert-dismissible {
+    transition: all 0.3s ease;
+}
+
+.custom-alert-dismissible.fade-out {
+    animation: slideInLeft 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+/* ============================================
+   АНИМАЦИИ ДЛЯ ГОЛОСОВАНИЯ
+   ============================================ */
+
+.vote-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vote-btn:hover {
+    transform: scale(1.15) rotate(5deg);
+}
+
+.vote-btn:active {
+    transform: scale(0.95);
+}
+
+.vote-btn.active {
+    animation: heartbeat 0.6s ease-in-out;
+}
+
+.rating-value {
+    transition: all 0.3s ease;
+}
+
+.rating-value.changed {
+    animation: pulse 0.5s ease-in-out;
+    color: var(--primary-color);
+}
+
+/* ============================================
+   АНИМАЦИИ ДЛЯ КОММЕНТАРИЕВ
+   ============================================ */
+
+.comment-item {
+    animation: fadeInUp 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+.comment-item:nth-child(1) { animation-delay: 0.1s; }
+.comment-item:nth-child(2) { animation-delay: 0.2s; }
+.comment-item:nth-child(3) { animation-delay: 0.3s; }
+.comment-item:nth-child(4) { animation-delay: 0.4s; }
+.comment-item:nth-child(5) { animation-delay: 0.5s; }
+.comment-item:nth-child(n+6) { animation-delay: 0.6s; }
+
+.comment-item:hover {
+    transform: translateX(5px);
+    transition: transform 0.3s ease;
+}
+
+/* ============================================
+   АНИМАЦИИ ДЛЯ ФОТОГРАФИЙ
+   ============================================ */
+
+.photo-thumbnail,
+.photo-item {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.photo-thumbnail:hover,
+.photo-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.photo-thumbnail img,
+.photo-item img {
+    transition: transform 0.3s ease;
+}
+
+.photo-thumbnail:hover img,
+.photo-item:hover img {
+    transform: scale(1.1);
+}
+
+/* ============================================
+   АНИМАЦИИ ДЛЯ ПРОФИЛЯ
+   ============================================ */
+
+.profile-avatar {
+    transition: all 0.3s ease;
+}
+
+.profile-avatar:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.user-profile-header {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* ============================================
+   АНИМАЦИИ ДЛЯ НАВИГАЦИИ
+   ============================================ */
+
+.nav-item a {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.nav-item a::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.nav-item a:hover::after,
+.nav-item a.active::after {
+    width: 100%;
+}
+
+/* ============================================
+   АНИМАЦИИ ДЛЯ КАРТЫ
+   ============================================ */
+
+.map-container {
+    animation: fadeIn 0.8s ease-out;
+}
+
+/* Анимация для маркеров на карте */
+.map-marker {
+    animation: bounce 1s ease-in-out infinite;
+}
+
+/* ============================================
+   SMOOTH SCROLL
+   ============================================ */
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* ============================================
+   ПРЕДОТВРАЩЕНИЕ МИГАНИЯ
+   ============================================ */
+
+.issue-card,
+.comment-item,
+.stat-item,
+.form-group {
+    will-change: transform, opacity;
+}
+
+/* Оптимизация для производительности */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
