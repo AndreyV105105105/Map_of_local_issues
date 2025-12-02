@@ -45,14 +45,24 @@
                         <div class="author-info">
                             <span class="author-label">{% trans "Автор" %}:</span>
                             <span class="author-name">
+                                <a href="{% url 'users:user_profile' issue.reporter.id %}" style="color: #667eea; text-decoration: none; font-weight: 500;">
+                                    {{ issue.reporter.get_full_name }}
+                                </a>
                                 {% if user.is_authenticated and user.role == 'official' %}
-                                    {{ issue.reporter.get_full_name }}
-                                    {% if issue.reporter.email %}({{ issue.reporter.email }}){% endif %}
-                                {% else %}
-                                    {{ issue.reporter.get_full_name }}
+                                    {% if issue.reporter.email %} ({{ issue.reporter.email }}){% endif %}
                                 {% endif %}
                             </span>
                         </div>
+                        {% if issue.assigned_to %}
+                        <div class="assigned-info" style="margin-top: 5px;">
+                            <span class="author-label">{% trans "Взято в работу" %}:</span>
+                            <span class="author-name">
+                                <a href="{% url 'users:user_profile' issue.assigned_to.id %}" style="color: #28a745; text-decoration: none; font-weight: 500;">
+                                    {{ issue.assigned_to.get_full_name }}
+                                </a>
+                            </span>
+                        </div>
+                        {% endif %}
                         <div class="issue-date">{{ issue.created_at|date:"d.m.Y H:i" }}</div>
                     </div>
                 </div>

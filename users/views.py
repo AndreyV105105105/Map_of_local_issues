@@ -14,7 +14,8 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 
-from issues.models import Issue, Vote
+from issues.models import Issue, Vote, Comment, IssuePhoto
+from django.db.models import Prefetch
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, CustomSetPasswordForm
 
 User = get_user_model()
@@ -42,7 +43,9 @@ def user_issues_view(request):
     ).values('value')[:1]
 
     # Базовый queryset со всеми нужными аннотациями
-    base_qs = Issue.objects.annotate(
+    base_qs = Issue.objects.select_related('reporter', 'assigned_to').prefetch_related(
+        Prefetch('photos', queryset=IssuePhoto.objects.order_by('id'))
+    ).annotate(
         vote_rating=Sum('votes__value', default=0),
         user_vote=Subquery(user_vote_subq),
         user_has_upvoted=Case(
@@ -70,6 +73,93 @@ def user_issues_view(request):
         }
 
     return render(request, 'users/my_issues.html', context)
+
+
+@login_required
+def user_profile_view(request, user_id):
+    """
+    Просмотр профиля другого пользователя.
+    Показывает все проблемы, которые пользователь создал или взял в работу,
+    а также статистику и комментарии.
+    """
+    profile_user = get_object_or_404(User, id=user_id)
+    current_user = request.user
+
+    # Подзапрос для текущего голоса пользователя по обращению
+    user_vote_subq = Vote.objects.filter(
+        issue=OuterRef('pk'),
+        user=current_user
+    ).values('value')[:1]
+
+    # Базовый queryset со всеми нужными аннотациями
+    base_qs = Issue.objects.select_related('reporter', 'assigned_to').prefetch_related(
+        Prefetch('photos', queryset=IssuePhoto.objects.order_by('id'))
+    ).annotate(
+        vote_rating=Sum('votes__value', default=0),
+        user_vote=Subquery(user_vote_subq),
+        user_has_upvoted=Case(
+            When(user_vote=1, then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField()
+        ),
+        user_has_downvoted=Case(
+            When(user_vote=-1, then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField()
+        )
+    )
+
+    # Статистика
+    if profile_user.role == 'citizen':
+        # Для граждан показываем созданные проблемы
+        all_issues_for_stats = Issue.objects.filter(reporter=profile_user)
+        issues = base_qs.filter(reporter=profile_user).order_by('-created_at')
+        
+        stats = {
+            'total_created': all_issues_for_stats.count(),
+            'open': all_issues_for_stats.filter(status=Issue.STATUS_OPEN).count(),
+            'in_progress': all_issues_for_stats.filter(status=Issue.STATUS_IN_PROGRESS).count(),
+            'resolved': all_issues_for_stats.filter(status=Issue.STATUS_RESOLVED).count(),
+            'total_comments': Comment.objects.filter(author=profile_user).count(),
+        }
+        
+        context = {
+            'profile_user': profile_user,
+            'issues': issues,
+            'is_citizen': True,
+            'stats': stats,
+            'is_own_profile': profile_user == current_user,
+        }
+    else:  # official
+        # Для официальных лиц показываем проблемы, которые они взяли в работу
+        issues_in_progress = base_qs.filter(
+            assigned_to=profile_user, 
+            status=Issue.STATUS_IN_PROGRESS
+        ).order_by('-updated_at')
+        issues_resolved = base_qs.filter(
+            assigned_to=profile_user, 
+            status=Issue.STATUS_RESOLVED
+        ).order_by('-resolved_at')
+        
+        all_assigned_for_stats = Issue.objects.filter(assigned_to=profile_user)
+        
+        stats = {
+            'total_assigned': all_assigned_for_stats.count(),
+            'in_progress': all_assigned_for_stats.filter(status=Issue.STATUS_IN_PROGRESS).count(),
+            'resolved': all_assigned_for_stats.filter(status=Issue.STATUS_RESOLVED).count(),
+            'total_comments': Comment.objects.filter(author=profile_user).count(),
+        }
+        
+        context = {
+            'profile_user': profile_user,
+            'issues_in_progress': issues_in_progress,
+            'issues_resolved': issues_resolved,
+            'is_official': True,
+            'stats': stats,
+            'is_own_profile': profile_user == current_user,
+        }
+
+    return render(request, 'users/user_profile.html', context)
 
 
 def register_view(request):

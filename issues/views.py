@@ -85,7 +85,7 @@ def map_view(request):
     ).values('value')[:1]
 
     # Базовый QuerySet
-    issues = Issue.objects.select_related('reporter').prefetch_related(
+    issues = Issue.objects.select_related('reporter', 'assigned_to').prefetch_related(
         Prefetch('photos', queryset=IssuePhoto.objects.order_by('id'))
     ).annotate(
         user_vote=Subquery(user_vote_subq, output_field=IntegerField()),
