@@ -35,3 +35,22 @@ dist/
 *.pyo
 *.pyd
 *.so
+
+# Editor swap files
+*.swp
+*.swo
+*~
+
+# Temporary and junk files
+tash
+tatus
+*profile*
+*functionality
+
+# Django migrations - only track initial migrations
+# Uncomment if you want to ignore all migrations (not recommended)
+# */migrations/[0-9]*.py
+
+# Local test files and scripts
+test_*.py
+*_test_local.py
