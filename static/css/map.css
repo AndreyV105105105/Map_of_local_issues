@@ -2,6 +2,17 @@
 
 
 
+.map-header {
+    margin-bottom: 24px;
+}
+
+.map-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 16px;
+}
+
 .map-instruction p{
     color: var(--text-color);
 }
@@ -108,10 +119,10 @@
 
 
 .map-search-container {
-    margin: 10px 500px;
+    position: relative;
+    margin-bottom: 20px;
     z-index: 2;
-    width: 500px;
-    max-width: 90vw;
+    max-width: 500px;
     background: white;
     border-radius: 24px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -366,17 +377,47 @@
     text-align: center;
     cursor: pointer;
     border: none;
-    transition: all 0.2s;
-    background-color: var(--primary-color);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(135deg, var(--primary-color) 0%, #d64567 100%);
     color: white;
     border: 2px solid var(--primary-color);
+    position: relative;
+    overflow: hidden;
 }
 
-.btn-primary:hover {
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-primary:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-primary:hover:not(:disabled) {
     background: white;
     color: var(--primary-color);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(231, 90, 124, 0.3);
+}
+
+.btn-primary:active:not(:disabled) {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.btn-primary:focus {
+    outline: none;
+    border-color: pink;
+    box-shadow: 0 0 0 3px rgba(255, 182, 193, 0.5);
 }
 
 .btn-secondary {

@@ -9,34 +9,30 @@
 {% endblock %}
 
 {% block content %}
-<div class="map-header">
-  <h2>{% trans "Карта локальных проблем (Ханты-Мансийск)" %}</h2>
-
-  {% if user.is_authenticated and user.role == 'citizen' %}
-    <div class="map-instruction">
-      <p>{% trans "Кликните по карте или начните вводить адрес — подсказки появятся автоматически." %}
-    </div>
-  {% endif %}
-</div>
-
-
-<div class="map-search-container">
-  <div class="input-group map-search-input-group">
-    <input type="text" id="map-address-search" class="form-control map-search-input"
-          placeholder="{% trans 'Начните вводить адрес: Ленина, Мира, Нефтяников...' %}">
-    <button class="map-search-btn" type="button" id="map-search-btn">
-      <i class="bi bi-search"></i> 
-    </button>
-  </div>
-  <div id="map-search-results" class="map-search-results"></div>
-</div>
-
-
-<div id="map-container">
-    <div id="map"></div>
-</div>
-
 <div class="container mt-4">
+  <div class="map-header">
+    <h2>{% trans "Карта локальных проблем (Ханты-Мансийск)" %}</h2>
+
+    {% if user.is_authenticated and user.role == 'citizen' %}
+      <div class="map-instruction">
+        <p>{% trans "Кликните по карте или начните вводить адрес — подсказки появятся автоматически." %}
+      </div>
+    {% endif %}
+  </div>
+  <div class="map-search-container">
+    <div class="input-group map-search-input-group">
+      <input type="text" id="map-address-search" class="form-control map-search-input"
+            placeholder="{% trans 'Начните вводить адрес: Ленина, Мира, Нефтяников...' %}">
+      <button class="map-search-btn" type="button" id="map-search-btn">
+        <i class="bi bi-search"></i> 
+      </button>
+    </div>
+    <div id="map-search-results" class="map-search-results"></div>
+  </div>
+
+  <div id="map-container">
+      <div id="map"></div>
+  </div>
   <!-- Форма фильтрации -->
   <div class="map-filters-container">
     <h5>{% trans "Фильтрация обращений" %}</h5>
