@@ -62,6 +62,7 @@
         </div>
     </div>
 
+    {% if not user.is_authenticated %}
     <div class="about-section">
         <h2>{% trans "Как стать пользователем?" %}</h2>
         <div class="about-content">
@@ -86,6 +87,47 @@
             </div>
         </div>
     </div>
+    {% else %}
+    <div class="about-section">
+        <h2>{% trans "Начните помогать городу" %}</h2>
+        <div class="about-content">
+            <p>{% trans "Вы уже являетесь участником портала. Теперь вы можете:" %}</p>
+            <ul>
+                <li>{% trans "Просматривать карту проблем на главной странице или в разделе «Карта»" %}</li>
+                {% if user.role == 'citizen' %}
+                    <li>{% trans "Создавать обращения о проблемах на карте (для этого выберите точку на карте)" %}</li>
+                    <li>{% trans "Голосовать за обращения других жителей" %}</li>
+                    <li>{% trans "Отслеживать статус ваших обращений в разделе «Мои запросы»" %}</li>
+                {% else %}
+                    <li>{% trans "Брать обращения в работу и менять их статус" %}</li>
+                    <li>{% trans "Отслеживать взятые в работу обращения в разделе «Запросы»" %}</li>
+                {% endif %}
+                <li>{% trans "Комментировать и обсуждать проблемы" %}</li>
+            </ul>
+            
+            <div class="login-options">
+                <div class="login-option">
+                    <h4>{% trans "Просмотреть карту проблем" %}</h4>
+                    <p>{% trans "Посмотрите, какие проблемы уже зарегистрированы на карте города" %}</p>
+                    <a href="{% url 'issues:map' %}" class="login-btn">{% trans "Перейти к карте" %}</a>
+                </div>
+                {% if user.role == 'citizen' %}
+                <div class="login-option">
+                    <h4>{% trans "Мои обращения" %}</h4>
+                    <p>{% trans "Посмотрите статус ваших обращений" %}</p>
+                    <a href="{% url 'users:my_issues' %}" class="login-btn">{% trans "Мои запросы" %}</a>
+                </div>
+                {% else %}
+                <div class="login-option">
+                    <h4>{% trans "Работа с обращениями" %}</h4>
+                    <p>{% trans "Посмотрите обращения, которые вы взяли в работу" %}</p>
+                    <a href="{% url 'users:my_issues' %}" class="login-btn">{% trans "Запросы" %}</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 {% endblock %}
