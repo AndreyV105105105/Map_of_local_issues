@@ -8,7 +8,9 @@
 __pycache__/
 local_settings.py
 db.sqlite3
-media/  # Or specific subdirectories within media if needed
+# Media files (user uploads)
+media/
+!/media/.gitkeep
 static_root/ # Or the directory where collectstatic outputs files
 
 # Virtual Environment
