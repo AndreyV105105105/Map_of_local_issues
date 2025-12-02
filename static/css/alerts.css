@@ -20,6 +20,8 @@
     color: #000;
     font-size: 0.875rem;
     line-height: 1.5;
+    animation: slideInRight 0.5s ease-out, fadeIn 0.3s ease-out;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 
@@ -86,6 +88,11 @@
 .custom-alert.fade.show {
     opacity: 1;
     transition: opacity 0.15s linear;
+}
+
+.custom-alert.fade-out {
+    animation: slideInLeft 0.5s ease-out forwards;
+    opacity: 0;
 }
 
 @media (max-width: 768px) {
