@@ -10,6 +10,7 @@
     
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/alerts.css' %}">
+    <link rel="stylesheet" href="{% static 'css/animations.css' %}">
     
     {% block extra_css %}{% endblock %}
     {% block extra_js %}{% endblock %}
@@ -26,20 +27,20 @@
 
             <nav class="header__nav">
                 <ul class="list_nav">
+                    <li><a href="{% url 'home' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Главная</a></li>
                     {% if user.is_authenticated %}
-                        <li><a href="{% url 'issues:map' %}" class="{% if request.resolver_match.url_name == 'map' %}active{% endif %}">карта</a></li>
-                    {% else %}
-                        <li><a href="{% url 'users:login' %}" class="{% if request.resolver_match.url_name == 'map' %}active{% endif %}">карта</a></li>
-                    {% endif %}
-                    {% if user.is_authenticated %}
-                        <li><a href="{% url 'users:my_issues' %}" class="{% if request.resolver_match.url_name == 'my_issues' %}active{% endif %}">
+                        <li><a href="{% url 'issues:map' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'map' %}active{% endif %}">Карта</a></li>
+                        <li><a href="{% url 'users:my_issues' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'my_issues' %}active{% endif %}">
                             {% if user.role == 'citizen' %}
-                                мои запросы
+                                Мои запросы
                             {% else %}
-                                запросы
+                                Запросы
                             {% endif %}
                         </a></li>
+                    {% else %}
+                        <li><a href="{% url 'users:login' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'map' %}active{% endif %}">Карта</a></li>
                     {% endif %}
+                    <li><a href="{% url 'about_site' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'about_site' %}active{% endif %}">О проекте</a></li>
                 </ul>
             </nav>
 
@@ -114,6 +115,7 @@
 
 
     <script src="{% static 'js/alerts.js' %}"></script>
+    <script src="{% static 'js/animations.js' %}"></script>
 
 </body>
 </html>
