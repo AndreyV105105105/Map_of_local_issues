@@ -47,16 +47,37 @@
             <div class="header_main_nav">
                 <ul>
                     {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'users:profile' %}">{% trans "Профиль" %}</a>
-                    </li>
+                        {% if user.is_demo_account %}
+                            <li class="nav-item demo-badge">
+                                <span class="demo-indicator">ДЕМО-РЕЖИМ</span>
+                            </li>
+                            <li class="nav-item demo-switch">
+                                <form method="post" action="{% url 'users:switch_demo_role' %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="demo-switch-btn" title="Переключить роль">
+                                        {% if user.role == 'citizen' %}
+                                            <span class="demo-role-active">Горожанин</span>
+                                            <span class="demo-role-separator">/</span>
+                                            <span class="demo-role-inactive">Должностное лицо</span>
+                                        {% else %}
+                                            <span class="demo-role-inactive">Горожанин</span>
+                                            <span class="demo-role-separator">/</span>
+                                            <span class="demo-role-active">Должностное лицо</span>
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:profile' %}">{% trans "Профиль" %}</a>
+                        </li>
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'users:login' %}">{% trans "Войти" %}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'users:register' %}">{% trans "Зарегистрироваться" %}</a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:login' %}">{% trans "Войти" %}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:register' %}">{% trans "Зарегистрироваться" %}</a>
+                        </li>
                     {% endif %}
                 </ul>
             </div>

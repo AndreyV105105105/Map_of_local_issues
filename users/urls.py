@@ -14,6 +14,8 @@ urlpatterns = [
     path('profile/<int:user_id>/', views.user_profile_view, name='user_profile'),
     path('my-issues/', views.user_issues_view, name='my_issues'),
     path('verify-email/<uidb64>/<token>/', views.verify_email_view, name='verify_email'),
+    path('demo/start/', views.start_demo_view, name='start_demo'),
+    path('demo/switch-role/', views.switch_demo_role_view, name='switch_demo_role'),
     path('password-reset/', auth_views.PasswordResetView.as_view(
         template_name='users/password_reset_form.html',
         email_template_name='emails/password_reset_email.txt',

@@ -75,6 +75,11 @@ class CustomUser(AbstractUser):
         _("Время создания токена"),
         default=timezone.now
     )
+    is_demo_account = models.BooleanField(
+        _("Демо-аккаунт"),
+        default=False,
+        help_text=_("Указывает, является ли это демонстрационным аккаунтом для быстрого тестирования.")
+    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

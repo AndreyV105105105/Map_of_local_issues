@@ -148,6 +148,29 @@ html, body {
     color: white;
 }
 
+.demo-cta-button {
+    background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+    border: 2px solid #FFA500;
+    border-radius: 50px;
+    padding: 12px 24px;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(255, 165, 0, 0.3);
+    cursor: pointer;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.demo-cta-button:hover {
+    background: white;
+    color: #FFA500;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.4);
+}
+
 
 .problem-cards h3 {
     font-size: 18px;

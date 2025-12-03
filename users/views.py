@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Sum, Subquery, OuterRef, Case, When, Value, \
@@ -17,6 +18,12 @@ from django.utils.translation import gettext_lazy as _
 from issues.models import Issue, Vote, Comment, IssuePhoto
 from django.db.models import Prefetch
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, CustomSetPasswordForm
+from .demo_utils import (
+    get_visitor_id_from_request,
+    get_or_create_demo_accounts,
+    login_demo_account,
+    get_demo_account_password
+)
 
 User = get_user_model()
 
@@ -311,5 +318,80 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
+    # Clear demo mode flag when logging out
+    request.session.pop('demo_mode', None)
     messages.success(request, _("Вы вышли из системы."), extra_tags='users')
     return redirect('home')
+
+
+def start_demo_view(request):
+    """Initialize demo accounts and login as citizen."""
+    # Get or create visitor ID
+    visitor_id = get_visitor_id_from_request(request)
+    
+    # Get or create demo accounts
+    citizen, official, passwords = get_or_create_demo_accounts(visitor_id, request)
+    
+    # Login as citizen by default
+    password = passwords.get('citizen') or get_demo_account_password(request, visitor_id, 'citizen')
+    if password and login_demo_account(request, citizen, password):
+        messages.info(
+            request,
+            _("Добро пожаловать в демо-режим! Вы вошли как горожанин."),
+            extra_tags='users'
+        )
+        return redirect('home')
+    else:
+        messages.error(
+            request,
+            _("Не удалось войти в демо-режим. Пожалуйста, попробуйте снова."),
+            extra_tags='users'
+        )
+        return redirect('home')
+
+
+@login_required
+@require_POST
+def switch_demo_role_view(request):
+    """Switch between citizen and official demo accounts."""
+    if not request.user.is_demo_account:
+        messages.error(
+            request,
+            _("Переключение ролей доступно только для демо-аккаунтов."),
+            extra_tags='users'
+        )
+        return redirect('home')
+    
+    visitor_id = get_visitor_id_from_request(request)
+    current_role = request.user.role
+    
+    # Get demo accounts
+    citizen, official, passwords = get_or_create_demo_accounts(visitor_id, request)
+    
+    # Determine which account to switch to
+    if current_role == 'citizen':
+        target_user = official
+        target_role = 'official'
+        role_display = _('Должностное лицо')
+    else:
+        target_user = citizen
+        target_role = 'citizen'
+        role_display = _('Горожанин')
+    
+    # Get password for target account
+    password = passwords.get(target_role) or get_demo_account_password(request, visitor_id, target_role)
+    
+    if password and login_demo_account(request, target_user, password):
+        messages.success(
+            request,
+            _("Вы переключились на роль: {}").format(role_display),
+            extra_tags='users'
+        )
+    else:
+        messages.error(
+            request,
+            _("Не удалось переключить роль. Пожалуйста, попробуйте снова."),
+            extra_tags='users'
+        )
+    
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
