@@ -4,42 +4,252 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/my_issues.css' %}">
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+    <style>
+        .user-profile-header {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 40px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin-bottom: 30px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 0.6s ease-out;
+            text-align: left;
+        }
+        
+        .profile-user-info {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 20px;
+            justify-content: flex-start;
+            width: 100%;
+            padding: 0;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            min-width: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+            animation: scaleIn 0.5s ease-out;
+            margin: 0;
+        }
+        
+        .profile-avatar:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .profile-user-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            text-align: left;
+            flex: 1;
+            min-width: 0;
+            padding: 0;
+        }
+        
+        .profile-user-details h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.8rem;
+            color: #333;
+            text-align: left;
+            width: 100%;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        
+        .profile-user-details .user-role {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin: 0;
+            align-self: flex-start;
+        }
+        
+        .user-role.role-official {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .user-role.role-citizen {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        
+        .stat-item:nth-child(1) { animation-delay: 0.1s; }
+        .stat-item:nth-child(2) { animation-delay: 0.2s; }
+        .stat-item:nth-child(3) { animation-delay: 0.3s; }
+        .stat-item:nth-child(4) { animation-delay: 0.4s; }
+        .stat-item:nth-child(5) { animation-delay: 0.5s; }
+        
+        .stat-value {
+            display: block;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-item:hover .stat-value {
+            transform: scale(1.1);
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
+    
+    <div class="user-profile-header">
+        <div class="profile-user-info">
+            <div class="profile-avatar">
+                {% if profile_user.profile_picture %}
+                    <img src="{{ profile_user.profile_picture.url }}" alt="{% trans 'Аватар' %}">
+                {% else %}
+                    {{ profile_user.first_name.0|default:"U" }}{{ profile_user.last_name.0|default:"S" }}
+                {% endif %}
+            </div>
+            <div class="profile-user-details">
+                <h2>{{ profile_user.get_full_name }}</h2>
+                <span class="user-role role-{{ profile_user.role }}">
+                    {{ profile_user.get_role_display }}
+                </span>
+                {% if profile_user.department %}
+                    <p style="margin: 8px 0 0 0; color: #6c757d; font-size: 0.95rem; text-align: left; width: 100%;">
+                        {% trans "Департамент" %}: {{ profile_user.department }}
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if stats %}
+        <div class="profile-stats">
+            {% if is_citizen %}
+                <div class="stat-item">
+                    <span class="stat-value">{{ stats.total_created }}</span>
+                    <span class="stat-label">{% trans "Создано проблем" %}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ stats.open }}</span>
+                    <span class="stat-label">{% trans "Открыто" %}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ stats.in_progress }}</span>
+                    <span class="stat-label">{% trans "В работе" %}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ stats.resolved }}</span>
+                    <span class="stat-label">{% trans "Решено" %}</span>
+                </div>
+            {% else %}
+                <div class="stat-item">
+                    <span class="stat-value">{{ stats.total_assigned }}</span>
+                    <span class="stat-label">{% trans "Всего взято в работу" %}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ stats.in_progress }}</span>
+                    <span class="stat-label">{% trans "В работе" %}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ stats.resolved }}</span>
+                    <span class="stat-label">{% trans "Решено" %}</span>
+                </div>
+            {% endif %}
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.total_comments }}</span>
+                <span class="stat-label">{% trans "Комментариев" %}</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
 
     <div class="my-issues-main-header-container">
-        <h3 class="my-issues-main-title">{% trans "Проблемы" %} <span class="issues-count">{{ issues.count }}</span></h3>
+        {% if is_citizen %}
+            <h3 class="my-issues-main-title">
+                {% trans "Мои проблемы" %}
+                <span class="issues-count">({{ issues.count }})</span>
+            </h3>
+        {% else %}
+            <h3 class="my-issues-main-title">
+                {% trans "Проблемы, взятые в работу" %}
+                <span class="issues-count">({{ stats.total_assigned }})</span>
+            </h3>
+        {% endif %}
     </div>
 
     <div style="display:none">{% csrf_token %}</div>
 
     {% if is_citizen %}
-
         {% include "users/my_issues_list.html" with issues=issues %}
-
     {% else %}
-
-
         <div class="my-issues-sub-headers">
             <h4 class="issues-title">{% trans "В работе" %}</h4>
             <h4 class="issues-title">{% trans "Завершённые" %}</h4>
         </div>
-
       
         <div class="issues-layout-container">
-    
             <div class="issues-section in-progress">
                 {% include "users/my_issues_list.html" with issues=issues_in_progress %}
             </div>
-
 
             <div class="issues-section resolved">
                 {% include "users/my_issues_list.html" with issues=issues_resolved %}
             </div>
         </div>
-
     {% endif %}
 </div>
 {% endblock %}

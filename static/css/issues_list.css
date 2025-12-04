@@ -45,34 +45,58 @@
     border-radius: 16px;
     padding: 20px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
     position: relative;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
 }
 
-.issue-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.4),
-        transparent
-    );
-    transition: left 0.6s;
-}
-
-.issue-card:hover::before {
-    left: 100%;
+/* Полностью отключаем все вспышки и подсветки на карточке */
+.issue-card::before,
+.issue-card::after {
+    display: none !important;
+    content: none !important;
 }
 
 .issue-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Отключаем вспышки у всех элементов внутри карточки */
+.issue-card *::before,
+.issue-card *::after {
+    display: none !important;
+    content: none !important;
+    animation: none !important;
+}
+
+.issue-card .issue-status::before,
+.issue-card .issue-status::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* Отключаем вспышки у всех кнопок внутри карточки */
+.issue-card .btn::before,
+.issue-card button::before,
+.issue-card .vote-btn::before,
+.issue-card .status-update-btn::before,
+.issue-card .delete-btn::before {
+    display: none !important;
+    content: none !important;
+}
+
+/* Отключаем все анимации вспышек */
+.issue-card * {
+    animation: none !important;
+}
+
+.issue-card:hover *::before,
+.issue-card:hover *::after {
+    display: none !important;
+    content: none !important;
 }
 
 .issue-header {
@@ -118,24 +142,6 @@
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.issue-status::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.3);
-    transition: left 0.5s;
-}
-
-.issue-card:hover .issue-status::before {
-    left: 100%;
 }
 
 .issue-status.status-new {
@@ -164,18 +170,35 @@
 }
 
 .issue-content {
-    margin-bottom: 15px;
+    flex: 1;
+    min-height: 0;
+}
+
+.issue-divider {
+    height: 1px;
+    background-color: #eee;
+    margin: 15px 0;
+    flex-shrink: 0;
 }
 
 .issue-description {
     margin: 0 0 12px 0;
     color: var(--light-text);
     line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    min-height: 4.5em;
+    max-height: 4.5em;
 }
 
 .issue-photos {
     display: flex;
     flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    min-height: 60px;
 }
 
 .photo-thumbnail {
@@ -205,33 +228,51 @@
 
 .issue-footer {
     display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+.issue-footer-content {
+    display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
+    align-items: flex-start;
+    gap: 16px;
 }
 
 .issue-voting {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-shrink: 0;
 }
 
 .vote-stats {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 2px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    min-width: 70px;
 }
 
 .vote-rating {
-    font-size: 18px;
+    font-size: 24px;
     font-weight: 700;
-    color: var(--text-color);
+    color: var(--primary-color);
+    line-height: 1;
 }
 
 .vote-label {
     color: var(--light-text);
-    font-size: 12px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
 }
 
 .vote-buttons {
@@ -276,25 +317,109 @@
 }
 
 .issue-info {
+    flex: 1;
+    min-width: 0;
     text-align: right;
 }
 
-.author-info {
+.author-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+}
+
+.author-row {
     display: flex;
     align-items: center;
-    gap: 4px;
-    margin-bottom: 4px;
+    gap: 6px;
+    width: 100%;
+    justify-content: flex-end;
 }
 
 .author-label {
     font-weight: 600;
     color: var(--light-text);
     font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.author-name {
-    color: var(--text-color);
+.author-name-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
     font-size: 12px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.author-name-link:hover {
+    text-decoration: underline;
+}
+
+.author-email-row {
+    width: 100%;
+    text-align: right;
+}
+
+.author-email {
+    font-size: 10px;
+    color: var(--light-text);
+    opacity: 0.8;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    word-break: break-all;
+}
+
+.assigned-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 2px;
+    min-height: 20px;
+}
+
+.assigned-row-empty {
+    visibility: hidden;
+}
+
+.assigned-label {
+    font-weight: 600;
+    color: var(--light-text);
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.assigned-name-link {
+    color: #28a745;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 12px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.assigned-name-link:hover {
+    text-decoration: underline;
+}
+
+.issue-date-row {
+    width: 100%;
+    text-align: right;
+    margin-top: 2px;
 }
 
 .issue-date {
@@ -305,9 +430,8 @@
 .official-actions {
     display: flex;
     gap: 10px;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
+    align-items: center;
+    flex-shrink: 0;
 }
 
 .status-form {

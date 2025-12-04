@@ -19,21 +19,36 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def env_bool(name: str, default: bool = False) -> bool:
+    return os.getenv(name, str(default)).strip().lower() in {'true', '1', 'yes'}
+
+
+def env_list(name: str, default: str = "") -> list[str]:
+    raw_value = os.getenv(name, default)
+    return [item.strip() for item in raw_value.split(',') if item.strip()]
+
+
 SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY environment variable not set")
 
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
-if DEBUG:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
-else:
-    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0').split(',')
+DEBUG = env_bool('DEBUG', False)
+
+ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+if not ALLOWED_HOSTS and not DEBUG:
+    raise ValueError("ALLOWED_HOSTS must be provided when DEBUG=False")
+elif not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['localhost']
+
+ENABLE_HTTPS_REDIRECT = env_bool('ENABLE_HTTPS_REDIRECT', True)
+CSRF_TRUSTED_ORIGINS = env_list('CSRF_TRUSTED_ORIGINS', '')
+DJANGO_LOG_LEVEL = os.getenv('DJANGO_LOG_LEVEL', 'INFO').upper()
 
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 if DEBUG:
     STATICFILES_DIRS = [BASE_DIR / 'static']
-else:
-    STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Application definition
 INSTALLED_APPS = [
@@ -79,6 +94,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Map_of_local_issues.wsgi.application'
 
+required_db_settings = ['DB_NAME', 'DB_USER', 'DB_PASSWORD']
+missing_db_settings = [item for item in required_db_settings if not os.getenv(item)]
+if missing_db_settings:
+    raise ValueError(f"Missing required database configuration: {', '.join(missing_db_settings)}")
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
@@ -122,63 +142,66 @@ AUTH_USER_MODEL = 'users.CustomUser'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 if not DEBUG:
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_REFERRER_POLICY = 'same-origin'
+    SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
+
+if not DEBUG and ENABLE_HTTPS_REDIRECT:
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_BROWSER_XSS_FILTER = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-
-    CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
-
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-    X_FRAME_OPTIONS = 'DENY'
-    SECURE_REFERRER_POLICY = 'same-origin'
 
-    SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
+EMAIL_BACKEND = os.getenv(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend'
+)
 
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'webmaster@localhost')
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-if not DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+if EMAIL_BACKEND.endswith('smtp.EmailBackend'):
     EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.example.com')
-    EMAIL_PORT = os.getenv('EMAIL_PORT', 587)
-    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', True)
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'webmaster@localhost')
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'webmaster@localhost')
 
 SITE_ID = 1
 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'level': 'DEBUG',
-        },
-        'file': {
-            'level': 'ERROR',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'error.log',
+            'formatter': 'verbose',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-        'issues.modules.geocoding': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': DJANGO_LOG_LEVEL,
             'propagate': False,
         },
         'django.request': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'issues.modules.geocoding': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,

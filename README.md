@@ -44,52 +44,61 @@
 - Безопасность: `escapejs` для данных в попапах, `CSRF`-токен в `fetch`.
 
 ### Инфраструктура
-- База: PostgreSQL 15 + PostGIS 3.4 (`django.contrib.gis.db.backends.postgis`)
-- Кэширование: `LocMemCache` (готово к замене на Redis)
-- Логирование:  
-  - `geocoding` → `INFO`  
-  - `django.request` → `INFO` (4xx/5xx в консоль)  
-  - `django` → `ERROR` → `error.log`
-- Безопасность: пароли ≥ 12 символов, `SECURE_*` флаги в prod, `CSRF_COOKIE_SECURE`.
+- `docker compose` поднимает три сервиса: `db` (PostGIS 16 + 3.4), `web` (Django + Gunicorn) и `nginx` (отдаёт `/static/` и `/media/`, проксирует backend).
+- База данных не пробрасывается наружу — доступ только через `docker compose exec db psql`.
+- Кэширование по умолчанию: `LocMemCache` (можно заменить на Redis без изменений кода).
+- Логирование уходит в STDOUT (`docker compose logs -f web`), формат единый для всех логгеров.  
+- `/health/` — технический эндпоинт для проверок балансировщика и healthcheck контейнера.
+- Безопасность: строгие валидаторы паролей, прод-флаги `SECURE_*`, настраиваемые `ALLOWED_HOSTS` и `CSRF_TRUSTED_ORIGINS`.
 
 ---
 
 ## Запуск
 
-### Требования
-- Docker и Docker Compose  
-- Python 3.11+ (опционально)  
-- Зависимости: `Django==5.2.6`, `GDAL==3.10.3`, `psycopg2-binary==2.9.9`
+### Production-ready сценарий (сервер `pitching`, IP `51.250.28.139`)
 
-### Пошагово
-
-1. **Подготовьте окружение**  
+1. **Подготовьте ветку и конфиг**
    ```bash
+   git checkout feature/deploy-prep
    cp .env.example .env
    ```
-   Заполните `SECRET_KEY`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`.
+   В `.env` заполните `SECRET_KEY`, `DB_NAME/USER/PASSWORD`, добавьте `pitching` и `51.250.28.139` в `ALLOWED_HOSTS`, пропишите реальные origin'ы в `CSRF_TRUSTED_ORIGINS`.  
+   При необходимости включите `RUN_MIGRATIONS_ON_START=True`.
 
-2. **Запустите контейнеры**  
+2. **Соберите и запустите стек**
    ```bash
-   docker-compose up --build
+   docker compose up -d --build
+   ```
+   Контейнер `web` собирает статику и (опционально) прогоняет миграции перед запуском Gunicorn.
+
+3. **Примените миграции, если авто-режим выключен**
+   ```bash
+   docker compose exec web python manage.py migrate
    ```
 
-3. **Примените миграции**  
+4. **Создайте суперпользователя / выполните сервисные команды**
    ```bash
-   docker-compose exec web python manage.py makemigrations
-   docker-compose exec web python manage.py migrate
+   docker compose exec web python manage.py createsuperuser
+   docker compose exec web python manage.py check --deploy
    ```
 
-4. **(Опционально) Создайте суперпользователя**  
+5. **Проверьте сервис**
    ```bash
-   docker-compose exec web python manage.py createsuperuser
+   curl http://localhost/health/
    ```
-   Нужно только для доступа к `/admin/`.
+   На сервере проверьте `http://51.250.28.139` (или доменное имя `pitching`).
 
-5. **Проверьте**  
-   - `http://localhost:8000` — главная  
-   - `http://localhost:8000/issues/map/` — карта  
-   - `http://localhost:8000/admin/` — админка (если создан суперпользователь)
+6. **Логи и остановка**
+   ```bash
+   docker compose logs -f web nginx
+   docker compose down         # оставляет тома
+   docker compose down -v      # удаляет pg/static/media данные
+   ```
+
+### Часто используемые команды
+- `docker compose exec web python manage.py collectstatic --noinput` — entrypoint делает это автоматически, команда нужна только для ручной проверки.
+- `docker compose exec db psql -U $DB_USER -d $DB_NAME` — доступ к PostGIS изнутри контейнера.
+- `docker compose exec web python manage.py shell` — выполнение одноразовых скриптов.
 
 ---
 

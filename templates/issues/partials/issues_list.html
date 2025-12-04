@@ -29,91 +29,97 @@
                 <div class="issue-content">
                     <p class="issue-description">{{ issue.description|truncatewords:20 }}</p>
                     
-                    {% if issue.photos.all %}
                     <div class="issue-photos">
-                        {% for photo in issue.photos.all|slice:":4" %}
-                        <div class="photo-thumbnail">
-                            <img src="{{ photo.image.url }}" alt="{% trans 'Фото проблемы' %}" loading="lazy">
-                        </div>
-                        {% endfor %}
-                        {% if issue.photos.count > 4 %}
-                        <div class="photo-more">+{{ issue.photos.count|add:"-4" }}</div>
+                        {% if issue.photos.all %}
+                            {% for photo in issue.photos.all|slice:":4" %}
+                            <div class="photo-thumbnail">
+                                <img src="{{ photo.image.url }}" alt="{% trans 'Фото проблемы' %}" loading="lazy">
+                            </div>
+                            {% endfor %}
+                            {% if issue.photos.count > 4 %}
+                            <div class="photo-more">+{{ issue.photos.count|add:"-4" }}</div>
+                            {% endif %}
                         {% endif %}
+                    </div>
+                </div>
+
+                <div class="issue-divider"></div>
+
+                <div class="issue-footer">
+                    <div class="issue-footer-content">
+                        <div class="issue-voting">
+                            <div class="vote-stats">
+                                <span class="vote-rating">{{ issue.vote_rating }}</span>
+                                <span class="vote-label">{% trans "рейтинг" %}</span>
+                            </div>
+                            
+                            {% if user.is_authenticated and user.role == 'citizen' %}
+                            <div class="vote-buttons">
+                                <button type="button" 
+                                        class="vote-btn upvote {% if issue.user_has_upvoted %}active{% endif %}"
+                                        data-issue-id="{{ issue.id }}"
+                                        data-vote-type="1">
+                                    <img src="{% static 'icons/like.svg' %}" alt="👍">
+                                </button>
+                                <button type="button" 
+                                        class="vote-btn downvote {% if issue.user_has_downvoted %}active{% endif %}"
+                                        data-issue-id="{{ issue.id }}"
+                                        data-vote-type="-1">
+                                    <img src="{% static 'icons/dislike.svg' %}" alt="👎">
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="issue-info">
+                            <div class="author-section">
+                                <div class="author-row">
+                                    <span class="author-label">{% trans "Автор" %}:</span>
+                                    <a href="{% url 'users:user_profile' issue.reporter.id %}" class="author-name-link">
+                                        {{ issue.reporter.get_full_name }}
+                                    </a>
+                                </div>
+                                {% if user.is_authenticated and user.role == 'official' and issue.reporter.email %}
+                                <div class="author-email-row">
+                                    <span class="author-email">{{ issue.reporter.email }}</span>
+                                </div>
+                                {% endif %}
+                                <div class="assigned-row {% if not issue.assigned_to %}assigned-row-empty{% endif %}">
+                                    {% if issue.assigned_to %}
+                                    <span class="assigned-label">{% trans "Взято в работу" %}:</span>
+                                    <a href="{% url 'users:user_profile' issue.assigned_to.id %}" class="assigned-name-link">
+                                        {{ issue.assigned_to.get_full_name }}
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                <div class="issue-date-row">
+                                    <span class="issue-date">{{ issue.created_at|date:"d.m.Y H:i" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if user.is_authenticated and user.role == 'official' %}
+                    <div class="official-actions">
+                        <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="status-form">
+                            {% csrf_token %}
+                            <select name="status" class="status-select">
+                                {% for key, label in issue.STATUS_CHOICES %}
+                                <option value="{{ key }}" {% if issue.status == key %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="status-update-btn">{% trans "Обновить" %}</button>
+                        </form>
+
+                        <form method="post" action="{% url 'issues:delete_issue' issue.id %}" class="delete-form">
+                            {% csrf_token %}
+                            <button type="submit" class="delete-btn" data-issue-title="{{ issue.title }}">
+                                {% trans "Удалить" %}
+                            </button>
+                        </form>
                     </div>
                     {% endif %}
                 </div>
-
-                <div class="issue-footer">
-                    <div class="issue-voting">
-                        <div class="vote-stats">
-                            <span class="vote-rating">{{ issue.vote_rating }}</span>
-                            <span class="vote-label">{% trans "рейтинг" %}</span>
-                        </div>
-                        
-                        {% if user.is_authenticated and user.role == 'citizen' %}
-                        <div class="vote-buttons">
-                            <button type="button" 
-                                    class="vote-btn upvote {% if issue.user_has_upvoted %}active{% endif %}"
-                                    data-issue-id="{{ issue.id }}"
-                                    data-vote-type="1">
-                                <img src="{% static 'icons/like.svg' %}" alt="👍">
-                            </button>
-                            <button type="button" 
-                                    class="vote-btn downvote {% if issue.user_has_downvoted %}active{% endif %}"
-                                    data-issue-id="{{ issue.id }}"
-                                    data-vote-type="-1">
-                                <img src="{% static 'icons/dislike.svg' %}" alt="👎">
-                            </button>
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="issue-info">
-                        <div class="author-info">
-                            <span class="author-label">{% trans "Автор" %}:</span>
-                            <span class="author-name">
-                                <a href="{% url 'users:user_profile' issue.reporter.id %}" style="color: #667eea; text-decoration: none; font-weight: 500;">
-                                    {{ issue.reporter.get_full_name }}
-                                </a>
-                                {% if user.is_authenticated and user.role == 'official' %}
-                                    {% if issue.reporter.email %} ({{ issue.reporter.email }}){% endif %}
-                                {% endif %}
-                            </span>
-                        </div>
-                        {% if issue.assigned_to %}
-                        <div class="assigned-info" style="margin-top: 5px;">
-                            <span class="author-label">{% trans "Взято в работу" %}:</span>
-                            <span class="author-name">
-                                <a href="{% url 'users:user_profile' issue.assigned_to.id %}" style="color: #28a745; text-decoration: none; font-weight: 500;">
-                                    {{ issue.assigned_to.get_full_name }}
-                                </a>
-                            </span>
-                        </div>
-                        {% endif %}
-                        <div class="issue-date">{{ issue.created_at|date:"d.m.Y H:i" }}</div>
-                    </div>
-                </div>
-
-                {% if user.is_authenticated and user.role == 'official' %}
-                <div class="official-actions">
-                    <form method="post" action="{% url 'issues:update_issue_status' issue.id %}" class="status-form">
-                        {% csrf_token %}
-                        <select name="status" class="status-select">
-                            {% for key, label in issue.STATUS_CHOICES %}
-                            <option value="{{ key }}" {% if issue.status == key %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit" class="status-update-btn">{% trans "Обновить" %}</button>
-                    </form>
-
-                    <form method="post" action="{% url 'issues:delete_issue' issue.id %}" class="delete-form">
-                        {% csrf_token %}
-                        <button type="submit" class="delete-btn" data-issue-title="{{ issue.title }}">
-                            {% trans "Удалить" %}
-                        </button>
-                    </form>
-                </div>
-                {% endif %}
             </div>
             {% endfor %}
         </div>

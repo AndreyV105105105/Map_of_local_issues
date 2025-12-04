@@ -67,16 +67,46 @@ def user_issues_view(request):
         )
     )
 
+    # Статистика
     if user.role == 'citizen':
+        # Для граждан показываем созданные проблемы
+        all_issues_for_stats = Issue.objects.filter(reporter=user)
         issues = base_qs.filter(reporter=user).order_by('-created_at')
-        context = {'issues': issues, 'is_citizen': True}
+        
+        stats = {
+            'total_created': all_issues_for_stats.count(),
+            'open': all_issues_for_stats.filter(status=Issue.STATUS_OPEN).count(),
+            'in_progress': all_issues_for_stats.filter(status=Issue.STATUS_IN_PROGRESS).count(),
+            'resolved': all_issues_for_stats.filter(status=Issue.STATUS_RESOLVED).count(),
+            'total_comments': Comment.objects.filter(author=user).count(),
+        }
+        
+        context = {
+            'profile_user': user,
+            'issues': issues,
+            'is_citizen': True,
+            'stats': stats,
+        }
     else:  # official
+        # Для официальных лиц показываем проблемы, которые они взяли в работу
         issues_in_progress = base_qs.filter(assigned_to=user, status='IN_PROGRESS').order_by('-updated_at')
         issues_resolved = base_qs.filter(assigned_to=user, status='RESOLVED').order_by('-resolved_at')
+        
+        all_assigned_for_stats = Issue.objects.filter(assigned_to=user)
+        
+        stats = {
+            'total_assigned': all_assigned_for_stats.count(),
+            'in_progress': all_assigned_for_stats.filter(status=Issue.STATUS_IN_PROGRESS).count(),
+            'resolved': all_assigned_for_stats.filter(status=Issue.STATUS_RESOLVED).count(),
+            'total_comments': Comment.objects.filter(author=user).count(),
+        }
+        
         context = {
+            'profile_user': user,
             'issues_in_progress': issues_in_progress,
             'issues_resolved': issues_resolved,
-            'is_official': True
+            'is_official': True,
+            'stats': stats,
         }
 
     return render(request, 'users/my_issues.html', context)
