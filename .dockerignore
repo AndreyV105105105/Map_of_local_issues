@@ -1,0 +1,15 @@
+.git
+.gitignore
+.idea
+venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+media/
+staticfiles/
+error.log
+.env
+docker-compose.override.yml
+
