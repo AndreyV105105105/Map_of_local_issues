@@ -117,3 +117,38 @@
     transform: translateY(-8px) scale(1.02);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
+
+@media (max-width: 992px) {
+    .issues-layout-container {
+        flex-direction: column;
+    }
+    
+    .my-issues-sub-headers {
+        flex-direction: column;
+        padding: 10px 20px;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .my-issues-sub-headers .issues-title,
+    .my-issues-sub-headers .issues-title:first-child,
+    .my-issues-sub-headers .issues-title:last-child {
+        text-align: left;
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .my-issues-main-header-container {
+        padding: 15px;
+        border-radius: 20px;
+    }
+    
+    .my-issues-main-title {
+        font-size: 1.4rem;
+    }
+    
+    .issues-grid {
+        grid-template-columns: 1fr;
+    }
+}

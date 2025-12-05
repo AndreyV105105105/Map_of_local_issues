@@ -167,6 +167,7 @@
     .profile-card {
         padding: 30px 20px;
         margin: 0 10px;
+        max-width: 100%;
     }
 
     .profile-avatar {
@@ -191,9 +192,18 @@
         text-align: center;
     }
 
+    .profile-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .my-problem-btn,
     .logout-btn {
         width: 100%;
         justify-content: center;
+        margin: 0;
+        box-sizing: border-box;
     }
 }
 
@@ -204,6 +214,7 @@
 
     .profile-card {
         padding: 20px 16px;
+        margin: 0;
     }
 
     .info-item {

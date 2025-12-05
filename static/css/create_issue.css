@@ -245,7 +245,7 @@
     .create-issue-form input[type="file"],
     .create-issue-form textarea,
     .create-issue-form select {
-        font-size: 14px;
+        font-size: 16px; /* Prevent iOS zoom */
     }
     
     .btn {

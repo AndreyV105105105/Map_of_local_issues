@@ -470,38 +470,62 @@ body {
     
     .header .container {
         flex-wrap: wrap;
-        gap: 16px;
+        gap: 10px; /* Уменьшил gap */
+        align-items: center;
     }
     
     .header__logo {
         order: 1;
-        gap: 12px;
+        gap: 10px;
+        flex: 0 1 auto; 
+        max-width: 60%; 
     }
     
     .logo-icon {
         height: 40px;
+        flex-shrink: 0;
     }
     
     .header__logo a,
     .header__logo h1 {
         font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     
+
+    .header_main_nav {
+        order: 2;
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+
+    .header_main_nav ul {
+        gap: 8px;
+    }
+    
+    /* Меню разделов - на новой строке */
     .header__nav {
         order: 3;
         width: 100%;
-        justify-content: flex-start;
+        margin-top: 10px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+        /* Скрываем скроллбар но оставляем скролл */
+        scrollbar-width: none; 
+    }
+    
+    .header__nav::-webkit-scrollbar {
+        display: none; 
     }
     
     .header__nav ul {
         gap: 12px;
-        width: 100%;
-        flex-wrap: wrap;
-    }
-    
-    .header_main_nav {
-        order: 2;
-        margin-left: auto;
+        width: max-content;
+        flex-wrap: nowrap;
+        padding: 0 4px; /* Небольшой отступ по бокам */
     }
     
     .header__nav a,
@@ -509,6 +533,7 @@ body {
     .nav-item a {
         font-size: 14px;
         padding: 8px 14px;
+        white-space: nowrap;
     }
     
     .nav-link-btn-primary {
@@ -528,23 +553,34 @@ body {
     .footer-links {
         flex-direction: column;
         gap: 8px;
+        align-items: center;
     }
     
     .footer-content {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .footer-text {
+        min-width: auto;
+        width: 100%;
     }
 }
 
 @media (max-width: 480px) {
-    .header__logo a,
-    .header__logo h1 {
-        font-size: 11px;
-        line-height: 1.2;
+    .header .container {
+        gap: 8px;
+    }
+
+    /* Скрываем текст логотипа на совсем маленьких экранах, оставляем только иконку */
+    .header__logo h1, 
+    .header__logo a { 
+        display: none; 
     }
     
     .logo-icon {
-        height: 36px;
+        height: 42px; /* Чуть крупнее иконка, раз текста нет */
     }
     
     .header__nav ul {
@@ -558,22 +594,24 @@ body {
         padding: 6px 12px;
     }
     
-    .nav-link-btn-primary {
-        font-size: 13px;
-        padding: 7px 14px;
-    }
-    
-    .header_main_nav ul {
-        gap: 4px;
-    }
-    
     .header_main_nav .nav-item a {
         font-size: 12px;
         padding: 6px 10px;
     }
     
+    /* Для демо-режима уменьшаем отступы */
+    .demo-switch-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+
+    .results-gallery {
+        grid-template-columns: 1fr;
+    }
+    
     .footer-social {
         justify-content: center;
+        margin-top: 10px;
     }
     
     .footer-copyright {

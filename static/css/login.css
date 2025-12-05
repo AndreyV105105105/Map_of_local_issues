@@ -263,6 +263,6 @@
     
     .login-form input[type="email"],
     .login-form input[type="password"] {
-        font-size: 15px;
+        font-size: 16px; /* Prevent iOS zoom */
     }
 }

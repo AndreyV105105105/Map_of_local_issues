@@ -441,3 +441,57 @@
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     transform: translateY(-1px);
 }
+
+/* Адаптивность для карты */
+@media (max-width: 768px) {
+    .map-filter-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .map-filter-item {
+        min-width: 100%;
+    }
+    
+    .map-filter-actions {
+        justify-content: stretch;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .map-filter-actions .btn {
+        width: 100%;
+    }
+    
+    #map-container {
+        height: 400px;
+    }
+    
+    #report-form-modal {
+        width: 95%;
+        padding: 16px;
+        top: 50%;
+        max-height: 95vh;
+    }
+    
+    .map-header h2 {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 480px) {
+    #map-container {
+        height: 300px;
+    }
+    
+    .map-search-container {
+        margin-bottom: 10px;
+    }
+    
+    #map-report-btn {
+        top: 10px !important;
+        right: 10px !important;
+        padding: 6px 12px !important;
+        font-size: 12px !important;
+    }
+}
