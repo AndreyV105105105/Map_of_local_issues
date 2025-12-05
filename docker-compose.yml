@@ -6,47 +6,27 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+      - pg:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
   web:
-    build:
-      context: .
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
     env_file:
       - .env
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT}
     depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - static_data:/app/staticfiles
-      - media_data:/app/media
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sSf http://localhost:8000/health/ || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 45s
-
-  nginx:
-    image: nginx:1.27-alpine
-    depends_on:
-      web:
-        condition: service_healthy
-    volumes:
-      - static_data:/app/staticfiles
-      - media_data:/app/media
-      - ./compose/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-    ports:
-      - "80:80"
-    restart: unless-stopped
+      - db
 
 volumes:
-  pg_data:
-  static_data:
-  media_data:
+  pg:

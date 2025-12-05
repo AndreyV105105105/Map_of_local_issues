@@ -1,11 +1,10 @@
 FROM python:3.11-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
+# Install ALL dependencies including build tools
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    build-essential \
+    gcc \
+    g++ \
     python3-dev \
     libxml2-dev \
     libsqlite3-dev \
@@ -15,25 +14,17 @@ RUN apt-get update && \
     libgeos-dev \
     libpq-dev \
     libspatialite-dev \
-    curl \
+    && ldconfig \
     && rm -rf /var/lib/apt/lists/*
-
-RUN groupadd --system app && useradd --system --gid app app
 
 WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN python -c "from osgeo import gdal; print('GDAL version:', gdal.__version__)"
-RUN python -c "from django.contrib.gis.gdal import GDALRaster; print('Django GDAL backend is ready')"
+RUN python -c "from osgeo import gdal; print('✅ GDAL успешно установлен:', gdal.__version__)"
+RUN python -c "from django.contrib.gis.gdal import GDALRaster; print('✅ Django GDAL работает')"
 
 COPY . .
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 
-RUN mkdir -p /app/staticfiles /app/media && chown -R app:app /app
-
-EXPOSE 8000
-
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
