@@ -579,10 +579,15 @@ body {
 @media (max-width: 480px) {
     /* Скрываем текст логотипа на совсем маленьких экранах, оставляем только иконку */
     .header__logo h1, 
-    .header__logo a { 
+    .navbar-brand { 
         display: none; 
     }
     
+    /* Явно указываем отображение ссылки-обертки и самой иконки */
+    .logo-link {
+        display: block;
+    }
+
     .logo-icon {
         height: 42px; 
     }
