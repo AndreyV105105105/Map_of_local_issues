@@ -182,14 +182,15 @@
     }
 
     .info-item {
-        flex-direction: column;
-        text-align: center;
-        gap: 12px;
+        flex-direction: row; /* Вернем в строку, чтобы не разваливалось */
+        text-align: left;
+        align-items: center;
+        gap: 16px;
         padding: 16px;
     }
 
     .info-content {
-        text-align: center;
+        text-align: left;
     }
 
     .profile-actions {
@@ -200,9 +201,10 @@
 
     .my-problem-btn,
     .logout-btn {
-        width: 100%;
-        justify-content: center;
-        margin: 0;
+        width: auto; /* Не растягиваем на всю ширину */
+        display: block;
+        margin: 0 auto; /* Центрируем */
+        min-width: 200px; /* Минимальная ширина для единообразия */
         box-sizing: border-box;
     }
 }
