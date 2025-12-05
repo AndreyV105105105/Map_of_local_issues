@@ -1,6 +1,5 @@
 #!/bin/sh
 set -e
-
 should_run_migrations=$(printf '%s' "${RUN_MIGRATIONS_ON_START:-false}" | tr '[:upper:]' '[:lower:]')
 STATIC_ROOT=/app/staticfiles
 MEDIA_ROOT=/app/media
