@@ -93,23 +93,34 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Map_of_local_issues.wsgi.application'
 
-required_db_settings = ['DB_NAME', 'DB_USER', 'DB_PASSWORD']
-missing_db_settings = [item for item in required_db_settings if not os.getenv(item)]
-if missing_db_settings:
-    raise ValueError(f"Missing required database configuration: {', '.join(missing_db_settings)}")
+# Database
+# ------------------------------------------------------------------------------
+# По умолчанию для локальной разработки используем SQLite.
+# Если заданы все переменные окружения для PostGIS, переключаемся на него
+# (это нужно для Docker/продакшена), но больше не падаем с ошибкой,
+# если их нет — проект всё равно можно запустить локально "из коробки".
+use_postgis = all(os.getenv(v) for v in ['DB_NAME', 'DB_USER', 'DB_PASSWORD'])
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST', 'db'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-        'CONN_MAX_AGE': 600,
-        'CONN_HEALTH_CHECKS': True,
+if use_postgis:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST', 'db'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'CONN_MAX_AGE': 600,
+            'CONN_HEALTH_CHECKS': True,
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
