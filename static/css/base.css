@@ -77,6 +77,14 @@ body {
     letter-spacing: 0.5px;
 }
 
+.header__menu {
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
+}
+
 .header__nav {
     flex: 1;
     display: flex;
@@ -385,6 +393,10 @@ body {
     margin-right: 8px;
 }
 
+.demo-form {
+    display: inline;
+}
+
 .demo-switch-btn {
     background: transparent;
     border: 2px solid var(--primary-color);
@@ -436,143 +448,135 @@ body {
 }
 
 
+.mobile-menu-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 30px;
+    height: 21px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001;
+}
+
+.mobile-menu-btn span {
+    width: 100%;
+    height: 3px;
+    background-color: var(--primary-color);
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.mobile-menu-btn.active span:nth-child(1) {
+    transform: translateY(9px) rotate(45deg);
+}
+
+.mobile-menu-btn.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.mobile-menu-btn.active span:nth-child(3) {
+    transform: translateY(-9px) rotate(-45deg);
+}
+
 /* Адаптивность для header */
 @media (max-width: 992px) {
     .header .container {
+        position: relative;
+    }
+
+    .mobile-menu-btn {
+        display: flex;
+    }
+
+    .header__menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: white;
+        flex-direction: column;
+        padding: 24px 20px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         gap: 24px;
+        z-index: 1000;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .header__menu.active {
+        display: flex;
+        animation: slideDown 0.3s ease forwards;
+    }
+
+    .header__nav,
+    .header_main_nav {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .header__nav ul,
+    .header_main_nav ul {
+        flex-direction: column;
+        width: 100%;
+        gap: 16px;
+        align-items: center;
+    }
+
+    .header__nav li, 
+    .header_main_nav li {
+        width: 100%;
+        justify-content: center;
     }
     
-    .header__nav ul {
-        gap: 16px;
+    .header__nav a,
+    .nav-item a {
+        width: 100%;
+        text-align: center;
+        padding: 12px;
+        background-color: var(--secondary-color);
+        border-radius: 12px;
+    }
+
+    .header__nav a:hover,
+    .nav-item a:hover {
+        background-color: rgba(231, 90, 124, 0.1);
     }
     
     .logo-icon {
         height: 48px;
     }
     
-    .header__logo a,
-    .header__logo h1 {
-        font-size: 14px;
+    /* Demo badge tweaks for mobile */
+    .demo-badge {
+        margin-right: 0;
+        margin-bottom: 8px;
     }
     
-    .header__nav a,
-    .nav-link-btn,
-    .nav-item a {
-        font-size: 15px;
-        padding: 8px 16px;
-    }
-}
-
-@media (max-width: 768px) {
-    .header {
-        padding: 12px 0;
-    }
-    
-    .header .container {
-        flex-wrap: wrap;
-        gap: 10px; /* Уменьшил gap */
-        align-items: center;
-    }
-    
-    .header__logo {
-        order: 1;
-        gap: 10px;
-        flex: 0 1 auto; 
-        max-width: 60%; 
-    }
-    
-    .logo-icon {
-        height: 40px;
-        flex-shrink: 0;
-    }
-    
-    .header__logo a,
-    .header__logo h1 {
-        font-size: 12px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-
-    .header_main_nav {
-        order: 2;
-        margin-left: auto;
-        flex-shrink: 0;
-    }
-
-    .header_main_nav ul {
-        gap: 8px;
-    }
-    
-    /* Меню разделов - на новой строке */
-    .header__nav {
-        order: 3;
+    .demo-switch {
+        margin-right: 0;
         width: 100%;
-        margin-top: 10px;
-        overflow-x: auto;
-        padding-bottom: 4px;
-        -webkit-overflow-scrolling: touch;
-        /* Скрываем скроллбар но оставляем скролл */
-        scrollbar-width: none; 
+        justify-content: center;
     }
     
-    .header__nav::-webkit-scrollbar {
-        display: none; 
-    }
-    
-    .header__nav ul {
-        gap: 12px;
-        width: max-content;
-        flex-wrap: nowrap;
-        padding: 0 4px; /* Небольшой отступ по бокам */
-    }
-    
-    .header__nav a,
-    .nav-link-btn,
-    .nav-item a {
-        font-size: 14px;
-        padding: 8px 14px;
-        white-space: nowrap;
-    }
-    
-    .nav-link-btn-primary {
-        font-size: 14px;
-        padding: 8px 16px;
-    }
-    
-    .results-gallery {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .results-info {
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    .footer-links {
-        flex-direction: column;
-        gap: 8px;
-        align-items: center;
-    }
-    
-    .footer-content {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    
-    .footer-text {
-        min-width: auto;
+    .demo-switch form {
         width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .demo-switch-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px;
     }
 }
 
 @media (max-width: 480px) {
-    .header .container {
-        gap: 8px;
-    }
-
     /* Скрываем текст логотипа на совсем маленьких экранах, оставляем только иконку */
     .header__logo h1, 
     .header__logo a { 
@@ -580,31 +584,9 @@ body {
     }
     
     .logo-icon {
-        height: 42px; /* Чуть крупнее иконка, раз текста нет */
+        height: 42px; 
     }
     
-    .header__nav ul {
-        gap: 8px;
-    }
-    
-    .header__nav a,
-    .nav-link-btn,
-    .nav-item a {
-        font-size: 13px;
-        padding: 6px 12px;
-    }
-    
-    .header_main_nav .nav-item a {
-        font-size: 12px;
-        padding: 6px 10px;
-    }
-    
-    /* Для демо-режима уменьшаем отступы */
-    .demo-switch-btn {
-        padding: 4px 8px;
-        font-size: 11px;
-    }
-
     .results-gallery {
         grid-template-columns: 1fr;
     }
@@ -617,4 +599,16 @@ body {
     .footer-copyright {
         text-align: center;
     }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 }

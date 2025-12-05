@@ -25,61 +25,69 @@
                 <a class="navbar-brand" href="{% url 'home' %}"><h1>КАРТА ЛОКАЛЬНЫХ<br>ПРОБЛЕМ</h1></a>
             </div>
 
-            <nav class="header__nav">
-                <ul class="list_nav">
-                    <li><a href="{% url 'home' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Главная</a></li>
-                    {% if user.is_authenticated %}
-                        <li><a href="{% url 'issues:map' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'map' %}active{% endif %}">Карта</a></li>
-                        <li><a href="{% url 'users:my_issues' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'my_issues' %}active{% endif %}">
-                            {% if user.role == 'citizen' %}
-                                Мои запросы
-                            {% else %}
-                                Запросы
-                            {% endif %}
-                        </a></li>
-                    {% else %}
-                        <li><a href="{% url 'users:login' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'map' %}active{% endif %}">Карта</a></li>
-                    {% endif %}
-                    <li><a href="{% url 'about_site' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'about_site' %}active{% endif %}">О проекте</a></li>
-                </ul>
-            </nav>
+            <button class="mobile-menu-btn" aria-label="Меню">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
 
-            <div class="header_main_nav">
-                <ul>
-                    {% if user.is_authenticated %}
-                        {% if user.is_demo_account %}
-                            <li class="nav-item demo-badge">
-                                <span class="demo-indicator">ДЕМО-РЕЖИМ</span>
+            <div class="header__menu">
+                <nav class="header__nav">
+                    <ul class="list_nav">
+                        <li><a href="{% url 'home' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Главная</a></li>
+                        {% if user.is_authenticated %}
+                            <li><a href="{% url 'issues:map' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'map' %}active{% endif %}">Карта</a></li>
+                            <li><a href="{% url 'users:my_issues' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'my_issues' %}active{% endif %}">
+                                {% if user.role == 'citizen' %}
+                                    Мои запросы
+                                {% else %}
+                                    Запросы
+                                {% endif %}
+                            </a></li>
+                        {% else %}
+                            <li><a href="{% url 'users:login' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'map' %}active{% endif %}">Карта</a></li>
+                        {% endif %}
+                        <li><a href="{% url 'about_site' %}" class="nav-link-btn {% if request.resolver_match.url_name == 'about_site' %}active{% endif %}">О проекте</a></li>
+                    </ul>
+                </nav>
+    
+                <div class="header_main_nav">
+                    <ul>
+                        {% if user.is_authenticated %}
+                            {% if user.is_demo_account %}
+                                <li class="nav-item demo-badge">
+                                    <span class="demo-indicator">ДЕМО-РЕЖИМ</span>
+                                </li>
+                                <li class="nav-item demo-switch">
+                                    <form method="post" action="{% url 'users:switch_demo_role' %}" class="demo-form">
+                                        {% csrf_token %}
+                                        <button type="submit" class="demo-switch-btn" title="Переключить роль">
+                                            {% if user.role == 'citizen' %}
+                                                <span class="demo-role-active">Горожанин</span>
+                                                <span class="demo-role-separator">/</span>
+                                                <span class="demo-role-inactive">Должностное лицо</span>
+                                            {% else %}
+                                                <span class="demo-role-inactive">Горожанин</span>
+                                                <span class="demo-role-separator">/</span>
+                                                <span class="demo-role-active">Должностное лицо</span>
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                </li>
+                            {% endif %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'users:profile' %}">{% trans "Профиль" %}</a>
                             </li>
-                            <li class="nav-item demo-switch">
-                                <form method="post" action="{% url 'users:switch_demo_role' %}" style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="demo-switch-btn" title="Переключить роль">
-                                        {% if user.role == 'citizen' %}
-                                            <span class="demo-role-active">Горожанин</span>
-                                            <span class="demo-role-separator">/</span>
-                                            <span class="demo-role-inactive">Должностное лицо</span>
-                                        {% else %}
-                                            <span class="demo-role-inactive">Горожанин</span>
-                                            <span class="demo-role-separator">/</span>
-                                            <span class="demo-role-active">Должностное лицо</span>
-                                        {% endif %}
-                                    </button>
-                                </form>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'users:login' %}">{% trans "Войти" %}</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'users:register' %}">{% trans "Зарегистрироваться" %}</a>
                             </li>
                         {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'users:profile' %}">{% trans "Профиль" %}</a>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'users:login' %}">{% trans "Войти" %}</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'users:register' %}">{% trans "Зарегистрироваться" %}</a>
-                        </li>
-                    {% endif %}
-                </ul>
+                    </ul>
+                </div>
             </div>
         </div>
     </header>
@@ -137,6 +145,7 @@
 
     <script src="{% static 'js/alerts.js' %}"></script>
     <script src="{% static 'js/animations.js' %}"></script>
+    <script src="{% static 'js/base.js' %}"></script>
 
 </body>
 </html>
