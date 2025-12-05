@@ -41,6 +41,8 @@ html, body {
     font-weight: 600;
     line-height: 1.4;
     text-transform: uppercase;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 
@@ -52,17 +54,21 @@ html, body {
     text-align: left;
     margin-top: 15px;
     align-self: flex-start; 
+    word-wrap: break-word;
+    max-width: 100%;
 }
 
 .banner-right {
     font-size: 24px;
     font-weight: 600;
-    line-height: 100;
+    line-height: 1.4;
     text-transform: uppercase;
     text-align: right;
     margin-bottom:15px ;
     align-self: flex-end;
     margin-top: auto;
+    word-wrap: break-word;
+    max-width: 100%;
 }
 
 
@@ -405,20 +411,33 @@ html, body {
     
     .help-banner {
         width: 100%;
-        border-radius: 0 40px 40px 0;
+        border-radius: 20px;
         padding: 24px;
         margin: 24px 0;
+    }
+
+    .help-banner.full-width {
+        width: 100%;
+        left: 0;
+        margin-left: 0;
+        margin-right: 0;
+        border-radius: 20px;
+        padding: 24px;
+    }
+    
+    .map-wrapper {
+        margin-top: 0;
+    }
+
+    .map-image {
+        height: 300px;
+        object-fit: cover;
     }
 }
 
 @media (max-width: 768px) {
     .cards-container {
         grid-template-columns: 1fr;
-    }
-    
-    .header .container {
-        flex-direction: column;
-        gap: 16px;
     }
     
     .help-banner {
@@ -451,7 +470,31 @@ html, body {
     }
     
     .map-container {
-        height: 200px;
+        height: auto;
+        min-height: 250px;
+    }
+
+    .map-image {
+        height: 250px;
+    }
+
+    .help-banner, 
+    .help-banner.full-width {
+        padding: 20px 16px;
+    }
+
+    .banner-left,
+    .banner-right {
+        font-size: 18px;
+    }
+
+    .map-cta, .demo-cta-button {
+        padding: 10px 20px;
+        font-size: 14px;
+        width: 80%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 
